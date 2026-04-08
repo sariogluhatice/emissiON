@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login – EMISSON</title>
+    <link rel="stylesheet" href="../css/main.css" />
+  </head>
+  <body>
+    <main class="auth-page">
+      <div class="auth-card">
+        <!-- Left Panel -->
+        <div class="auth-left">
+          <div class="auth-brand">EMISSON</div>
+          <h1 class="auth-heading">Login to EMISSON</h1>
+
+          <form id="loginForm" novalidate>
+            <!-- Email -->
+            <div class="form-group">
+              <label class="label" for="email">Email</label>
+              <input
+                class="input"
+                type="email"
+                id="email"
+                placeholder="Enter your email"
+                autocomplete="email"
+              />
+              <span class="error-msg" id="emailError"></span>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+              <label class="label" for="password">Password</label>
+              <input
+                class="input"
+                type="password"
+                id="password"
+                placeholder="Enter your password"
+                autocomplete="current-password"
+              />
+              <span class="error-msg" id="passwordError"></span>
+            </div>
+
+            <!-- Remember me + Forgot Password -->
+            <div class="auth-row">
+              <label class="checkbox-label">
+                <input type="checkbox" id="rememberMe" />
+                Remember me
+              </label>
+              <button type="button" class="link-btn">Forgot Password?</button>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" class="btn-primary">Login</button>
+
+            <!-- Register link -->
+            <p class="bottom-text">
+              Don't have an account? <a href="register.html">Register</a>
+            </p>
+          </form>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="auth-right"></div>
+      </div>
+    </main>
+
+    <script type="module" src="../js/login.js"></script>
+  </body>
+</html>

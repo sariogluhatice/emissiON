@@ -1,0 +1,55 @@
+/* ============================================================
+   COMPONENTS / BUTTONS — primary, logout ve link-btn
+   ============================================================ */
+
+.btn-primary {
+  width: 100%;
+  background-color: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 13px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.btn-primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.btn-logout {
+  padding: 10px 32px;
+  background-color: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-logout:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.link-btn {
+  font-size: 14px;
+  color: var(--color-primary);
+  text-decoration: underline;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.link-btn:hover {
+  color: var(--color-primary-dark);
+}

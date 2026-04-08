@@ -1,0 +1,44 @@
+/* ============================================================
+   COMPONENTS / FORMS — input, label, form-group, hata mesajları
+   ============================================================ */
+
+.label {
+  display: block;
+  font-size: 14px;
+  color: var(--color-text);
+  margin-bottom: 6px;
+}
+
+.input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--color-text);
+  background: var(--color-surface-muted);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  border-color: var(--color-primary);
+}
+
+.input.is-invalid {
+  border-color: var(--color-error);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--spacing-xs);
+}
+
+.error-msg {
+  color: var(--color-error);
+  font-size: 12px;
+  margin-top: var(--spacing-xs);
+  margin-bottom: var(--spacing-sm);
+  min-height: 16px;
+}

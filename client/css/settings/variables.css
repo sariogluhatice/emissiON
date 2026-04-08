@@ -1,0 +1,47 @@
+/* ============================================================
+   SETTINGS — design tokens (CSS custom properties)
+   Tüm renkler, spacing, radius ve shadow değerleri burada.
+   Başka hiçbir dosyaya ham değer yazılmaz — her zaman değişken kullan.
+   ============================================================ */
+
+:root {
+  /* ── Marka renkleri ── */
+  --color-primary:       #2e4a8f;
+  --color-primary-dark:  #243b75;
+  --color-brand-text:    #1a1a2e;
+
+  /* ── Nötrler ── */
+  --color-bg:            #f0f0f0;
+  --color-surface:       #ffffff;
+  --color-surface-muted: #fafafa;
+  --color-border:        #cccccc;
+  --color-panel-right:   #e8e8e8;
+
+  /* ── Metin ── */
+  --color-text:          #333333;
+  --color-text-muted:    #555555;
+  --color-placeholder:   #aaaaaa;
+
+  /* ── Durum renkleri ── */
+  --color-error:         #e53935;
+  --color-success:       #2e7d32;
+
+  /* ── Spacing ── */
+  --spacing-xs:   4px;
+  --spacing-sm:   8px;
+  --spacing-md:  16px;
+  --spacing-lg:  24px;
+  --spacing-xl:  40px;
+  --spacing-2xl: 48px;
+
+  /* ── Border radius ── */
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* ── Gölgeler ── */
+  --shadow-card: 0 2px 16px rgba(0, 0, 0, 0.10);
+
+  /* ── Breakpoint'ler ── */
+  --bp-tablet: 768px;
+}

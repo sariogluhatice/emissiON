@@ -1,0 +1,21 @@
+/* ============================================================
+   BASE / GLOBAL — body varsayılanları, linkler, temel tipografi
+   ============================================================ */
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-size: 14px;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+a:hover {
+  color: var(--color-primary-dark);
+}

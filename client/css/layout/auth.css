@@ -1,0 +1,91 @@
+/* ============================================================
+   LAYOUT / AUTH — login ve register sayfaları iki sütunlu kart layout'u
+   ============================================================ */
+
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-lg);
+}
+
+.auth-card {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  max-width: 900px;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  min-height: 480px;
+}
+
+/* ── Sol panel (form) ── */
+.auth-left {
+  flex: 1;
+  padding: var(--spacing-2xl) var(--spacing-xl);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Sağ panel (illüstrasyon) ── */
+.auth-right {
+  flex: 1;
+  background-color: var(--color-panel-right);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-right .illustration-text {
+  color: var(--color-primary);
+  font-size: 14px;
+  text-decoration: underline;
+}
+
+/* ── Marka ── */
+.auth-brand {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-brand-text);
+  letter-spacing: 2px;
+  margin-bottom: 28px;
+}
+
+/* ── Başlık ── */
+.auth-heading {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-brand-text);
+  margin-bottom: 28px;
+}
+
+/* ── Remember me / Forgot password satırı ── */
+.auth-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 12px 0 20px;
+}
+
+.auth-left .btn-primary {
+  margin-top: var(--spacing-sm);
+  margin-bottom: 20px;
+}
+
+/* ── Responsive — mobilde tek sütun ── */
+@media (max-width: 767px) {
+  .auth-right {
+    display: none;
+  }
+
+  .auth-card {
+    flex-direction: column;
+  }
+
+  .auth-left {
+    padding: var(--spacing-xl) var(--spacing-lg);
+  }
+}
