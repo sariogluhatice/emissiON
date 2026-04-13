@@ -42,3 +42,12 @@
   margin-bottom: var(--spacing-sm);
   min-height: 16px;
 }
+
+.api-message {
+  font-size: 13px;
+  min-height: 18px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.api-message.is-error   { color: var(--color-error); }
+.api-message.is-success { color: var(--color-success); }
