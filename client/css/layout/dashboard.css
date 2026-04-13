@@ -1,0 +1,208 @@
+/* ============================================================
+   LAYOUT / DASHBOARD — Sidebar ve İçerik Alanı Yapısı
+   
+   Uygulamanın ana iskeletini tanımlar.
+   Sabit bir yan menü (sidebar) ve esnek bir içerik alanı (main-content) içerir.
+   ============================================================ */
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-bg);
+}
+
+/* Sidebar (Yan Menü) Stilleri */
+.sidebar {
+  width: 260px;
+  min-height: 100vh;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  box-shadow: 2px 0 12px rgba(0,0,0,0.03);
+}
+
+.sidebar-brand {
+  padding: var(--spacing-xl) var(--spacing-lg);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-primary);
+  letter-spacing: 1.5px;
+  text-align: center;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--spacing-md);
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 0 var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Navigasyon Elemanları */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border-radius: var(--radius-md);
+}
+
+.nav-item:hover {
+  background: var(--color-bg);
+  color: var(--color-primary);
+}
+
+.nav-item.active {
+  background: var(--color-primary);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(46, 74, 143, 0.2);
+}
+
+/* [Korkunç Görünüm Fix] İkon Boyutlandırma */
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* Sidebar Alt Kısmı ve Logout */
+.sidebar-footer {
+  padding: var(--spacing-lg) var(--spacing-md);
+  border-top: 1px solid var(--color-border);
+}
+
+.btn-logout {
+  width: 100%;
+  padding: 10px;
+  background: #fdecea;
+  color: var(--color-error);
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-logout:hover {
+  background: #fadbd8;
+}
+
+/* Ana İçerik Bölgesi */
+.main-content {
+  margin-left: 260px; 
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Üst Bar (Topbar) */
+.topbar {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  padding: 0 var(--spacing-xl);
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.topbar-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.userName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-brand-text);
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* Page Header & Typography Polish */
+.page-body {
+  padding: var(--spacing-lg) var(--spacing-xl);
+  flex: 1;
+}
+
+.page-header {
+  margin-bottom: var(--spacing-xl);
+}
+
+.page-header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--color-brand-text);
+  margin-bottom: 40px; /* Screenshot fix: space out H1 from info text */
+}
+
+.page-header p {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin-top: -30px; /* Pull text closer to H1 if needed, or just let it flow */
+  margin-bottom: var(--spacing-lg);
+}
+
+/* Tablo Filtreleme ve Arama Alanı (My Emissions Fix) */
+.table-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+  gap: 12px;
+}
+
+.search-box {
+  position: relative;
+  flex: 1;
+  max-width: 300px;
+}
+
+/* Responsive Düzenlemeler */
+@media (max-width: 767px) {
+  .sidebar {
+    display: none; 
+  }
+  .main-content {
+    margin-left: 0;
+  }
+  .page-body {
+    padding: var(--spacing-lg);
+  }
+}

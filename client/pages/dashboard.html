@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard – EmissiON</title>
+    <meta name="description" content="EmissiON carbon footprint dashboard — your emissions at a glance." />
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="../css/main.css" />
+    <!-- Grafik görselleştirme kütüphanesi -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+
+      <!-- Sidebar (Yan Menü) -->
+      <aside class="sidebar">
+        <div class="sidebar-brand">EMISSON</div>
+        <nav class="sidebar-nav">
+          <a href="dashboard.html"  class="nav-item active" id="nav-dashboard">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            Dashboard
+          </a>
+          <a href="emissions.html"  class="nav-item" id="nav-emissions">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+            My Emissions
+          </a>
+          <a href="add-emission.html" class="nav-item" id="nav-add">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+            Add Entry
+          </a>
+          <a href="profile.html"    class="nav-item" id="nav-profile">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            Profile
+          </a>
+        </nav>
+        <div class="sidebar-footer">
+          <button class="btn-logout" id="logoutBtn">Log out</button>
+        </div>
+      </aside>
+
+      <!-- Ana İçerik Alanı -->
+      <div class="main-content">
+        <header class="topbar">
+          <span class="topbar-title">Dashboard</span>
+          <div class="topbar-user">
+            <div class="user-avatar" id="userInitials">?</div>
+            <span id="userName">Loading…</span>
+          </div>
+        </header>
+
+        <main class="page-body">
+          <div class="page-header">
+            <h1>Welcome back, <span id="welcomeName">there</span>!</h1>
+            <p>Karbon ayak izi aktivitenizin bir özeti aşağıdadır.</p>
+          </div>
+
+          <!-- Özet İstatistik Kartları -->
+          <div class="card-grid">
+            <div class="stat-card">
+              <span class="stat-label">Toplam Emisyon</span>
+              <span class="stat-value" id="statTotal">—</span>
+              <span class="stat-unit">kg CO₂e</span>
+            </div>
+            <div class="stat-card accent-green">
+              <span class="stat-label">Bu Ay</span>
+              <span class="stat-value" id="statMonth">—</span>
+              <span class="stat-unit">kg CO₂e</span>
+            </div>
+            <div class="stat-card accent-orange">
+              <span class="stat-label">Kayıt Sayısı</span>
+              <span class="stat-value" id="statEntries">—</span>
+              <span class="stat-unit">records</span>
+            </div>
+            <div class="stat-card accent-red">
+              <span class="stat-label">En Yüksek Kategori</span>
+              <span class="stat-value" id="statTopCat" style="font-size:18px;">—</span>
+              <span class="stat-unit">emission source</span>
+            </div>
+          </div>
+
+          <!-- Kategori Bazlı Emisyon Dağılım Grafiği -->
+          <div class="content-card" style="margin-bottom: 24px;">
+            <div class="content-card-header">
+              <span class="content-card-title">Kategori Bazlı Dağılım</span>
+            </div>
+            <div style="height: 300px; display: flex; justify-content: center; align-items: center;">
+              <canvas id="emissionChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Son Eklenen Kayıtlar Tablosu -->
+          <div class="content-card">
+            <div class="content-card-header">
+              <span class="content-card-title">Son Kayıtlar</span>
+              <a href="emissions.html" class="btn-action btn-edit">Tümünü Gör</a>
+            </div>
+            <div class="table-wrapper">
+              <table class="data-table" id="recentTable">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Amount (kg CO₂e)</th>
+                  </tr>
+                </thead>
+                <tbody id="recentTableBody">
+                  <tr><td colspan="5" class="table-empty">Veriler yükleniyor…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Dashboard mantığını yöneten JS modülü -->
+    <script type="module" src="../js/dashboard.js"></script>
+  </body>
+</html>

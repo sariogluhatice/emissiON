@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Emission – EmissiON</title>
+    <meta name="description" content="Log a new carbon emission entry." />
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="../css/main.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+
+      <!-- Sidebar (Yan Menü) -->
+      <aside class="sidebar">
+        <div class="sidebar-brand">EMISSON</div>
+        <nav class="sidebar-nav">
+          <a href="dashboard.html"     class="nav-item" id="nav-dashboard">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            Dashboard
+          </a>
+          <a href="emissions.html"     class="nav-item" id="nav-emissions">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+            My Emissions
+          </a>
+          <a href="add-emission.html"  class="nav-item active" id="nav-add">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+            Add Entry
+          </a>
+          <a href="profile.html"       class="nav-item" id="nav-profile">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            Profile
+          </a>
+        </nav>
+        <div class="sidebar-footer">
+          <button class="btn-logout" id="logoutBtn">Log out</button>
+        </div>
+      </aside>
+
+      <!-- Ana İçerik Alanı -->
+      <div class="main-content">
+        <header class="topbar">
+          <span class="topbar-title">Add Emission Entry</span>
+          <div class="topbar-user">
+            <div class="user-avatar" id="userInitials">?</div>
+            <span id="userName">Loading…</span>
+          </div>
+        </header>
+
+        <main class="page-body">
+          <div class="page-header">
+            <h1>Log a New Emission</h1>
+            <p>Karbon ayak izinizi hesaplamak için aşağıdaki bilgileri doldurun.</p>
+          </div>
+
+          <div class="content-card" style="max-width:620px;">
+            <form id="addEmissionForm" novalidate>
+
+              <!-- 1. Kategori Seçimi -->
+              <div class="form-group">
+                <label class="label" for="category">Category</label>
+                <select class="input" id="category" name="category">
+                  <option value="">Select a category…</option>
+                  <option value="Transport">🚗 Transport</option>
+                  <option value="Energy">⚡ Energy</option>
+                  <option value="Food">🍽 Food</option>
+                  <option value="Shopping">🛍 Shopping</option>
+                  <option value="Other">📦 Other</option>
+                </select>
+                <span class="error-msg" id="categoryError"></span>
+              </div>
+
+              <!-- 2. Aktivite Tipi -->
+              <div class="form-group" id="activityGroup" style="display:none;">
+                <label class="label" for="activitySelect">Activity type</label>
+                <select class="input" id="activitySelect" name="activity">
+                  <option value="">Select an activity…</option>
+                </select>
+                <span class="error-msg" id="activityError"></span>
+              </div>
+
+              <!-- 3. Miktar Girişi -->
+              <div class="form-group" id="quantityGroup" style="display:none;">
+                <label class="label" for="quantity">
+                  Amount (<span id="unitLabel">units</span>)
+                </label>
+                <input class="input" type="number" id="quantity" name="quantity" min="0.01" step="any" />
+                <span class="error-msg" id="quantityError"></span>
+              </div>
+
+              <!-- Otomatik Hesaplama Durum Alanı -->
+              <div id="calcBox" style="display:none; background:#eef1f9; border:1px solid #cdd8f3; border-radius:6px; padding:14px 18px; margin-bottom:16px; font-size:14px;">
+                Tahmini CO₂: <strong id="calcResult">—</strong> kg CO₂e
+                <span style="font-size:12px;color:var(--color-text-muted);display:block;margin-top:3px;">
+                  Kaynak: <span id="calcFactor">—</span>
+                </span>
+              </div>
+
+              <!-- 4. Nihai Emisyon Tutarı -->
+              <div class="form-group">
+                <label class="label" for="amount">CO₂ amount (kg CO₂e)</label>
+                <input class="input" type="number" id="amount" name="amount" placeholder="Otomatik hesaplanacak" title="Bu alan otomatik dolar ama isterseniz manuel olarak düzenleyebilirsiniz" min="0.01" step="any" />
+                <span class="error-msg" id="amountError"></span>
+              </div>
+
+              <!-- 5. Açıklama ve Tarih -->
+              <div class="form-group">
+                <label class="label" for="description">Description</label>
+                <input class="input" type="text" id="description" name="description" maxlength="200" />
+                <span class="error-msg" id="descriptionError"></span>
+              </div>
+
+              <div class="form-group">
+                <label class="label" for="date">Date</label>
+                <input class="input" type="date" id="date" name="date" />
+                <span class="error-msg" id="dateError"></span>
+              </div>
+
+              <div id="formMessage" style="margin-bottom:12px;font-size:14px;min-height:20px;"></div>
+
+              <div style="display:flex;gap:16px;margin-top:12px;">
+                <button type="submit" class="btn-primary" id="submitBtn" style="flex:1;">Save Entry</button>
+                <a href="emissions.html" class="btn-secondary" style="flex:1;">Vazgeç</a>
+              </div>
+            </form>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Form mantığını yöneten JS modülü -->
+    <script type="module" src="../js/add-emission.js"></script>
+  </body>
+</html>

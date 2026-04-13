@@ -4,51 +4,60 @@ import {
   showError,
   bindFieldValidation,
 } from './utils/validation.js';
-import { apiFetch } from './utils/api.js';
+import { AuthService } from './api/authService.js';
 
 const form          = document.getElementById('loginForm');
 const emailInput    = document.getElementById('email');
 const passwordInput = document.getElementById('password');
-const submitBtn     = document.getElementById('submitBtn');
-const apiMessage    = document.getElementById('apiMessage');
 const emailError    = document.getElementById('emailError');
 const passwordError = document.getElementById('passwordError');
+const apiMessage    = document.getElementById('apiMessage');
+const submitBtn     = document.getElementById('submitBtn');
+
+const authService = new AuthService();
 
 bindFieldValidation(emailInput,    emailError,    () => validateEmail(emailInput.value));
 bindFieldValidation(passwordInput, passwordError, () => validatePassword(passwordInput.value, 1));
 
-function setApiMessage(text, isError) {
-  apiMessage.textContent = text;
-  apiMessage.className   = `api-message ${isError ? 'is-error' : 'is-success'}`;
-}
-
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
-
+  
+  // Temel doğrulama
   const eErr = validateEmail(emailInput.value);
   const pErr = validatePassword(passwordInput.value, 1);
 
   showError(emailInput,    emailError,    eErr);
   showError(passwordInput, passwordError, pErr);
+  
+  apiMessage.textContent = '';
+  apiMessage.className = 'api-message';
 
   if (eErr || pErr) return;
 
   submitBtn.disabled = true;
-  setApiMessage('', false);
+  submitBtn.textContent = 'Logging in…';
 
-  const { ok, data } = await apiFetch('/api/auth/login', {
-    email:    emailInput.value.trim(),
-    password: passwordInput.value,
-  });
+  try {
+    const response = await authService.login(emailInput.value, passwordInput.value);
+    
+    // API'den gelen kullanıcı verisini kaydet (Dashboard'da görünmesi için)
+    if (response?.user) {
+        localStorage.setItem('user', JSON.stringify(response.user));
+    }
 
-  if (ok) {
-    localStorage.setItem('token', data.token);
-    setApiMessage('Login successful! Redirecting…', false);
+    apiMessage.textContent = 'Login successful! Redirecting…';
+    apiMessage.classList.add('is-success');
+
+    // Başarılı girişte Dashboard'a yönlendir
     setTimeout(() => {
-      window.location.href = '../index.html';
+        window.location.href = './dashboard.html';
     }, 1000);
-  } else {
-    setApiMessage(data.message || 'Login failed. Please try again.', true);
+
+  } catch (err) {
+    console.error('Login error:', err);
+    apiMessage.textContent = err.message || 'Login failed. Please check your credentials.';
+    apiMessage.classList.add('is-error');
     submitBtn.disabled = false;
+    submitBtn.textContent = 'Login';
   }
 });
