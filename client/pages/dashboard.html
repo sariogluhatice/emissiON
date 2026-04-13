@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard – EMISSON</title>
+    <link rel="stylesheet" href="../css/main.css" />
+  </head>
+  <body>
+    <div class="dashboard-page">
+
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="dashboard-brand">EMISSON</div>
+        <div class="dashboard-header-actions">
+          <span class="dashboard-user" id="userGreeting"></span>
+          <button class="btn-logout" id="logoutBtn">Logout</button>
+        </div>
+      </header>
+
+      <!-- Main -->
+      <main class="dashboard-main">
+        <div class="dashboard-title-row">
+          <h1 class="dashboard-title">Emission Records</h1>
+          <a href="record-form.html" class="btn-logout">+ New Record</a>
+        </div>
+
+        <div id="recordList" class="record-list">
+          <!-- Records injected by JS -->
+        </div>
+
+        <p class="empty-state" id="emptyState" style="display:none;">
+          No records yet. Add your first emission record!
+        </p>
+      </main>
+    </div>
+
+    <script type="module" src="../js/dashboard.js"></script>
+  </body>
+</html>
