@@ -10,11 +10,11 @@ export class AuthService {
         this.api = new ApiClient();
     }
 
-    async login(email, password) {
+    async login(email, password, remember = true) {
         const response = await this.api.post('/auth/login', { email, password });
-        
+
         if (response && response.token) {
-            TokenManager.set(response.token);
+            TokenManager.set(response.token, remember);
         }
         return response;
     }
