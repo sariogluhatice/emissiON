@@ -50,9 +50,18 @@ const register = async (req, res) => {
             [name, email, hashedPassword]
         );
 
+        const newUser = result.rows[0];
+
+        const token = jwt.sign(
+            { id: newUser.id, role: newUser.role },
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+        );
+
         return res.status(201).json({
             message: 'Registration successful.',
-            user: result.rows[0],
+            user: newUser,
+            token,
         });
     } catch (err) {
         // Catch race condition: duplicate email inserted between our check and INSERT

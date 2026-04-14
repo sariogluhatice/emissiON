@@ -28,6 +28,7 @@ export class ApiClient {
 
             if (response.status === 401 && !isPublic) {
                 TokenManager.remove();
+                window.location.replace('/pages/login.html');
                 throw new Error('SESSION_EXPIRED');
             }
 

@@ -6,7 +6,9 @@ import {
   showError,
   bindFieldValidation,
 } from './utils/validation.js';
-import { apiFetch } from './utils/api.js';
+import { AuthService } from './api/authService.js';
+
+const authService = new AuthService();
 
 const form          = document.getElementById('registerForm');
 const nameInput     = document.getElementById('name');
@@ -49,19 +51,18 @@ form.addEventListener('submit', async (e) => {
   submitBtn.disabled = true;
   setApiMessage('', false);
 
-  const { ok, data } = await apiFetch('/api/auth/register', {
-    name:     nameInput.value.trim(),
-    email:    emailInput.value.trim(),
-    password: passwordInput.value,
-  });
-
-  if (ok) {
-    setApiMessage('Account created! Redirecting to login…', false);
+  try {
+    await authService.register(
+      nameInput.value.trim(),
+      emailInput.value.trim(),
+      passwordInput.value,
+    );
+    setApiMessage('Account created! Redirecting…', false);
     setTimeout(() => {
-      window.location.href = 'login.html';
+      window.location.href = 'dashboard.html';
     }, 1500);
-  } else {
-    setApiMessage(data.message || 'Registration failed. Please try again.', true);
+  } catch (err) {
+    setApiMessage(err.message || 'Registration failed. Please try again.', true);
     submitBtn.disabled = false;
   }
 });
