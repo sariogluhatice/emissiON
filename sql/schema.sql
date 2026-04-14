@@ -14,3 +14,13 @@ CREATE TABLE IF NOT EXISTS users (
     role       user_role     NOT NULL DEFAULT 'user',
     created_at TIMESTAMP     NOT NULL DEFAULT NOW()
 );
+
+-- Emission records table: stores CO₂ emission entries per user.
+CREATE TABLE IF NOT EXISTS emission_records (
+    id         SERIAL PRIMARY KEY,
+    user_id    INT           NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    source     VARCHAR(100)  NOT NULL,
+    amount     NUMERIC(10,2) NOT NULL,           -- kg CO₂
+    date       DATE          NOT NULL,
+    created_at TIMESTAMP     NOT NULL DEFAULT NOW()
+);

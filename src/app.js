@@ -3,6 +3,7 @@ require('dotenv').config();
 const path      = require('path');
 const express   = require('express');
 const authRoutes    = require('./routes/authRoutes');
+const emissionRoutes = require('./routes/emissionRoutes');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -15,6 +16,9 @@ app.use(express.static(path.join(__dirname, '..', 'client')));
 
 // Mount auth routes under /api/auth
 app.use('/api/auth',     authRoutes);
+
+// Mount emission record routes under /api/emissions
+app.use('/api/emissions', emissionRoutes);
 
 // Health check — useful to confirm the server is running
 app.get('/health', (req, res) => {

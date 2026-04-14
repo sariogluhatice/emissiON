@@ -23,7 +23,7 @@
   top: 0;
   left: 0;
   z-index: 100;
-  box-shadow: 2px 0 12px rgba(0,0,0,0.03);
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.03);
 }
 
 .sidebar-brand {
@@ -103,7 +103,7 @@
 
 /* Ana İçerik Bölgesi */
 .main-content {
-  margin-left: 260px; 
+  margin-left: 260px;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -169,17 +169,17 @@
   font-size: 28px;
   font-weight: 800;
   color: var(--color-brand-text);
-  margin-bottom: 40px; /* Screenshot fix: space out H1 from info text */
+  margin-bottom: 40px;
 }
 
 .page-header p {
   font-size: 14px;
   color: var(--color-text-muted);
-  margin-top: -30px; /* Pull text closer to H1 if needed, or just let it flow */
+  margin-top: -30px;
   margin-bottom: var(--spacing-lg);
 }
 
-/* Tablo Filtreleme ve Arama Alanı (My Emissions Fix) */
+/* Tablo Filtreleme ve Arama Alanı */
 .table-actions {
   display: flex;
   justify-content: space-between;
@@ -194,10 +194,18 @@
   max-width: 300px;
 }
 
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-2xl) 0;
+  color: var(--color-text-muted);
+  font-size: 15px;
+}
+
 /* Responsive Düzenlemeler */
 @media (max-width: 767px) {
   .sidebar {
-    display: none; 
+    display: none;
   }
   .main-content {
     margin-left: 0;

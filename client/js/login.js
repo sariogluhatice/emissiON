@@ -4,7 +4,9 @@ import {
   showError,
   bindFieldValidation,
 } from './utils/validation.js';
-import { apiFetch } from './utils/api.js';
+import { AuthService } from './api/authService.js';
+
+const authService   = new AuthService();
 
 const form          = document.getElementById('loginForm');
 const emailInput    = document.getElementById('email');
@@ -36,20 +38,14 @@ form.addEventListener('submit', async (e) => {
   submitBtn.disabled = true;
   setApiMessage('', false);
 
-  const { ok, data } = await apiFetch('/api/auth/login', {
-    email:    emailInput.value.trim(),
-    password: passwordInput.value,
-  });
-
-  if (ok) {
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
+  try {
+    await authService.login(emailInput.value.trim(), passwordInput.value);
     setApiMessage('Login successful! Redirecting…', false);
     setTimeout(() => {
       window.location.href = 'dashboard.html';
     }, 1000);
-  } else {
-    setApiMessage(data.message || 'Login failed. Please try again.', true);
+  } catch (err) {
+    setApiMessage(err.message || 'Login failed. Please try again.', true);
     submitBtn.disabled = false;
   }
 });
