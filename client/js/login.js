@@ -43,9 +43,10 @@ form.addEventListener('submit', async (e) => {
 
   if (ok) {
     localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
     setApiMessage('Login successful! Redirecting…', false);
     setTimeout(() => {
-      window.location.href = '../index.html';
+      window.location.href = 'dashboard.html';
     }, 1000);
   } else {
     setApiMessage(data.message || 'Login failed. Please try again.', true);
