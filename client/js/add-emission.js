@@ -10,6 +10,7 @@
 
 import { getCurrentUser, renderTopbarUser, bindLogout, showToast } from './utils/mockData.js';
 import { EMISSION_FACTORS, calculateEmission } from './utils/emissionFactors.js';
+import { emissionService } from './api/emissionService.js';
 
 // Başlangıç Kurulumu
 const user = getCurrentUser();
@@ -138,15 +139,9 @@ function validate() {
   return ok;
 }
 
-/** Kaydı saklar (Şimdilik localStorage, daha sonra gerçek API entegrasyonu) */
+/** Kaydı backend API'ye gönderir */
 function saveEntry(entry) {
-  /* HATICE'S PART: API Entegrasyon Noktası: POST /emissions */
-  // api.post('/emissions', entry);
-
-  const existing = JSON.parse(localStorage.getItem('localEmissions') || '[]');
-  existing.push({ ...entry, id: Date.now(), status: 'pending' });
-  localStorage.setItem('localEmissions', JSON.stringify(existing));
-  return Promise.resolve();
+  return emissionService.create(entry);
 }
 
 /** Formun Gönderilmesi */
@@ -159,11 +154,9 @@ form.addEventListener('submit', async (e) => {
 
   try {
     await saveEntry({
-      category:    categoryEl.value,
-      description: descEl.value.trim(),
-      amount:      parseFloat(amountEl.value),
-      date:        dateEl.value,
-      status:      'pending'
+      source: categoryEl.value,
+      amount: parseFloat(amountEl.value),
+      date:   dateEl.value,
     });
 
     showToast('Başarılı!', 'Emisyon kaydı başarıyla oluşturuldu.', 'success');

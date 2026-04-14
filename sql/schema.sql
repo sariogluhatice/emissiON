@@ -29,3 +29,5 @@ CREATE TABLE IF NOT EXISTS emission_records (
     date       DATE          NOT NULL,
     created_at TIMESTAMP     NOT NULL DEFAULT NOW()
 );
+
+CREATE INDEX ON emission_records (user_id, date DESC);
