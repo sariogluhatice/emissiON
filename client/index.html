@@ -2,7 +2,15 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="refresh" content="0; url=pages/register.html" />
+    <script>
+      // Smart Redirect: Check if user is already logged in
+      const token = localStorage.getItem('emission_token');
+      if (token) {
+        window.location.replace('pages/dashboard.html');
+      } else {
+        window.location.replace('pages/login.html');
+      }
+    </script>
   </head>
   <body></body>
 </html>

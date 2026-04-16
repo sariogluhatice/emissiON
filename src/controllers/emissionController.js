@@ -1,4 +1,30 @@
 const pool = require('../config/db');
+const climatiqService = require('../services/climatiqService');
+
+// --- CALCULATE ---
+// POST /api/emissions/calculate
+// Body: { activityId, quantity, unit } OR { from, to, flightClass }
+const calculate = async (req, res) => {
+    const { activityId, quantity, unit, from, to, flightClass } = req.body;
+
+    try {
+        let result;
+        // If 'from' and 'to' are provided, assume it's a flight route calculation
+        if (from && to) {
+            result = await climatiqService.calculateFlightEmission(from, to, flightClass);
+        } else {
+            if (!activityId || !quantity || !unit) {
+                return res.status(400).json({ message: 'activityId, quantity and unit are required for generic calculation.' });
+            }
+            result = await climatiqService.calculateEmission(activityId, quantity, unit);
+        }
+        
+        return res.status(200).json(result);
+    } catch (err) {
+        console.error('[emissions.calculate]', err.message);
+        return res.status(500).json({ message: err.message || 'Climatiq calculation failed.' });
+    }
+};
 
 // --- GET ALL ---
 // GET /api/emissions
@@ -54,7 +80,6 @@ const create = async (req, res) => {
 
 // --- UPDATE ---
 // PUT /api/emissions/:id
-// Body: { source, amount, date }
 const update = async (req, res) => {
     const { id } = req.params;
     const { source: rawSource, amount, date } = req.body;
@@ -116,4 +141,4 @@ const remove = async (req, res) => {
     }
 };
 
-module.exports = { getAll, create, update, remove };
+module.exports = { getAll, create, update, remove, calculate };

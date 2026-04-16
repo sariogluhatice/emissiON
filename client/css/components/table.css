@@ -62,39 +62,41 @@
 .badge-orange { background: #fff3e0; color: #e67e22; }
 .badge-red    { background: #fdecea; color: #e53935; }
 
-/* Tablo Satırı İşlem Butonları (Polish Fix) */
+/* Tablo Satırı İşlem Butonları (Pill Style with Icon + Text) */
 .btn-action {
-  padding: 8px 14px;
-  border-radius: var(--radius-md);
-  font-size: 12px;
-  font-weight: 700;
+  padding: 8px 16px;
+  height: 36px;
+  border-radius: 12px;
   cursor: pointer;
-  border: 1px solid transparent;
-  transition: all 0.2s;
+  border: none;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .btn-delete { 
-  background: #fff; 
+  background: rgba(239, 68, 68, 0.08); 
   color: var(--color-error); 
-  border-color: #fdecea;
 }
 .btn-delete:hover {
   background: var(--color-error);
   color: #fff;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
 }
 
 .btn-edit { 
-  background: #fff; 
+  background: rgba(79, 70, 229, 0.08); 
   color: var(--color-primary); 
-  border-color: #e3eaf8;
 }
 .btn-edit:hover {
   background: var(--color-primary);
   color: #fff;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
 }
 
 /* Alt Özet Alanı */

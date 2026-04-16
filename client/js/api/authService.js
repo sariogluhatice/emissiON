@@ -15,6 +15,9 @@ export class AuthService {
 
         if (response && response.token) {
             TokenManager.set(response.token, remember);
+            if (response.user) {
+                localStorage.setItem('user', JSON.stringify(response.user));
+            }
         }
         return response;
     }
@@ -24,6 +27,9 @@ export class AuthService {
         
         if (response && response.token) {
             TokenManager.set(response.token);
+            if (response.user) {
+                localStorage.setItem('user', JSON.stringify(response.user));
+            }
         }
         return response;
     }
