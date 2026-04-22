@@ -1,0 +1,88 @@
+/* AI Digital Twin Impact Box Styling */
+.ai-insight-box {
+    margin-top: 15px;
+    padding: 18px;
+    background: linear-gradient(135deg, rgba(67, 97, 238, 0.1) 0%, rgba(76, 201, 240, 0.1) 100%);
+    border: 1px solid rgba(67, 97, 238, 0.25);
+    border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(67, 97, 238, 0.05);
+    animation: slideUp 0.4s ease-out;
+}
+
+.ai-box-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    color: var(--color-primary);
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.sparkle-icon {
+    color: #4cc9f0;
+    filter: drop-shadow(0 0 3px rgba(76, 201, 240, 0.5));
+}
+
+.ai-insight-text {
+    margin: 0;
+    line-height: 1.6;
+    color: var(--color-text);
+}
+
+.insight-main {
+    font-style: italic;
+    font-size: 1rem;
+    margin-bottom: 10px;
+    color: #2b3a67;
+}
+
+.insight-tip {
+    font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.5);
+    padding: 8px 12px;
+    border-radius: 8px;
+    border-left: 3px solid #4cc9f0;
+    color: #475569;
+}
+
+.ai-insight-box.loading {
+    background: rgba(67, 97, 238, 0.03);
+    border-color: rgba(67, 97, 238, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.ai-insight-box.loading::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.4) 50%,
+        transparent 100%
+    );
+    animation: shimmer-box 1.5s infinite;
+}
+
+@keyframes shimmer-box {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(50%); }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

@@ -19,7 +19,8 @@
   },
   "homepage": "https://github.com/sariogluhatice/emissiON#readme",
   "dependencies": {
-    "bcrypt": "^6.0.0",
+    "@google/generative-ai": "^0.24.1",
+    "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.1",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",

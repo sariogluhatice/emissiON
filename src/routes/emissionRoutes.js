@@ -1,15 +1,16 @@
 const express    = require('express');
 const { authenticate } = require('../middleware/authMiddleware');
-const { getAll, create, update, remove, calculate } = require('../controllers/emissionController');
+const { getAll, create, update, remove, calculate, generateInsight } = require('../controllers/emissionController');
 
 const router = express.Router();
 
-// All emission routes require a valid JWT token
+// Tüm emisyon rotaları geçerli bir JWT token gerektirir
 router.use(authenticate);
 
 router.get('/',     getAll);    // GET    /api/emissions
 router.post('/',    create);    // POST   /api/emissions
 router.post('/calculate', calculate); // POST /api/emissions/calculate
+router.post('/generate-insight', generateInsight); // POST /api/emissions/generate-insight
 router.put('/:id',  update);    // PUT    /api/emissions/:id
 router.delete('/:id', remove);  // DELETE /api/emissions/:id
 

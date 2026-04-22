@@ -24,13 +24,7 @@ export class AuthService {
 
     async register(name, email, password) {
         const response = await this.api.post('/auth/register', { name, email, password });
-        
-        if (response && response.token) {
-            TokenManager.set(response.token);
-            if (response.user) {
-                localStorage.setItem('user', JSON.stringify(response.user));
-            }
-        }
+        // Kayıttan sonra otomatik giriş yapma, kullanıcının login sayfasına gitmesini bekliyoruz.
         return response;
     }
 

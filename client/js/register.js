@@ -23,7 +23,7 @@ const emailError    = document.getElementById('emailError');
 const passwordError = document.getElementById('passwordError');
 const confirmError  = document.getElementById('confirmPasswordError');
 
-bindFieldValidation(nameInput,     nameError,     () => validateRequired(nameInput.value, 'Full name'));
+bindFieldValidation(nameInput,     nameError,     () => validateRequired(nameInput.value, 'Ad Soyad'));
 bindFieldValidation(emailInput,    emailError,    () => validateEmail(emailInput.value));
 bindFieldValidation(passwordInput, passwordError, () => validatePassword(passwordInput.value));
 bindFieldValidation(confirmInput,  confirmError,  () => validateConfirmPassword(confirmInput.value, passwordInput.value));
@@ -36,7 +36,7 @@ function setApiMessage(text, isError) {
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  const nErr = validateRequired(nameInput.value, 'Full name');
+  const nErr = validateRequired(nameInput.value, 'Ad Soyad');
   const eErr = validateEmail(emailInput.value);
   const pErr = validatePassword(passwordInput.value);
   const cErr = validateConfirmPassword(confirmInput.value, passwordInput.value);
@@ -57,12 +57,12 @@ form.addEventListener('submit', async (e) => {
       emailInput.value.trim(),
       passwordInput.value,
     );
-    setApiMessage('Account created! Redirecting…', false);
+    setApiMessage('Hesap oluşturuldu! Giriş sayfasına yönlendiriliyorsunuz…', false);
     setTimeout(() => {
-      window.location.href = 'dashboard.html';
-    }, 1500);
+      window.location.href = 'login.html';
+    }, 2000);
   } catch (err) {
-    setApiMessage(err.message || 'Registration failed. Please try again.', true);
+    setApiMessage(err.message || 'Kayıt başarısız. Lütfen tekrar deneyin.', true);
     submitBtn.disabled = false;
   }
 });

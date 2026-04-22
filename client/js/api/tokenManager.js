@@ -9,8 +9,8 @@ export class TokenManager {
         return localStorage.getItem(this.KEY) ?? sessionStorage.getItem(this.KEY);
     }
 
-    // persistent=true  → localStorage  (survives browser close)
-    // persistent=false → sessionStorage (cleared when tab/window closes)
+    // persistent=true  → localStorage  (tarayıcı kapatılsa bile kalır)
+    // persistent=false → sessionStorage (sekme/pencere kapandığında silinir)
     static set(token, persistent = true) {
         if (persistent) {
             localStorage.setItem(this.KEY, token);

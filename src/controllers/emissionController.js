@@ -1,34 +1,56 @@
 const pool = require('../config/db');
 const climatiqService = require('../services/climatiqService');
+const aiService = require('../services/aiService');
 
-// --- CALCULATE ---
+// --- HESAPLA (CALCULATE) ---
 // POST /api/emissions/calculate
-// Body: { activityId, quantity, unit } OR { from, to, flightClass }
+// Gövde (Body): { activityId, quantity, unit, activityLabel } VEYA { from, to, flightClass }
 const calculate = async (req, res) => {
-    const { activityId, quantity, unit, from, to, flightClass } = req.body;
+    const { activityId, quantity, unit, from, to, flightClass, activityLabel } = req.body;
 
     try {
         let result;
-        // If 'from' and 'to' are provided, assume it's a flight route calculation
+        // Eğer 'from' ve 'to' sağlanmışsa, bunun bir uçuş rotası hesaplaması olduğunu varsayalım
         if (from && to) {
             result = await climatiqService.calculateFlightEmission(from, to, flightClass);
         } else {
             if (!activityId || !quantity || !unit) {
-                return res.status(400).json({ message: 'activityId, quantity and unit are required for generic calculation.' });
+                return res.status(400).json({ message: 'Genel hesaplama için activityId, miktar (quantity) ve birim (unit) gereklidir.' });
             }
             result = await climatiqService.calculateEmission(activityId, quantity, unit);
         }
         
+        // Hızlı yanıt: AI beklemeden sadece sonucu dönüyoruz
         return res.status(200).json(result);
     } catch (err) {
         console.error('[emissions.calculate]', err.message);
-        return res.status(500).json({ message: err.message || 'Climatiq calculation failed.' });
+        return res.status(500).json({ message: err.message || 'Climatiq hesaplaması başarısız oldu.' });
     }
 };
 
-// --- GET ALL ---
+/**
+ * AI İçgörüsü Oluştur (Generate AI Insight)
+ * Bağımsız bir endpoint olarak çağrılır, böylece ana hesaplamayı yavaşlatmaz.
+ */
+const generateInsight = async (req, res) => {
+    const { activityLabel, co2e, unit, category } = req.body;
+
+    if (!activityLabel || co2e === undefined || !unit) {
+        return res.status(400).json({ message: 'Eksik veri: activityLabel, co2e ve unit gereklidir.' });
+    }
+
+    try {
+        const insight = await aiService.generateImpactInsight(activityLabel, co2e, unit, category);
+        return res.status(200).json({ aiInsight: insight });
+    } catch (err) {
+        console.error('[emissions.generateInsight]', err.message);
+        return res.status(500).json({ message: 'AI içgörüsü oluşturulamadı.' });
+    }
+};
+
+// --- TÜMÜNÜ GETİR (GET ALL) ---
 // GET /api/emissions
-// Returns all emission records for the logged-in user, newest first.
+// Giriş yapmış kullanıcının tüm emisyon kayıtlarını döndürür (en yeni en başta).
 const getAll = async (req, res) => {
     try {
         const result = await pool.query(
@@ -41,24 +63,24 @@ const getAll = async (req, res) => {
         return res.status(200).json({ records: result.rows });
     } catch (err) {
         console.error('[emissions.getAll]', err.message);
-        return res.status(500).json({ message: 'Server error.' });
+        return res.status(500).json({ message: 'Sunucu hatası.' });
     }
 };
 
-// --- CREATE ---
+// --- OLUŞTUR (CREATE) ---
 // POST /api/emissions
-// Body: { source, amount, date }
+// Gövde (Body): { source, amount, date }
 const create = async (req, res) => {
     const { source: rawSource, amount, date } = req.body;
     const source = typeof rawSource === 'string' ? rawSource.trim() : '';
 
     if (!source || amount === undefined || !date) {
-        return res.status(400).json({ message: 'source, amount and date are required.' });
+        return res.status(400).json({ message: 'Kaynak (source), miktar (amount) ve tarih (date) gereklidir.' });
     }
 
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-        return res.status(400).json({ message: 'Amount must be a positive number.' });
+        return res.status(400).json({ message: 'Miktar pozitif bir sayı olmalıdır.' });
     }
 
     try {
@@ -69,16 +91,16 @@ const create = async (req, res) => {
             [req.user.id, source, parsedAmount, date]
         );
         return res.status(201).json({
-            message: 'Record created.',
+            message: 'Kayıt oluşturuldu.',
             record: result.rows[0],
         });
     } catch (err) {
         console.error('[emissions.create]', err.message);
-        return res.status(500).json({ message: 'Server error.' });
+        return res.status(500).json({ message: 'Sunucu hatası.' });
     }
 };
 
-// --- UPDATE ---
+// --- GÜNCELLE (UPDATE) ---
 // PUT /api/emissions/:id
 const update = async (req, res) => {
     const { id } = req.params;
@@ -86,12 +108,12 @@ const update = async (req, res) => {
     const source = typeof rawSource === 'string' ? rawSource.trim() : '';
 
     if (!source || amount === undefined || !date) {
-        return res.status(400).json({ message: 'source, amount and date are required.' });
+        return res.status(400).json({ message: 'Kaynak (source), miktar (amount) ve tarih (date) gereklidir.' });
     }
 
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-        return res.status(400).json({ message: 'Amount must be a positive number.' });
+        return res.status(400).json({ message: 'Miktar pozitif bir sayı olmalıdır.' });
     }
 
     try {
@@ -104,20 +126,20 @@ const update = async (req, res) => {
         );
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ message: 'Record not found.' });
+            return res.status(404).json({ message: 'Kayıt bulunamadı.' });
         }
 
         return res.status(200).json({
-            message: 'Record updated.',
+            message: 'Kayıt güncellendi.',
             record: result.rows[0],
         });
     } catch (err) {
         console.error('[emissions.update]', err.message);
-        return res.status(500).json({ message: 'Server error.' });
+        return res.status(500).json({ message: 'Sunucu hatası.' });
     }
 };
 
-// --- DELETE ---
+// --- SİL (DELETE) ---
 // DELETE /api/emissions/:id
 const remove = async (req, res) => {
     const { id } = req.params;
@@ -131,14 +153,14 @@ const remove = async (req, res) => {
         );
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ message: 'Record not found.' });
+            return res.status(404).json({ message: 'Kayıt bulunamadı.' });
         }
 
-        return res.status(200).json({ message: 'Record deleted.' });
+        return res.status(200).json({ message: 'Kayıt silindi.' });
     } catch (err) {
         console.error('[emissions.remove]', err.message);
-        return res.status(500).json({ message: 'Server error.' });
+        return res.status(500).json({ message: 'Sunucu hatası.' });
     }
 };
 
-module.exports = { getAll, create, update, remove, calculate };
+module.exports = { getAll, create, update, remove, calculate, generateInsight };

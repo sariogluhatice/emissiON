@@ -7,7 +7,7 @@ import {
   showToast 
 } from './utils/uiUtils.js';
 
-// Setup
+// Kurulum
 const user = getCurrentUser();
 if (!user) {
   window.location.href = 'login.html';
@@ -15,12 +15,12 @@ if (!user) {
 renderTopbarUser(user);
 bindLogout();
 
-// Edit Detection
+// Düzenleme Tespiti (Edit Detection)
 const params = new URLSearchParams(window.location.search);
 const editId = params.get('id');
 const isEdit = !!editId;
 
-// DOM Elements
+// DOM Elemanları (DOM Elements)
 const form         = document.getElementById('addEmissionForm');
 const submitBtn    = document.getElementById('submitBtn');
 const categoryEl   = document.getElementById('category');
@@ -29,10 +29,26 @@ const dateEl       = document.getElementById('date');
 const pageTitle    = document.getElementById('pageTitle');
 const pageDesc     = document.getElementById('pageDesc');
 
+// Tarih Kısıtlaması (Date Limitation) - Gelecek ve çok eski tarihler seçilemesin
+if (dateEl) {
+  const now = new Date();
+  const today = now.toISOString().split('T')[0];
+  
+  // 1 yıl öncesini sınır olarak belirle
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(now.getFullYear() - 1);
+  const minDate = oneYearAgo.toISOString().split('T')[0];
+
+  dateEl.setAttribute('max', today);
+  dateEl.setAttribute('min', minDate); // 1 yıldan daha eskiye izin verme
+  
+  if (!isEdit) dateEl.value = today; // Yeni kayıtlarda varsayılan bugünü seç
+}
+
 if (isEdit) {
-    if (pageTitle) pageTitle.textContent = 'Edit Emission Entry';
-    if (pageDesc)  pageDesc.textContent  = 'Modify your existing activity record below.';
-    if (submitBtn) submitBtn.textContent = 'Update Record';
+    if (pageTitle) pageTitle.textContent = 'Emisyon Kaydını Düzenle';
+    if (pageDesc)  pageDesc.textContent  = 'Mevcut aktivite kaydınızı aşağıdan güncelleyebilirsiniz.';
+    if (submitBtn) submitBtn.textContent = 'Kaydı Güncelle';
 }
 
 const climatiqBox  = document.getElementById('climatiqBox');
@@ -48,30 +64,33 @@ const calcStatus   = document.getElementById('calcStatus');
 const originEl     = document.getElementById('origin');
 const destEl       = document.getElementById('destination');
 
-// Climatiq Activity Mapping
+// AI Elements
+const aiInsightBox  = document.getElementById('aiInsightBox');
+const aiInsightText = document.getElementById('aiInsightText');
+
+// Climatiq Aktivite Eşleşmeleri
 const ACTIVITY_MAP = {
   Energy: [
-    { id: 'electricity-supply_grid-source_supplier_mix', label: 'Electricity (Grid Mix)', unit: 'kWh' },
-    { id: 'fuel-type_gaseous_fuels_net-fuel_use_na', label: 'Natural Gas', unit: 'kWh' }
+    { id: 'electricity-supply_grid-source_supplier_mix', label: 'Elektrik (Şebeke Karışımı)', unit: 'kWh' },
+    { id: 'fuel-type_gaseous_fuels_net-fuel_use_na', label: 'Doğalgaz', unit: 'kWh' }
   ],
   Transport: [
-    { id: 'passenger_vehicle-vehicle_type_car-fuel_source_petrol-engine_size_na-vehicle_age_na-vehicle_weight_na', label: 'Petrol Car', unit: 'km' },
-    { id: 'passenger_vehicle-vehicle_type_car-fuel_source_diesel-engine_size_na-vehicle_age_na-vehicle_weight_na', label: 'Diesel Car', unit: 'km' }
+    { id: 'passenger_vehicle-vehicle_type_car-fuel_source_petrol-engine_size_na-vehicle_age_na-vehicle_weight_na', label: 'Benzinli Araç', unit: 'km' },
+    { id: 'passenger_vehicle-vehicle_type_car-fuel_source_diesel-engine_size_na-vehicle_age_na-vehicle_weight_na', label: 'Dizel Araç', unit: 'km' }
   ],
   Flight: [
-    { id: 'transport_flight-passenger_flight-type_domestic-distance_na', label: 'Domestic Flight (KM)', unit: 'km' },
-    { id: 'transport_flight-passenger_flight-type_short_haul-distance_na', label: 'Short Haul (KM)', unit: 'km' },
-    { id: 'transport_flight-passenger_flight-type_long_haul-distance_na', label: 'Long Haul (KM)', unit: 'km' }
+    { id: 'transport_flight-passenger_flight-type_domestic-distance_na', label: 'Yurtiçi Uçuş (KM)', unit: 'km' },
+    { id: 'transport_flight-passenger_flight-type_short_haul-distance_na', label: 'Kısa Mesafe Uçuş (KM)', unit: 'km' },
+    { id: 'transport_flight-passenger_flight-type_long_haul-distance_na', label: 'Uzun Mesafe Uçuş (KM)', unit: 'km' }
   ],
   Other: [
-    { id: 'general_retail-type_nonstore_retailers', label: 'Shopping / General Retail', unit: 'usd' },
-    { id: 'waste_management-type_solid_waste_disposal-disposal_method_managed_waste_disposal_sites', label: 'General Waste', unit: 'kg' },
-    { id: 'paper_and_cardboard-type_paper_average_source', label: 'Paper Consumption', unit: 'kg' },
-    { id: 'water_supply-type_na', label: 'Water Usage', unit: 'l' }
+    { id: 'general_retail-type_nonstore_retailers', label: 'Alışveriş / Genel Perakende', unit: 'usd' },
+    { id: 'waste_management-type_solid_waste_disposal-disposal_method_managed_waste_disposal_sites', label: 'Genel Atık', unit: 'kg' },
+    { id: 'paper_and_cardboard-type_paper_average_source', label: 'Kağıt Tüketimi', unit: 'kg' },
+    { id: 'water_supply-type_na', label: 'Su Kullanımı', unit: 'l' }
   ]
 };
 
-// Category Change -> ADAPTIVE UI SWITCH
 categoryEl.addEventListener('change', () => {
   const cat = categoryEl.value;
   
@@ -80,6 +99,10 @@ categoryEl.addEventListener('change', () => {
   amountEl.classList.remove('calculated');
   calcStatus.className = 'calc-status';
   calcStatus.textContent = '';
+
+  // Reset AI box
+  if (aiInsightBox) aiInsightBox.style.display = 'none';
+  if (aiInsightText) aiInsightText.textContent = '';
 
   if (ACTIVITY_MAP[cat]) {
     climatiqBox.style.display = 'block';
@@ -92,9 +115,9 @@ categoryEl.addEventListener('change', () => {
       flightBlock.style.display = 'none';
     }
     
-    // Populate activities
+    // Aktiviteleri doldur
     const activities = ACTIVITY_MAP[cat];
-    activityEl.innerHTML = '<option value="">Select an activity…</option>';
+    activityEl.innerHTML = '<option value="">Bir aktivite seçin…</option>';
     activities.forEach(acc => {
       const opt = document.createElement('option');
       opt.value = acc.id;
@@ -103,7 +126,7 @@ categoryEl.addEventListener('change', () => {
       activityEl.appendChild(opt);
     });
 
-    // Default to first activity and its unit
+    // İlk aktiviteyi ve birimini varsayılan yap
     if (activities.length > 0) {
       activityEl.selectedIndex = 1;
       unitLabel.textContent = activities[0].unit;
@@ -113,7 +136,7 @@ categoryEl.addEventListener('change', () => {
   }
 });
 
-// Activity Change -> Update Unit and trigger calc
+// Aktivite Değişimi -> Birimi güncelle ve hesaplamayı tetikle
 activityEl.addEventListener('change', () => {
   const selected = activityEl.options[activityEl.selectedIndex];
   if (selected && selected.dataset.unit) {
@@ -122,7 +145,7 @@ activityEl.addEventListener('change', () => {
   triggerCalculation();
 });
 
-// Auto Calculation Trigger
+// Otomatik Hesaplama Tetikleyici
 const triggerCalculation = async () => {
   const cat = categoryEl.value;
   let payload = {};
@@ -133,27 +156,30 @@ const triggerCalculation = async () => {
       const to = destEl.value.trim().toUpperCase();
       if (from.length < 3 || to.length < 3) {
         calcStatus.className = 'calc-status';
-        calcStatus.textContent = 'Awaiting route (e.g. IST to LHR)...';
+        calcStatus.textContent = 'Rota bekleniyor (örn. IST -> LHR)...';
         return;
       }
-      payload = { from, to };
+      payload = { from, to, category: cat };
     } else {
       const activityId = activityEl.value;
-      const quantity = parseFloat(quantityEl.value);
-      const unit = unitLabel.textContent;
+      const quantity   = parseFloat(quantityEl.value);
+      const unit       = unitLabel.textContent;
+      const label      = activityEl.options[activityEl.selectedIndex]?.textContent || '';
       
       if (!activityId || isNaN(quantity) || quantity <= 0) {
         amountEl.value = '';
         amountEl.classList.remove('calculated');
+        if (aiInsightBox) aiInsightBox.style.display = 'none';
         return;
       }
-      payload = { activityId, quantity, unit };
+      payload = { activityId, quantity, unit, activityLabel: label, category: cat };
     }
 
     calcStatus.className = 'calc-status loading';
-    calcStatus.textContent = 'Calculating carbon footprint...';
+    calcStatus.textContent = 'Karbon ayak izi hesaplanıyor...';
     amountEl.classList.remove('calculated');
 
+    // 1. Hızlı Hesaplama (Backend /api/emissions/calculate)
     const response = await fetch('/api/emissions/calculate', {
       method: 'POST',
       headers: {
@@ -169,23 +195,72 @@ const triggerCalculation = async () => {
         throw new Error(result.message || `Server Error (${response.status})`);
     }
 
+    // Ana miktar sonucunu hemen göster
     amountEl.value = result.co2e.toFixed(2);
     amountEl.classList.add('calculated');
-    
-    // Success: Clear the status message to avoid redundancy (Delete the green)
     calcStatus.className = 'calc-status';
     calcStatus.textContent = '';
+
+    // 2. AI İçgörüsü Hazırlığı (Lazy Loading)
+    if (aiInsightBox && aiInsightText) {
+      aiInsightBox.style.display = 'block';
+      aiInsightBox.classList.add('loading');
+      aiInsightText.innerHTML = '<div class="insight-main" style="opacity:0.6;">AI Diijital İkiziniz verileri analiz ediyor...</div>';
+
+      try {
+        // AI için gerekli etiketi belirle
+        const from = originEl.value.trim().toUpperCase();
+        const to = destEl.value.trim().toUpperCase();
+        const displayLabel = (cat === 'Flight') 
+          ? `Uçuş (${from} - ${to})` 
+          : (activityEl.options[activityEl.selectedIndex]?.textContent || 'Bilinmeyen Aktivite');
+
+        const insightRes = await fetch('/api/emissions/generate-insight', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${TokenManager.get() || ''}`
+          },
+          body: JSON.stringify({
+            activityLabel: displayLabel,
+            co2e: result.co2e,
+            unit: result.unit,
+            category: cat
+          })
+        });
+
+        const insightData = await insightRes.json();
+        
+        aiInsightBox.classList.remove('loading');
+
+        if (insightData.aiInsight) {
+          const parts = insightData.aiInsight.split('Tip:');
+          const insight = parts[0].replace('Insight:', '').trim();
+          const tip = parts[1] ? parts[1].trim() : '';
+
+          aiInsightText.innerHTML = `
+            <div class="insight-main">${insight}</div>
+            ${tip ? `<div class="insight-tip"><strong>💡 Öneri:</strong> ${tip}</div>` : ''}
+          `;
+        } else {
+          aiInsightBox.style.display = 'none';
+        }
+      } catch (aiErr) {
+        console.error('Lazy AI loading failed:', aiErr);
+        aiInsightBox.style.display = 'none';
+      }
+    }
     
   } catch (err) {
     console.error('Calculation flow error:', err);
     calcStatus.className = 'calc-status error';
     
-    // User-friendly fallback message
+    // Kullanıcı dostu hata mesajı
     let friendlyMsg = `⚠ ${err.message}`;
     if (err.message.includes('No emission factors')) {
-      friendlyMsg = '⚠ Selected activity is not supported for this region yet.';
+      friendlyMsg = '⚠ Seçilen aktivite henüz bu bölge için desteklenmiyor.';
     } else if (err.message.includes('Failed to fetch')) {
-      friendlyMsg = '⚠ Connection error. Please check your internet.';
+      friendlyMsg = '⚠ Bağlantı hatası. Lütfen internetinizi kontrol edin.';
     }
     
     calcStatus.textContent = friendlyMsg;
@@ -194,7 +269,7 @@ const triggerCalculation = async () => {
   }
 };
 
-/** Debounce utility to prevent too many API calls while typing */
+/** Yazarken çok fazla API çağrısını önlemek için geciktirme (debounce) fonksiyonu */
 function debounce(fn, ms) {
   let timeout;
   return (...args) => {
@@ -210,7 +285,7 @@ quantityEl.addEventListener('input', debouncedCalc);
 originEl.addEventListener('input', debouncedCalc);
 destEl.addEventListener('input', debouncedCalc);
 
-// Validation
+// Doğrulama (Validation)
 function validate() {
   let ok = true;
   ['category','amount','date'].forEach(id => {
@@ -219,22 +294,22 @@ function validate() {
   });
 
   if (!categoryEl.value) {
-    document.getElementById('categoryError').textContent = 'Please select a category.';
+    document.getElementById('categoryError').textContent = 'Lütfen bir kategori seçin.';
     ok = false;
   }
   const amt = parseFloat(amountEl.value);
   if (!amountEl.value || isNaN(amt) || amt <= 0) {
-    document.getElementById('amountError').textContent = 'Please enter or calculate an amount.';
+    document.getElementById('amountError').textContent = 'Lütfen bir miktar girin veya hesaplatın.';
     ok = false;
   }
   if (!dateEl.value) {
-    document.getElementById('dateError').textContent = 'Please select a date.';
+    document.getElementById('dateError').textContent = 'Lütfen bir tarih seçin.';
     ok = false;
   }
   return ok;
 }
 
-// Pre-fill Logic for Edit Mode
+// Düzenleme Modu için Ön Doldurma Mantığı
 if (isEdit) {
     (async () => {
         try {
@@ -279,16 +354,16 @@ form.addEventListener('submit', async (e) => {
   if (!validate()) return;
 
   submitBtn.disabled = true;
-  submitBtn.textContent = isEdit ? 'Updating...' : 'Saving...';
+  submitBtn.textContent = isEdit ? 'Güncelleniyor...' : 'Kaydediliyor...';
 
   try {
-    // Determine a descriptive "source" for the record
+    // Kayıt için açıklayıcı bir "kaynak" (source) belirle
     let source = categoryEl.value; 
     const fromInput = originEl.value.trim();
     const toInput   = destEl.value.trim();
 
     if (fromInput && toInput) {
-      source = `Flight: ${fromInput.toUpperCase()}-${toInput.toUpperCase()}`;
+      source = `Uçuş: ${fromInput.toUpperCase()}-${toInput.toUpperCase()}`;
     } else {
       const catList = ACTIVITY_MAP[categoryEl.value];
       if (catList) {
@@ -297,10 +372,9 @@ form.addEventListener('submit', async (e) => {
       }
     }
 
-    // Bug Fix: If source is still just "Food" or "Shopping" or generic category, 
-    // it's better than empty, but let's ensure it's valid.
+    // Hata Giderme: Eğer kaynak hala genel kategoriyse, boş kalmasından iyidir.
     if (!source || source === "") {
-        source = categoryEl.value || "Other Activity";
+        source = categoryEl.value || "Diğer Aktivite";
     }
 
     const payload = {
@@ -311,16 +385,16 @@ form.addEventListener('submit', async (e) => {
 
     if (isEdit) {
         await emissionService.update(editId, payload);
-        showToast('Updated!', 'Record updated successfully.', 'success');
+        showToast('Güncellendi!', 'Kayıt başarıyla güncellendi.', 'success');
     } else {
         await emissionService.create(payload);
-        showToast('Success!', 'Emission record created successfully.', 'success');
+        showToast('Başarılı!', 'Emisyon kaydı başarıyla oluşturuldu.', 'success');
     }
     
     setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
   } catch (err) {
-    showToast('Error!', err.message || 'Failed to save record.', 'error');
+    showToast('Hata!', err.message || 'Kayıt kaydedilemedi.', 'error');
     submitBtn.disabled = false;
-    submitBtn.textContent = isEdit ? 'Update Record' : 'Save Entry';
+    submitBtn.textContent = isEdit ? 'Kaydı Güncelle' : 'Kaydet';
   }
 });

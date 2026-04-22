@@ -1,7 +1,7 @@
 const { Pool } = require('pg');
 
-// Pool manages multiple DB connections efficiently.
-// It reuses connections instead of opening a new one per query.
+// Pool (Havuz), birden fazla veritabanı bağlantısını verimli bir şekilde yönetir.
+// Her sorgu için yeni bir bağlantı açmak yerine mevcut bağlantıları tekrar kullanır.
 const pool = new Pool({
     host:     process.env.DB_HOST,
     port:     process.env.DB_PORT,

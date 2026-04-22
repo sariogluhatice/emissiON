@@ -22,11 +22,11 @@ bindFieldValidation(emailInput,    emailError,    () => validateEmail(emailInput
 bindFieldValidation(passwordInput, passwordError, () => validatePassword(passwordInput.value, 1));
 
 forgotPasswordBtn.addEventListener('click', () => {
-  const email = window.prompt('Enter your email address and we will send you a reset link:');
-  if (email === null) return; // user cancelled
+  const email = window.prompt('E-posta adresinizi girin, size bir sıfırlama bağlantısı gönderelim:');
+  if (email === null) return; // kullanıcı iptal etti
   apiMessage.textContent = email.trim()
-    ? 'If this email is registered, a password reset link has been sent.'
-    : 'Please enter a valid email address.';
+    ? 'Eğer bu e-posta kayıtlıysa, şifre sıfırlama bağlantısı gönderilmiştir.'
+    : 'Lütfen geçerli bir e-posta adresi girin.';
   apiMessage.className = 'api-message is-success';
 });
 
@@ -51,12 +51,12 @@ form.addEventListener('submit', async (e) => {
 
   try {
     await authService.login(emailInput.value.trim(), passwordInput.value, rememberMeInput.checked);
-    setApiMessage('Login successful! Redirecting…', false);
+    setApiMessage('Giriş başarılı! Yönlendiriliyorsunuz…', false);
     setTimeout(() => {
       window.location.href = 'dashboard.html';
     }, 1000);
   } catch (err) {
-    setApiMessage(err.message || 'Login failed. Please try again.', true);
+    setApiMessage(err.message || 'Giriş başarısız. Lütfen tekrar deneyin.', true);
     submitBtn.disabled = false;
   }
 });

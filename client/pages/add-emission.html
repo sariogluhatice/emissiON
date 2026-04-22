@@ -23,10 +23,6 @@
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
             My Emissions
           </a>
-          <a href="add-emission.html"  class="nav-item active" id="nav-add">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
-            Add Entry
-          </a>
           <a href="profile.html"       class="nav-item" id="nav-profile">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
             Profile
@@ -119,6 +115,15 @@
                   <span style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: 700; color: var(--color-text-muted); pointer-events: none;">kg CO₂e</span>
                 </div>
                 <span class="error-msg" id="amountError"></span>
+              </div>
+
+              <!-- AI İçgörü Kutusu (AI Insight Box) -->
+              <div id="aiInsightBox" class="ai-insight-box" style="display:none;">
+                <div class="ai-box-header">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sparkle-icon"><path d="M12 3l1.91 5.81L21 9l-5.81 1.91L12 21l-1.91-5.81L3 15l5.81-1.91z"/></svg>
+                  <span>AI Digital Twin Insight</span>
+                </div>
+                <p id="aiInsightText" class="ai-insight-text"></p>
               </div>
 
               <!-- 4. Tarih -->

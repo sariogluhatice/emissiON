@@ -1,13 +1,13 @@
 /**
- * Service to interface with Climatiq API.
- * Uses native fetch available in Node 18+
+ * Climatiq API ile iletişim kuran servis.
+ * Node 18+ sürümünde bulunan yerleşik fetch fonksiyonunu kullanır.
  */
 class ClimatiqService {
     constructor() {
         this.apiKey = process.env.CLIMATIQ_API_KEY;
     }
 
-    /** Generic estimation */
+    /** Genel emisyon tahmini */
     async calculateEmission(activityId, quantity, unit) {
         const url = 'https://api.climatiq.io/data/v1/estimate';
         const payload = {
@@ -24,7 +24,7 @@ class ClimatiqService {
         return this._post(url, payload);
     }
 
-    /** Specialized estimation for Flights (Local Distance Bypass) */
+    /** Uçuşlar için özelleştirilmiş tahmin (Yerel Mesafe Hesaplamalı) */
     async calculateFlightEmission(from, to, flightClass = 'economy') {
         const airports = require('../data/airports.json');
         const { calculateDistance } = require('../utils/geoUtils');
@@ -33,7 +33,7 @@ class ClimatiqService {
             const code = input.trim().toUpperCase();
             if (airports[code]) return airports[code];
             
-            // Search by name if code not found
+            // Kod bulunamazsa isme göre ara
             const entry = Object.values(airports).find(a => 
                 a.name.toLowerCase().includes(input.toLowerCase())
             );
@@ -44,12 +44,12 @@ class ClimatiqService {
         const end   = findAirport(to);
 
         if (!start || !end) {
-            throw new Error(`Airport not found for "${!start ? from : to}". Please use codes (e.g. IST) or common names.`);
+            throw new Error(`"${!start ? from : to}" için havalimanı bulunamadı. Lütfen IATA kodlarını (örn. IST) veya bilinen isimleri kullanın.`);
         }
 
         const distance = calculateDistance(start.lat, start.lon, end.lat, end.lon);
         
-        // Determine Haul Type based on verified BEIS IDs
+        // Doğrulanmış BEIS ID'lerine dayanarak Uçuş Tipini belirle
         let activityId = 'passenger_flight-route_type_international-aircraft_type_na-distance_short_haul_lt_3700km-class_na-rf_included-distance_uplift_included';
         if (distance < 1000) {
             activityId = 'passenger_flight-route_type_domestic-aircraft_type_na-distance_na-class_na-rf_included-distance_uplift_included';
@@ -60,9 +60,9 @@ class ClimatiqService {
         return this.calculateEmission(activityId, distance, 'km');
     }
 
-    /** Private helper for API requests */
+    /** API istekleri için özel yardımcı fonksiyon */
     async _post(url, payload) {
-        if (!this.apiKey) throw new Error('CLIMATIQ_API_KEY is missing.');
+        if (!this.apiKey) throw new Error('CLIMATIQ_API_KEY eksik.');
 
         const response = await fetch(url, {
             method: 'POST',
@@ -75,7 +75,7 @@ class ClimatiqService {
 
         const data = await response.json();
         if (!response.ok) {
-            throw new Error(data.message || 'Climatiq API error');
+            throw new Error(data.message || 'Climatiq API hatası');
         }
 
         return {

@@ -9,7 +9,7 @@ import {
   formatDate,
 } from './utils/uiUtils.js';
 
-// Guard: redirect to login if not authenticated
+// Koruma: Kimlik doğrulaması yapılmamışsa giriş sayfasına yönlendir
 if (!TokenManager.exists()) {
   window.location.href = 'login.html';
 }
@@ -20,7 +20,7 @@ renderTopbarUser(user);
 bindLogout();
 
 const welcomeEl = document.getElementById('welcomeName');
-if (welcomeEl) welcomeEl.textContent = user?.name ? user.name.split(' ')[0] : 'there';
+if (welcomeEl) welcomeEl.textContent = user?.name ? user.name.split(' ')[0] : 'Misafir';
 
 const recordList = document.getElementById('recordList');
 
@@ -37,13 +37,13 @@ function createCard(record) {
     </div>
     <span class="record-amount">${parseFloat(record.amount).toFixed(1)} kg CO₂</span>
     <div class="record-actions" style="display:flex; gap:10px;">
-      <a href="add-emission.html?id=${record.id}" class="btn-action btn-edit" title="Edit Entry">
+      <a href="add-emission.html?id=${record.id}" class="btn-action btn-edit" title="Kaydı Düzenle">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path></svg>
-        Edit
+        Düzenle
       </a>
-      <button class="btn-action btn-delete" data-delete="${record.id}" title="Delete Entry">
+      <button class="btn-action btn-delete" data-delete="${record.id}" title="Kaydı Sil">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-        Delete
+        Sil
       </button>
     </div>
   `;
@@ -78,7 +78,7 @@ async function initDashboard() {
     }
 
   } catch (err) {
-    console.error('Failed to load dashboard data:', err);
+    console.error('Panel verileri yüklenemedi:', err);
   }
 }
 
@@ -88,13 +88,13 @@ if (recordList) {
     const id = e.target.dataset.delete;
     if (!id) return;
 
-    if (!confirm('Delete this record?')) return;
+    if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
 
     try {
       await emissionService.remove(id);
       await initDashboard(); // Re-fetch to update stats and list
     } catch {
-      alert('Failed to delete record.');
+      alert('Kayıt silinemedi.');
     }
   });
 }
@@ -116,8 +116,8 @@ function initChart(data) {
     ctx.parentElement.innerHTML = `
       <div style="text-align:center; padding: 40px 20px; color: var(--color-text-muted);">
         <p style="font-size:32px; margin-bottom:12px;">🌱</p>
-        <p style="font-size:14px; font-weight:500;">No emission records yet.</p>
-        <p style="font-size:13px; margin-top:4px;">Add your first entry to see visualizations →</p>
+        <p style="font-size:14px; font-weight:500;">Henüz emisyon kaydı yok.</p>
+        <p style="font-size:13px; margin-top:4px;">Görselleştirmeyi görmek için ilk kaydınızı ekleyin →</p>
       </div>`;
     return;
   }

@@ -8,23 +8,23 @@ const emissionRoutes = require('./routes/emissionRoutes');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
-// Parse incoming JSON request bodies
+// Gelen JSON istek gövdelerini ayrıştır (parse et)
 app.use(express.json());
 
-// Serve client files as static assets
+// İstemci (frontend) dosyalarını statik varlıklar olarak sun
 app.use(express.static(path.join(__dirname, '..', 'client')));
 
-// Mount auth routes under /api/auth
+// Kimlik doğrulama rotalarını /api/auth altına bağla
 app.use('/api/auth',     authRoutes);
 
-// Mount emission record routes under /api/emissions
+// Emisyon kaydı rotalarını /api/emissions altına bağla
 app.use('/api/emissions', emissionRoutes);
 
-// Health check — useful to confirm the server is running
+// Sağlık kontrolü (Health check) — sunucunun çalıştığını teyit etmek için yararlıdır
 app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
 });
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Sunucu ${PORT} portunda çalışıyor`);
 });
