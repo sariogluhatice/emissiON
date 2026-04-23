@@ -4,28 +4,72 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Profile – EmissiON</title>
-    <meta name="description" content="View and update your EmissiON account profile." />
+    <meta
+      name="description"
+      content="View and update your EmissiON account profile."
+    />
     <!-- Tüm sayfalar için ortak ana stil dosyası -->
     <link rel="stylesheet" href="../css/main.css" />
   </head>
   <body>
     <div class="app-shell">
-
       <!-- Sidebar (Yan Menü) Bölümü -->
       <aside class="sidebar">
         <div class="sidebar-brand">EMISSON</div>
         <nav class="sidebar-nav">
-          <a href="dashboard.html"     class="nav-item" id="nav-dashboard">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          <a href="dashboard.html" class="nav-item" id="nav-dashboard">
+            <svg
+              class="nav-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+            </svg>
             Dashboard
           </a>
-          <a href="emissions.html"     class="nav-item" id="nav-emissions">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+          <a href="emissions.html" class="nav-item" id="nav-emissions">
+            <svg
+              class="nav-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M3 3h18v18H3z" />
+              <path d="M3 9h18M3 15h18M9 3v18" />
+            </svg>
             My Emissions
           </a>
-          <a href="profile.html"       class="nav-item active" id="nav-profile">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          <a href="profile.html" class="nav-item active" id="nav-profile">
+            <svg
+              class="nav-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+            </svg>
             Profile
+          </a>
+          <a href="ocr-import.html" class="nav-item" id="nav-ocr">
+            <svg
+              class="nav-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M4 4h16v16H4z" />
+              <path d="M8 8h8M8 12h8M8 16h5" />
+            </svg>
+            OCR Import
           </a>
         </nav>
         <div class="sidebar-footer">
@@ -52,8 +96,10 @@
           <div class="profile-grid">
             <!-- Profil Kartı (Avatar ve Kimlik Bilgileri) -->
             <div class="profile-avatar-card">
-              <div class="profile-avatar-circle" id="profileAvatarCircle">?</div>
-              <div class="profile-name"  id="profileName">—</div>
+              <div class="profile-avatar-circle" id="profileAvatarCircle">
+                ?
+              </div>
+              <div class="profile-name" id="profileName">—</div>
               <div class="profile-email" id="profileEmail">—</div>
               <span class="profile-role-badge" id="profileRole">user</span>
               <div class="profile-since" id="profileSince">Member since —</div>
@@ -67,29 +113,66 @@
                 </div>
                 <div class="form-group">
                   <label class="label" for="profileNameInput">Full Name</label>
-                  <input class="input" type="text" id="profileNameInput" readonly />
+                  <input
+                    class="input"
+                    type="text"
+                    id="profileNameInput"
+                    readonly
+                  />
                 </div>
                 <div class="form-group">
-                  <label class="label" for="profileEmailInput">Email Address</label>
-                  <input class="input" type="email" id="profileEmailInput" readonly />
+                  <label class="label" for="profileEmailInput"
+                    >Email Address</label
+                  >
+                  <input
+                    class="input"
+                    type="email"
+                    id="profileEmailInput"
+                    readonly
+                  />
                 </div>
                 <div class="form-group">
-                  <label class="label" for="profileRoleInput">Account Role</label>
-                  <input class="input" type="text" id="profileRoleInput" readonly />
+                  <label class="label" for="profileRoleInput"
+                    >Account Role</label
+                  >
+                  <input
+                    class="input"
+                    type="text"
+                    id="profileRoleInput"
+                    readonly
+                  />
                 </div>
                 <div class="form-group">
-                  <label class="label" for="profileCreatedInput">Join Date</label>
-                  <input class="input" type="text" id="profileCreatedInput" readonly />
+                  <label class="label" for="profileCreatedInput"
+                    >Join Date</label
+                  >
+                  <input
+                    class="input"
+                    type="text"
+                    id="profileCreatedInput"
+                    readonly
+                  />
                 </div>
               </div>
 
               <!-- Emisyon Özeti -->
               <div class="content-card">
                 <div class="content-card-header">
-                  <span class="content-card-title">Emission Activity Overview</span>
+                  <span class="content-card-title"
+                    >Emission Activity Overview</span
+                  >
                 </div>
-                <p style="font-size:13px; color:var(--color-text-muted); margin-bottom: 24px;">Kullanım alışkanlıklarınızın karbon ayak iziniz üzerindeki genel etkisi.</p>
-                <div class="card-grid" style="margin-bottom:0;">
+                <p
+                  style="
+                    font-size: 13px;
+                    color: var(--color-text-muted);
+                    margin-bottom: 24px;
+                  "
+                >
+                  Kullanım alışkanlıklarınızın karbon ayak iziniz üzerindeki
+                  genel etkisi.
+                </p>
+                <div class="card-grid" style="margin-bottom: 0">
                   <div class="stat-card">
                     <span class="stat-label">Toplam Emisyon</span>
                     <span class="stat-value" id="profileStatTotal">—</span>

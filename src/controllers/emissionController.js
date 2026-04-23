@@ -1,6 +1,32 @@
 const pool = require('../config/db');
 const climatiqService = require('../services/climatiqService');
 const aiService = require('../services/aiService');
+const textractService = require('../services/textractService');
+
+const normalizeExtractedBillData = (raw = {}) => {
+    const allowedCategories = ['electricity', 'water', 'natural_gas'];
+    const category = allowedCategories.includes(raw.category) ? raw.category : null;
+
+    const quantity = Number(raw.quantity);
+    const normalizedQuantity = Number.isFinite(quantity) && quantity > 0 ? quantity : null;
+
+    const unit = typeof raw.unit === 'string' && raw.unit.trim() ? raw.unit.trim() : null;
+
+    const activityType = typeof raw.activity_type === 'string' && raw.activity_type.trim()
+        ? raw.activity_type.trim()
+        : null;
+
+    const dateMatch = String(raw.date || '').match(/^\d{4}-\d{2}$/);
+    const date = dateMatch ? dateMatch[0] : null;
+
+    return {
+        category,
+        activity_type: activityType,
+        quantity: normalizedQuantity,
+        unit,
+        date,
+    };
+};
 
 // --- HESAPLA (CALCULATE) ---
 // POST /api/emissions/calculate
@@ -45,6 +71,67 @@ const generateInsight = async (req, res) => {
     } catch (err) {
         console.error('[emissions.generateInsight]', err.message);
         return res.status(500).json({ message: 'AI içgörüsü oluşturulamadı.' });
+    }
+};
+
+// --- OCR FATURA VERI CIKARIMI ---
+// POST /api/emissions/extract-ocr
+// Govde (Body): { ocrText }
+const extractOcrBillData = async (req, res) => {
+    const { ocrText } = req.body;
+
+    if (!ocrText || String(ocrText).trim().length < 20) {
+        return res.status(400).json({ message: 'OCR metni gecersiz veya cok kisa.' });
+    }
+
+    try {
+        const extracted = await aiService.extractUtilityBillData(ocrText);
+        const normalized = normalizeExtractedBillData(extracted);
+
+        return res.status(200).json({ extracted: normalized });
+    } catch (err) {
+        console.error('[emissions.extractOcrBillData]', err.message);
+        return res.status(500).json({ message: err.message || 'OCR veri cikarma basarisiz oldu.' });
+    }
+};
+
+// --- AWS TEXTRACT + AI VERI CIKARIMI ---
+// POST /api/emissions/extract-ocr-image
+// Govde (Body): { imageBase64 }
+const extractOcrFromImage = async (req, res) => {
+    const { imageBase64 } = req.body;
+
+    if (!imageBase64 || String(imageBase64).length < 100) {
+        return res.status(400).json({ message: 'Gorsel verisi gecersiz veya eksik.' });
+    }
+
+    try {
+        const mimeTypeMatch = String(imageBase64).match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,/i);
+        const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : 'image/jpeg';
+
+        const uploaded = await textractService.uploadImageToS3(imageBase64, mimeType);
+        const ocrText = await textractService.extractTextFromS3Object(uploaded.bucket, uploaded.key);
+
+        if (!ocrText || ocrText.length < 20) {
+            return res.status(200).json({
+                ocrText: ocrText || '',
+                extracted: {
+                    category: null,
+                    activity_type: null,
+                    quantity: null,
+                    unit: null,
+                    date: null,
+                }
+            });
+        }
+
+        const extracted = await aiService.extractUtilityBillData(ocrText);
+        const normalized = normalizeExtractedBillData(extracted);
+
+        return res.status(200).json({ ocrText, extracted: normalized, source: uploaded });
+    } catch (err) {
+        console.error('[emissions.extractOcrFromImage]', err.message);
+        return res.status(500).json({ message: err.message || 'Textract OCR islemi basarisiz oldu.' });
     }
 };
 
@@ -163,4 +250,4 @@ const remove = async (req, res) => {
     }
 };
 
-module.exports = { getAll, create, update, remove, calculate, generateInsight };
+module.exports = { getAll, create, update, remove, calculate, generateInsight, extractOcrBillData, extractOcrFromImage };

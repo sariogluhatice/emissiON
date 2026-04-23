@@ -53,6 +53,95 @@ class AiService {
             return "Karbon ayak iziniz hesaplandı, ancak şu an AI kıyaslaması yapılamıyor.";
         }
     }
+
+    async extractUtilityBillData(ocrText) {
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+            throw new Error('GEMINI_API_KEY tanimli degil.');
+        }
+
+        const safeText = String(ocrText || '').trim();
+        if (!safeText) {
+            throw new Error('OCR metni bos.');
+        }
+
+        const prompt = `You are a data extraction assistant for a carbon footprint tracking system.
+
+Your task is to extract structured data from OCR text of a utility bill and map it to the system's input fields.
+
+Return ONLY JSON.
+
+Fields to extract:
+- category (electricity, water, natural_gas)
+- activity_type (simple normalized label)
+- quantity (numeric consumption value)
+- unit (kWh, m3, l, etc.)
+- date (YYYY-MM if possible)
+
+Rules:
+- Map bill type to category:
+  electricity -> electricity
+  water -> water
+  gas -> natural_gas
+- Extract TOTAL consumption value (not daily or partial)
+- Normalize units (kWh, m3, l)
+- If multiple dates exist, choose billing period
+- If unsure, return null for that field
+- Do NOT explain anything
+
+OCR TEXT:
+"""
+${safeText.slice(0, 12000)}
+"""`;
+
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    temperature: 0.1,
+                    responseMimeType: 'application/json'
+                }
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            console.error('[AiService.extractUtilityBillData] API Error:', data);
+            throw new Error(data.error?.message || 'AI veri cikarma basarisiz oldu.');
+        }
+
+        const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!rawText) {
+            throw new Error('AI yaniti bos geldi.');
+        }
+
+        const cleaned = rawText
+            .replace(/^```json\s*/i, '')
+            .replace(/^```\s*/i, '')
+            .replace(/```\s*$/i, '')
+            .trim();
+
+        let parsed;
+        try {
+            parsed = JSON.parse(cleaned);
+        } catch (err) {
+            console.error('[AiService.extractUtilityBillData] Parse Error:', cleaned);
+            throw new Error('AI yaniti JSON formatinda degil.');
+        }
+
+        return {
+            category: parsed?.category ?? null,
+            activity_type: parsed?.activity_type ?? null,
+            quantity: typeof parsed?.quantity === 'number' ? parsed.quantity : (parsed?.quantity ? Number(parsed.quantity) : null),
+            unit: parsed?.unit ?? null,
+            date: parsed?.date ?? null,
+        };
+    }
 }
 
 module.exports = new AiService();

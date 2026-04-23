@@ -1,0 +1,59 @@
+/* OCR import page specific styles */
+.ocr-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.ocr-card {
+  min-height: 420px;
+}
+
+.ocr-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0 16px;
+}
+
+.ocr-progress {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.ocr-textarea {
+  min-height: 180px;
+  resize: vertical;
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    Liberation Mono,
+    Courier New,
+    monospace;
+  line-height: 1.35;
+}
+
+.ocr-inline-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.ocr-result-box {
+  border: 1px dashed var(--color-border);
+  background: #fafbfd;
+  border-radius: var(--radius-md);
+  padding: 12px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin-bottom: 18px;
+}
+
+@media (max-width: 980px) {
+  .ocr-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OCR Import - EmissiON</title>
+    <meta
+      name="description"
+      content="Extract utility bill data with OCR and create a verified emission entry."
+    />
+    <link rel="stylesheet" href="../css/main.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">EMISSON</div>
+        <nav class="sidebar-nav">
+          <a href="dashboard.html" class="nav-item" id="nav-dashboard">
+            <svg
+              class="nav-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+            </svg>
+            Dashboard
+          </a>
+          <a href="emissions.html" class="nav-item" id="nav-emissions">
+            <svg
+              class="nav-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M3 3h18v18H3z" />
+              <path d="M3 9h18M3 15h18M9 3v18" />
+            </svg>
+            My Emissions
+          </a>
+          <a href="profile.html" class="nav-item" id="nav-profile">
+            <svg
+              class="nav-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+            </svg>
+            Profile
+          </a>
+          <a href="ocr-import.html" class="nav-item active" id="nav-ocr">
+            <svg
+              class="nav-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M4 4h16v16H4z" />
+              <path d="M8 8h8M8 12h8M8 16h5" />
+            </svg>
+            OCR Import
+          </a>
+        </nav>
+        <div class="sidebar-footer">
+          <button class="btn-logout" id="logoutBtn">Log out</button>
+        </div>
+      </aside>
+
+      <div class="main-content">
+        <header class="topbar">
+          <span class="topbar-title">OCR Bill Import</span>
+          <div class="topbar-user">
+            <div class="user-avatar" id="userInitials">?</div>
+            <span id="userName">Loading...</span>
+          </div>
+        </header>
+
+        <main class="page-body">
+          <div class="page-header">
+            <h1>Import Utility Bill</h1>
+            <p>
+              Upload a bill image, review extracted data, confirm, then create a
+              new emission entry.
+            </p>
+          </div>
+
+          <div class="ocr-grid">
+            <section class="content-card ocr-card">
+              <div class="content-card-header">
+                <span class="content-card-title">1) Upload and OCR</span>
+              </div>
+
+              <div class="form-group">
+                <label class="label" for="billImage">Bill Image</label>
+                <input
+                  class="input"
+                  type="file"
+                  id="billImage"
+                  accept="image/*"
+                />
+              </div>
+
+              <div class="ocr-actions">
+                <button class="btn-primary" id="runOcrBtn" type="button">
+                  Read Image
+                </button>
+                <span id="ocrProgress" class="ocr-progress"
+                  >Waiting for file...</span
+                >
+              </div>
+
+              <div class="form-group">
+                <label class="label" for="ocrText">OCR Text</label>
+                <textarea
+                  class="input ocr-textarea"
+                  id="ocrText"
+                  placeholder="OCR output will appear here..."
+                ></textarea>
+              </div>
+
+              <div class="ocr-actions">
+                <button class="btn-secondary" id="extractBtn" type="button">
+                  Extract Structured Data
+                </button>
+              </div>
+            </section>
+
+            <section class="content-card ocr-card">
+              <div class="content-card-header">
+                <span class="content-card-title"
+                  >2) Verify and Create Entry</span
+                >
+              </div>
+
+              <form id="verifyForm" novalidate>
+                <div class="form-group">
+                  <label class="label" for="category">Category</label>
+                  <select class="input" id="category" required>
+                    <option value="">Select...</option>
+                    <option value="electricity">electricity</option>
+                    <option value="water">water</option>
+                    <option value="natural_gas">natural_gas</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="label" for="activityType">Activity Type</label>
+                  <input
+                    class="input"
+                    type="text"
+                    id="activityType"
+                    placeholder="e.g. Monthly Electricity Bill"
+                    required
+                  />
+                </div>
+
+                <div class="ocr-inline-fields">
+                  <div class="form-group">
+                    <label class="label" for="quantity">Quantity</label>
+                    <input
+                      class="input"
+                      type="number"
+                      id="quantity"
+                      min="0"
+                      step="any"
+                      required
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label class="label" for="unit">Unit</label>
+                    <input
+                      class="input"
+                      type="text"
+                      id="unit"
+                      placeholder="kWh / m3 / l"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="label" for="period">Billing Period</label>
+                  <input class="input" type="month" id="period" required />
+                </div>
+
+                <div class="ocr-result-box" id="calcPreview">
+                  Calculated carbon impact preview will appear after
+                  confirmation.
+                </div>
+
+                <div class="ocr-actions">
+                  <button
+                    class="btn-primary"
+                    id="confirmCreateBtn"
+                    type="submit"
+                  >
+                    Confirm and Create Entry
+                  </button>
+                </div>
+              </form>
+            </section>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="../js/ocr-import.js"></script>
+  </body>
+</html>
