@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Setup – EMISSON</title>
+    <link rel="stylesheet" href="../css/main.css" />
+  </head>
+  <body>
+    <main class="auth-page">
+      <div class="auth-card">
+        <!-- Left Panel: dynamic form -->
+        <div class="auth-left">
+          <div class="auth-brand">EMISSON</div>
+          <h1 class="auth-heading" id="onboardingHeading">Set up your account</h1>
+          <p id="onboardingSubtext" style="font-size:14px;color:var(--color-text-muted);margin-bottom:20px;margin-top:-16px;"></p>
+
+          <form id="onboardingForm" novalidate>
+            <div id="formFields">
+              <!-- Fields injected by onboarding.js based on role -->
+            </div>
+
+            <p class="api-message" id="apiMessage"></p>
+
+            <button type="submit" class="btn-primary" id="submitBtn" style="width:100%;">
+              Continue to Dashboard
+            </button>
+          </form>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="auth-right"></div>
+      </div>
+    </main>
+
+    <script type="module" src="../js/onboarding.js"></script>
+  </body>
+</html>

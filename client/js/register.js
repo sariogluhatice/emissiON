@@ -12,6 +12,7 @@ const authService = new AuthService();
 
 const form          = document.getElementById('registerForm');
 const nameInput     = document.getElementById('name');
+const roleSelect    = document.getElementById('role');
 const emailInput    = document.getElementById('email');
 const passwordInput = document.getElementById('password');
 const confirmInput  = document.getElementById('confirmPassword');
@@ -56,6 +57,7 @@ form.addEventListener('submit', async (e) => {
       nameInput.value.trim(),
       emailInput.value.trim(),
       passwordInput.value,
+      roleSelect.value,
     );
 
     if (response.requiresEmailVerification) {

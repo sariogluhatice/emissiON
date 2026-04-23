@@ -4,17 +4,19 @@ const pool   = require('../config/db');
 const { generateVerificationCode } = require('../utils/codeUtils');
 const { sendVerificationEmail }    = require('../services/mailService');
 
-const SALT_ROUNDS = 10;
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SALT_ROUNDS  = 10;
+const EMAIL_REGEX  = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const VALID_ROLES  = ['individual', 'household', 'company'];
 
 // --- KAYIT (REGISTER) ---
 // POST /api/auth/register
 // Body: { name, email, password }
 const register = async (req, res) => {
-    const { name: rawName, email: rawEmail, password } = req.body;
+    const { name: rawName, email: rawEmail, password, role: rawRole } = req.body;
 
     const name  = typeof rawName  === 'string' ? rawName.trim()                : '';
     const email = typeof rawEmail === 'string' ? rawEmail.trim().toLowerCase() : '';
+    const role  = VALID_ROLES.includes(rawRole) ? rawRole : 'individual';
 
     if (!name || !email || !password) {
         return res.status(400).json({ message: 'Tüm alanların doldurulması zorunludur.' });
@@ -44,9 +46,9 @@ const register = async (req, res) => {
         const expiresAt      = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
         await pool.query(
-            `INSERT INTO users (name, email, password, is_verified, verification_code_hash, verification_code_expires_at)
-             VALUES ($1, $2, $3, false, $4, $5)`,
-            [name, email, hashedPassword, codeHash, expiresAt]
+            `INSERT INTO users (name, email, password, role, is_verified, verification_code_hash, verification_code_expires_at)
+             VALUES ($1, $2, $3, $4, false, $5, $6)`,
+            [name, email, hashedPassword, role, codeHash, expiresAt]
         );
 
         await sendVerificationEmail(email, code);
@@ -198,7 +200,7 @@ const login = async (req, res) => {
 
     try {
         const result = await pool.query(
-            'SELECT id, name, email, password, role, is_verified, created_at FROM users WHERE email = $1',
+            'SELECT id, name, email, password, role, is_verified, onboarding_completed, created_at FROM users WHERE email = $1',
             [email]
         );
 
@@ -228,11 +230,12 @@ const login = async (req, res) => {
             message: 'Giriş başarılı.',
             token,
             user: {
-                id:         user.id,
-                name:       user.name,
-                email:      user.email,
-                role:       user.role,
-                created_at: user.created_at,
+                id:                   user.id,
+                name:                 user.name,
+                email:                user.email,
+                role:                 user.role,
+                onboarding_completed: user.onboarding_completed,
+                created_at:           user.created_at,
             },
         });
     } catch (err) {

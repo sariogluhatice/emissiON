@@ -22,8 +22,8 @@ export class AuthService {
         return response;
     }
 
-    async register(name, email, password) {
-        const response = await this.api.post('/auth/register', { name, email, password });
+    async register(name, email, password, role) {
+        const response = await this.api.post('/auth/register', { name, email, password, role });
         // Kayıttan sonra otomatik giriş yapma, kullanıcının login sayfasına gitmesini bekliyoruz.
         return response;
     }

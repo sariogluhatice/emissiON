@@ -2,9 +2,10 @@ require('dotenv').config();
 
 const path      = require('path');
 const express   = require('express');
-const authRoutes    = require('./routes/authRoutes');
-const emissionRoutes = require('./routes/emissionRoutes');
-const ocrRoutes      = require('./routes/ocrRoutes');
+const authRoutes       = require('./routes/authRoutes');
+const emissionRoutes   = require('./routes/emissionRoutes');
+const ocrRoutes        = require('./routes/ocrRoutes');
+const onboardingRoutes = require('./routes/onboardingRoutes');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -19,8 +20,9 @@ app.use(express.static(path.join(__dirname, '..', 'client')));
 app.use('/api/auth',     authRoutes);
 
 // Emisyon kaydı rotalarını /api/emissions altına bağla
-app.use('/api/emissions', emissionRoutes);
-app.use('/api/ocr',       ocrRoutes);
+app.use('/api/emissions',  emissionRoutes);
+app.use('/api/ocr',        ocrRoutes);
+app.use('/api/onboarding', onboardingRoutes);
 
 // Sağlık kontrolü (Health check) — sunucunun çalıştığını teyit etmek için yararlıdır
 app.get('/health', (req, res) => {

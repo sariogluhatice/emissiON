@@ -50,10 +50,11 @@ form.addEventListener('submit', async (e) => {
   setApiMessage('', false);
 
   try {
-    await authService.login(emailInput.value.trim(), passwordInput.value, rememberMeInput.checked);
+    const response = await authService.login(emailInput.value.trim(), passwordInput.value, rememberMeInput.checked);
     setApiMessage('Giriş başarılı! Yönlendiriliyorsunuz…', false);
     setTimeout(() => {
-      window.location.href = 'dashboard.html';
+      const needsOnboarding = response?.user?.onboarding_completed === false;
+      window.location.href = needsOnboarding ? 'onboarding.html' : 'dashboard.html';
     }, 1000);
   } catch (err) {
     setApiMessage(err.message || 'Giriş başarısız. Lütfen tekrar deneyin.', true);
