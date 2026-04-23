@@ -23,7 +23,7 @@ export class ApiClient {
             });
 
             // Güvenli public rotalar (bu rotalarda hata alınırsa oturum silinmez)
-            const PUBLIC_ENDPOINTS = ['/auth/login', '/auth/register'];
+            const PUBLIC_ENDPOINTS = ['/auth/login', '/auth/register', '/auth/verify-email', '/auth/resend-code'];
             const isPublic = PUBLIC_ENDPOINTS.some(p => endpoint === p);
 
             if (response.status === 401 && !isPublic) {

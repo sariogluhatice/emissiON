@@ -52,15 +52,24 @@ form.addEventListener('submit', async (e) => {
   setApiMessage('', false);
 
   try {
-    await authService.register(
+    const response = await authService.register(
       nameInput.value.trim(),
       emailInput.value.trim(),
       passwordInput.value,
     );
-    setApiMessage('Hesap oluşturuldu! Giriş sayfasına yönlendiriliyorsunuz…', false);
-    setTimeout(() => {
-      window.location.href = 'login.html';
-    }, 2000);
+
+    if (response.requiresEmailVerification) {
+      sessionStorage.setItem('pending_email', emailInput.value.trim());
+      setApiMessage('Hesap oluşturuldu! E-posta doğrulama sayfasına yönlendiriliyorsunuz…', false);
+      setTimeout(() => {
+        window.location.href = 'verify-email.html';
+      }, 1500);
+    } else {
+      setApiMessage('Hesap oluşturuldu! Giriş sayfasına yönlendiriliyorsunuz…', false);
+      setTimeout(() => {
+        window.location.href = 'login.html';
+      }, 2000);
+    }
   } catch (err) {
     setApiMessage(err.message || 'Kayıt başarısız. Lütfen tekrar deneyin.', true);
     submitBtn.disabled = false;

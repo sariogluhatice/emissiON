@@ -7,12 +7,16 @@ CREATE TYPE user_role AS ENUM ('user', 'admin');
 
 -- Users table: stores all registered accounts.
 CREATE TABLE IF NOT EXISTS users (
-    id         SERIAL PRIMARY KEY,
-    name       VARCHAR(100)  NOT NULL,
-    email      VARCHAR(150)  NOT NULL CHECK (email = LOWER(email)),
-    password   VARCHAR(255)  NOT NULL,          -- bcrypt hash, never plaintext
-    role       user_role     NOT NULL DEFAULT 'user',
-    created_at TIMESTAMP     NOT NULL DEFAULT NOW()
+    id                             SERIAL PRIMARY KEY,
+    name                           VARCHAR(100)  NOT NULL,
+    email                          VARCHAR(150)  NOT NULL CHECK (email = LOWER(email)),
+    password                       VARCHAR(255)  NOT NULL,          -- bcrypt hash, never plaintext
+    role                           user_role     NOT NULL DEFAULT 'user',
+    is_verified                    BOOLEAN       NOT NULL DEFAULT FALSE,
+    verification_code_hash         TEXT,
+    verification_code_expires_at   TIMESTAMP,
+    verified_at                    TIMESTAMP,
+    created_at                     TIMESTAMP     NOT NULL DEFAULT NOW()
 );
 
 -- Case-insensitive unique index on email.

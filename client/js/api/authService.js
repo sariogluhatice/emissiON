@@ -28,6 +28,14 @@ export class AuthService {
         return response;
     }
 
+    async verifyEmail(email, code) {
+        return await this.api.post('/auth/verify-email', { email, code });
+    }
+
+    async resendCode(email) {
+        return await this.api.post('/auth/resend-code', { email });
+    }
+
     logout() {
         TokenManager.remove();
     }

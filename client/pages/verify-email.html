@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verify Email – EMISSON</title>
+    <link rel="stylesheet" href="../css/main.css" />
+  </head>
+  <body>
+    <main class="auth-page">
+      <div class="auth-card">
+        <!-- Left Panel -->
+        <div class="auth-left">
+          <div class="auth-brand">EMISSON</div>
+          <h1 class="auth-heading">Verify Your Email</h1>
+
+          <form id="verifyForm" novalidate>
+            <!-- Email -->
+            <div class="form-group">
+              <label class="label" for="email">Email</label>
+              <input
+                class="input"
+                type="email"
+                id="email"
+                placeholder="Enter your email"
+                autocomplete="email"
+              />
+              <span class="error-msg" id="emailError"></span>
+            </div>
+
+            <!-- Verification Code -->
+            <div class="form-group">
+              <label class="label" for="code">Verification Code</label>
+              <input
+                class="input"
+                type="text"
+                id="code"
+                placeholder="Enter 6-digit code"
+                inputmode="numeric"
+                maxlength="6"
+                autocomplete="one-time-code"
+              />
+              <span class="error-msg" id="codeError"></span>
+            </div>
+
+            <!-- API message -->
+            <p class="api-message" id="apiMessage"></p>
+
+            <!-- Verify button -->
+            <button type="submit" class="btn-primary" id="submitBtn">Verify Email</button>
+
+            <!-- Resend code -->
+            <button type="button" class="btn-secondary" id="resendBtn">Resend Code</button>
+
+            <!-- Back to login -->
+            <p class="bottom-text">
+              Already verified? <a href="login.html">Login</a>
+            </p>
+          </form>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="auth-right"></div>
+      </div>
+    </main>
+
+    <script type="module" src="../js/verify-email.js"></script>
+  </body>
+</html>

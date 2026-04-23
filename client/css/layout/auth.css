@@ -75,6 +75,10 @@
   margin-bottom: 20px;
 }
 
+.auth-left .btn-secondary {
+  margin-bottom: 20px;
+}
+
 /* ── Responsive — mobilde tek sütun ── */
 @media (max-width: 767px) {
   .auth-right {
