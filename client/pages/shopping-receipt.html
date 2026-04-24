@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shopping Receipt – EmissiON</title>
+    <link rel="stylesheet" href="../css/main.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">EMISSON</div>
+        <nav class="sidebar-nav">
+          <a href="dashboard.html" class="nav-item" id="nav-dashboard">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+              <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+            </svg>
+            Dashboard
+          </a>
+          <a href="emissions.html" class="nav-item" id="nav-emissions">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18"/>
+            </svg>
+            My Emissions
+          </a>
+          <a href="profile.html" class="nav-item" id="nav-profile">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+            </svg>
+            Profile
+          </a>
+          <a href="ocr-import.html" class="nav-item" id="nav-ocr">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/>
+            </svg>
+            OCR Import
+          </a>
+          <a href="shopping-receipt.html" class="nav-item active" id="nav-shopping">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <path d="M16 10a4 4 0 01-8 0"/>
+            </svg>
+            Shopping CO₂
+          </a>
+        </nav>
+        <div class="sidebar-footer">
+          <button class="btn-logout" id="logoutBtn">Log out</button>
+        </div>
+      </aside>
+
+      <div class="main-content">
+        <header class="topbar">
+          <span class="topbar-title">Shopping Receipt CO₂ Calculator</span>
+          <div class="topbar-user">
+            <div class="user-avatar" id="userInitials">?</div>
+            <span id="userName">Loading…</span>
+          </div>
+        </header>
+
+        <main class="page-body">
+          <div class="page-header">
+            <h1>E-Fatura / Shopping Receipt</h1>
+            <p>Upload a receipt (PDF or image) — we extract the total, convert TRY → USD at the purchase date rate, then calculate the carbon footprint.</p>
+          </div>
+
+          <div class="ocr-grid">
+
+            <!-- Upload Panel -->
+            <section class="content-card ocr-card">
+              <div class="content-card-header">
+                <span class="content-card-title">1) Upload Receipt</span>
+              </div>
+
+              <div class="form-group">
+                <label class="label" for="receiptFile">Receipt File (PDF, JPG, PNG)</label>
+                <input class="input" type="file" id="receiptFile" accept="application/pdf,image/jpeg,image/png,image/webp" />
+              </div>
+
+              <div class="ocr-actions">
+                <button class="btn-primary" id="scanBtn" type="button">Scan &amp; Calculate CO₂</button>
+                <span id="scanProgress" class="ocr-progress">Waiting for file…</span>
+              </div>
+
+              <!-- Extracted raw data -->
+              <div class="form-group" style="margin-top:8px;">
+                <label class="label">Extracted Data (read-only)</label>
+                <div id="extractedBox" style="display:none;padding:12px;background:var(--color-surface,#f9fafb);border:1px solid var(--color-border,#e5e7eb);border-radius:var(--radius-md,6px);font-size:13px;line-height:1.8;">
+                  <div><span style="color:var(--color-text-muted);">Total amount:</span> <strong id="extAmount">—</strong></div>
+                  <div><span style="color:var(--color-text-muted);">Currency:</span> <strong id="extCurrency">—</strong></div>
+                  <div><span style="color:var(--color-text-muted);">Purchase date:</span> <strong id="extDate">—</strong></div>
+                  <div><span style="color:var(--color-text-muted);">Exchange rate:</span> <strong id="extRate">—</strong></div>
+                  <div><span style="color:var(--color-text-muted);">USD equivalent:</span> <strong id="extUsd">—</strong></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Result & Save Panel -->
+            <section class="content-card ocr-card">
+              <div class="content-card-header">
+                <span class="content-card-title">2) Review &amp; Save Entry</span>
+              </div>
+
+              <form id="saveForm" novalidate>
+
+                <div class="form-group">
+                  <label class="label" for="descInput">Description</label>
+                  <input class="input" type="text" id="descInput" placeholder="e.g. Migros grocery shopping" />
+                </div>
+
+                <div class="form-group">
+                  <label class="label" for="co2Input" style="font-weight:700;color:var(--color-primary);">Estimated CO₂ (kg)</label>
+                  <div style="position:relative;">
+                    <input class="input" type="number" id="co2Input" step="any" min="0.001" placeholder="Will be filled after scan…" />
+                    <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:700;color:var(--color-text-muted);pointer-events:none;">kg CO₂e</span>
+                  </div>
+                  <span class="error-msg" id="co2Error"></span>
+                </div>
+
+                <div class="form-group">
+                  <label class="label" for="dateInput">Date</label>
+                  <input class="input" type="date" id="dateInput" />
+                  <span class="error-msg" id="dateError"></span>
+                </div>
+
+                <div class="ocr-result-box" id="resultBox">
+                  Scan a receipt to see the CO₂ breakdown here.
+                </div>
+
+                <div class="ocr-actions">
+                  <button class="btn-primary" id="saveBtn" type="submit">Save Emission Entry</button>
+                </div>
+              </form>
+            </section>
+
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="../js/shopping-receipt.js"></script>
+  </body>
+</html>

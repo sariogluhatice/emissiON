@@ -64,9 +64,21 @@ class TextractService {
 
     getFileExtension(mimeType = '') {
         const lower = String(mimeType).toLowerCase();
-        if (lower.includes('png')) return 'png';
+        if (lower.includes('png'))  return 'png';
         if (lower.includes('webp')) return 'webp';
+        if (lower.includes('pdf'))  return 'pdf';
         return 'jpg';
+    }
+
+    async analyzeExpenseFromS3(bucket, key) {
+        if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+            throw new Error('AWS credentials missing.');
+        }
+        const command = new AnalyzeExpenseCommand({
+            Document: { S3Object: { Bucket: bucket, Name: key } }
+        });
+        const response = await this.client.send(command);
+        return response.ExpenseDocuments?.[0] || null;
     }
 
     async analyzeExpenseFromBuffer(buffer, mimeType = 'image/jpeg') {
