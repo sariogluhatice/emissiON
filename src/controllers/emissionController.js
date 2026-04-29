@@ -250,4 +250,61 @@ const remove = async (req, res) => {
     }
 };
 
-module.exports = { getAll, create, update, remove, calculate, generateInsight, extractOcrBillData, extractOcrFromImage };
+// --- AKILLI ANALIZ (SMART INSIGHTS) ---
+// GET /api/emissions/smart-insights
+const getSmartInsights = async (req, res) => {
+    const userId = req.user.id;
+    const role   = req.user.role;
+
+    try {
+        // 1. Geçmiş Verileri Çek (Aylık Toplamlar)
+        const historyResult = await pool.query(
+            `SELECT 
+                TO_CHAR(date, 'YYYY-MM') as month, 
+                SUM(amount) as total_amount
+             FROM emission_records
+             WHERE user_id = $1
+             GROUP BY month
+             ORDER BY month DESC
+             LIMIT 6`,
+            [userId]
+        );
+
+        // 1b. Kategori Dağılımını Çek (Hangi kaynaklardan ne kadar salınım yapılmış?)
+        const categoryResult = await pool.query(
+            `SELECT source as category, SUM(amount) as total
+             FROM emission_records
+             WHERE user_id = $1
+             GROUP BY source
+             ORDER BY total DESC`,
+            [userId]
+        );
+
+        // 2. Kullanıcı Profilini Çek
+        const tableMap = {
+            individual: 'individual_profiles',
+            household:  'household_profiles',
+            company:    'company_profiles',
+        };
+        const profileTable = tableMap[role];
+        let profile = null;
+
+        if (profileTable) {
+            const profileResult = await pool.query(
+                `SELECT * FROM ${profileTable} WHERE user_id = $1`,
+                [userId]
+            );
+            profile = profileResult.rows[0] || null;
+        }
+
+        // 3. AI Servisini Çağır (Geçmiş, Profil ve Kategori verilerini gönderiyoruz)
+        const insights = await aiService.getSmartInsights(historyResult.rows, profile, categoryResult.rows);
+
+        return res.status(200).json(insights);
+    } catch (err) {
+        console.error('[emissions.getSmartInsights]', err.message);
+        return res.status(500).json({ message: 'Akıllı analizler şu an hazırlanamıyor.' });
+    }
+};
+
+module.exports = { getAll, create, update, remove, calculate, generateInsight, extractOcrBillData, extractOcrFromImage, getSmartInsights };

@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Insights – EmissiON</title>
+    <link rel="stylesheet" href="../css/main.css" />
+    <style>
+      .insight-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-top: 24px;
+      }
+      .insight-card {
+        background: var(--color-bg-card);
+        padding: 24px;
+        border-radius: 16px;
+        border: 1px solid var(--color-border);
+        box-shadow: var(--shadow-sm);
+        transition: transform 0.2s;
+      }
+      .insight-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--color-primary);
+      }
+      .ai-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .ai-badge {
+        background: linear-gradient(135deg, #6366f1, #a855f7);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+      .prediction-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--color-primary);
+        margin: 12px 0;
+      }
+      .recommendation-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .recommendation-item {
+        display: flex;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--color-border);
+      }
+      .recommendation-item:last-child {
+        border-bottom: none;
+      }
+      .check-icon {
+        color: #10b981;
+        flex-shrink: 0;
+      }
+      .skeleton {
+        background: linear-gradient(90deg, var(--color-border) 25%, var(--color-bg-alt) 50%, var(--color-border) 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+        height: 20px;
+        border-radius: 4px;
+        margin-bottom: 10px;
+      }
+      @keyframes loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+      @media (max-width: 992px) {
+        .insight-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">EMISSON</div>
+        <nav class="sidebar-nav">
+          <a href="dashboard.html" class="nav-item" id="nav-dashboard">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>
+            Dashboard
+          </a>
+          <a href="emissions.html" class="nav-item" id="nav-emissions">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"></path><path d="M3 9h18M3 15h18M9 3v18"></path></svg>
+            My Emissions
+          </a>
+          <a href="ocr-import.html" class="nav-item" id="nav-ocr">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"></path><path d="M8 8h8M8 12h8M8 16h5"></path></svg>
+            OCR Import
+          </a>
+          <a href="shopping-receipt.html" class="nav-item" id="nav-shopping">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+            Shopping CO₂
+          </a>
+          <a href="smart-insights.html" class="nav-item active" id="nav-insights">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            Smart Insights
+          </a>
+          <a href="profile.html" class="nav-item" id="nav-profile">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path></svg>
+            Profile
+          </a>
+        </nav>
+        <div class="sidebar-footer">
+          <button class="btn-logout" id="logoutBtn">Log out</button>
+        </div>
+      </aside>
+
+      <div class="main-content">
+        <header class="topbar">
+          <span class="topbar-title">Smart AI Insights</span>
+          <div class="topbar-user">
+            <div class="user-avatar" id="userInitials">?</div>
+            <span id="userName">Loading…</span>
+          </div>
+        </header>
+
+        <main class="page-body">
+          <div class="page-header">
+            <h1>🔮 Karbon Zekası</h1>
+            <p>Geçmiş verilerin ve davranış profilin yapay zeka tarafından analiz edildi.</p>
+          </div>
+
+          <div class="insight-grid">
+            <!-- Tahmin Kartı -->
+            <div class="insight-card">
+              <div class="ai-header">
+                <span class="ai-badge">Tahmin</span>
+                <h3 style="margin:0">Gelecek Ay Öngörüsü</h3>
+              </div>
+              <div id="predictionContent">
+                <div class="skeleton" style="width: 80%"></div>
+                <div class="skeleton" style="width: 60%"></div>
+              </div>
+            </div>
+
+            <!-- Trend Özeti -->
+            <div class="insight-card">
+              <div class="ai-header">
+                <span class="ai-badge">Trend</span>
+                <h3 style="margin:0">Gidişat Analizi</h3>
+              </div>
+              <div id="trendContent">
+                <div class="skeleton" style="width: 90%"></div>
+                <div class="skeleton" style="width: 70%"></div>
+              </div>
+            </div>
+
+            <!-- Öneriler Listesi -->
+            <div class="insight-card" style="grid-column: 1 / -1">
+              <div class="ai-header">
+                <span class="ai-badge">Tavsiyeler</span>
+                <h3 style="margin:0">Sana Özel Azaltma Önerileri</h3>
+              </div>
+              <div id="recommendationContent">
+                <div class="skeleton" style="width: 100%"></div>
+                <div class="skeleton" style="width: 100%"></div>
+                <div class="skeleton" style="width: 100%"></div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="../js/smart-insights.js"></script>
+  </body>
+</html>

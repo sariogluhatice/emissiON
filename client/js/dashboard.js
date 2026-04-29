@@ -77,6 +77,18 @@ async function initDashboard() {
       }
     }
 
+    // 4. AI Spotlight (Özet) Bilgisini Çek
+    try {
+      const insights = await emissionService.getSmartInsights();
+      const spotlightEl = document.getElementById('aiSpotlightText');
+      if (spotlightEl && insights.prediction) {
+        spotlightEl.textContent = insights.prediction;
+      }
+    } catch {
+      // Spotlight hatası kritik değil, sessizce geçebiliriz
+      document.getElementById('aiSpotlightText').textContent = "Tahmin verileri şu an alınamıyor.";
+    }
+
   } catch (err) {
     console.error('Panel verileri yüklenemedi:', err);
   }
