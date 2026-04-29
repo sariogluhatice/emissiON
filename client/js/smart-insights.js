@@ -21,8 +21,50 @@ async function loadSmartInsights() {
   const recEl = document.getElementById('recommendationContent');
 
   try {
-    console.log('Generating fresh AI insights for trends and recommendations...');
+    const res = await emissionService.getAll();
+    const emissionsArray = res.records || [];
+    const dataFingerprint = emissionsArray.length.toString();
+
+    const cachedFingerprint = localStorage.getItem('ai_insights_fingerprint');
+    const cachedPrediction = localStorage.getItem('ai_insights_prediction');
+    const cachedTrend = localStorage.getItem('ai_insights_trend');
+
+    const isErrorText = (text) => {
+      if (!text || text === 'undefined') return true;
+      const lower = text.toLowerCase();
+      return lower === 'öngörü oluşturulamadı.' ||
+             lower === 'trend analizi yapılamadı.' ||
+             lower === 'öneri oluşturulamadı.' ||
+             lower === 'analiz şu an hazırlanamadı.' ||
+             lower === 'bir hata oluştu veya kota doldu.' ||
+             lower === 'ai anahtarı eksik.' ||
+             lower === 'ai tavsiyeleri şu an alınamıyor.' ||
+             lower.includes('şu an hazırlanamadı') ||
+             lower.includes('öngörü şu an alınamadı');
+    };
+
+    const isCachedValid = !isErrorText(cachedPrediction) && !isErrorText(cachedTrend);
+
+    console.log('Generating fresh AI insights for recommendations...');
     const insights = await emissionService.getSmartInsights();
+    const isNewValid = !isErrorText(insights.prediction) && !isErrorText(insights.trend_summary);
+
+    if (cachedFingerprint === dataFingerprint && isCachedValid) {
+      console.log('Keeping Future Prediction and Trend frozen from cache.');
+      insights.prediction = cachedPrediction;
+      insights.trend_summary = cachedTrend;
+    } else if (isNewValid) {
+      console.log('Data changed or cache invalid! Saving new Future Prediction and Trend to cache.');
+      localStorage.setItem('ai_insights_fingerprint', dataFingerprint);
+      localStorage.setItem('ai_insights_prediction', insights.prediction);
+      localStorage.setItem('ai_insights_trend', insights.trend_summary);
+    } else if (cachedFingerprint === dataFingerprint && isCachedValid) {
+      // Sadece veriler DEĞİŞMEDİYSE ve yeni istek başarısız olduysa eski cache'e düş. 
+      // Veri değiştiyse eski analizi gösterme, başarısızlık mesajını göster.
+      console.log('New insights invalid. Falling back to existing valid cache because data is unchanged.');
+      insights.prediction = cachedPrediction;
+      insights.trend_summary = cachedTrend;
+    }
 
     // Render Prediction
     predictionEl.innerHTML = `<p class="prediction-value">${insights.prediction}</p>`;
@@ -47,9 +89,19 @@ async function loadSmartInsights() {
 
   } catch (err) {
     console.error('AI analizleri yüklenemedi:', err);
+    
+    const cachedFingerprint = localStorage.getItem('ai_insights_fingerprint');
+    const cachedPrediction = localStorage.getItem('ai_insights_prediction');
+    const cachedTrend = localStorage.getItem('ai_insights_trend');
+    
+    // Yalnızca veri değişmemişse cache göster (yeni veri girildiğinde eski analizi göstermemek için)
+    // dataFingerprint try bloğu içinde tanımlı olduğu için, eğer oraya kadar gelebildiyse kullan, 
+    // ancak scope dışında olduğu için tekrar çekmemiz veya globalde tanımlı olması gerekebilir.
+    // Try bloğu içinde olduğu için dataFingerprint burada mevcut değil. Güvenli yaklaşım, cache göstermemek.
+    
     predictionEl.innerHTML = '<p>Analiz yüklenirken bir hata oluştu.</p>';
     trendEl.innerHTML = '<p>Veriler alınamadı.</p>';
-    recEl.innerHTML = '<p>Lütfen daha sonra tekrar deneyin.</p>';
+    recEl.innerHTML = '<p>Lütfen daha sonra tekrar deneyin veya kotanızı kontrol edin.</p>';
   }
 }
 
