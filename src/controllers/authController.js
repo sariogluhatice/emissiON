@@ -1,12 +1,17 @@
+const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt    = require('jsonwebtoken');
 const pool   = require('../config/db');
 const { generateVerificationCode } = require('../utils/codeUtils');
-const { sendVerificationEmail }    = require('../services/mailService');
+const { sendVerificationEmail, sendPasswordResetEmail } = require('../services/mailService');
 
 const SALT_ROUNDS  = 10;
 const EMAIL_REGEX  = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const VALID_ROLES  = ['individual', 'household', 'company'];
+
+// Password must be ≥8 chars with lowercase, uppercase, digit, and symbol.
+const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$/;
+const STRONG_PASSWORD_MSG   = 'Şifre en az 8 karakter olmalı; büyük harf, küçük harf, rakam ve sembol içermelidir.';
 
 // --- KAYIT (REGISTER) ---
 // POST /api/auth/register
@@ -26,8 +31,8 @@ const register = async (req, res) => {
         return res.status(400).json({ message: 'Geçersiz e-posta formatı.' });
     }
 
-    if (password.length < 8) {
-        return res.status(400).json({ message: 'Şifre en az 8 karakter olmalıdır.' });
+    if (!STRONG_PASSWORD_REGEX.test(password)) {
+        return res.status(400).json({ message: STRONG_PASSWORD_MSG });
     }
 
     try {
@@ -45,10 +50,16 @@ const register = async (req, res) => {
         const codeHash       = await bcrypt.hash(code, SALT_ROUNDS);
         const expiresAt      = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-        await pool.query(
+        const insertResult = await pool.query(
             `INSERT INTO users (name, email, password, role, is_verified, verification_code_hash, verification_code_expires_at)
-             VALUES ($1, $2, $3, $4, false, $5, $6)`,
+             VALUES ($1, $2, $3, $4, false, $5, $6)
+             RETURNING id`,
             [name, email, hashedPassword, role, codeHash, expiresAt]
+        );
+
+        await pool.query(
+            'INSERT INTO password_history (user_id, password_hash) VALUES ($1, $2)',
+            [insertResult.rows[0].id, hashedPassword]
         );
 
         await sendVerificationEmail(email, code);
@@ -244,4 +255,140 @@ const login = async (req, res) => {
     }
 };
 
-module.exports = { register, verifyEmail, resendCode, login };
+// --- ŞİFRE SIFIRLAMA TALEBİ (FORGOT PASSWORD) ---
+// POST /api/auth/forgot-password
+// Body: { email }
+const forgotPassword = async (req, res) => {
+    const { email: rawEmail } = req.body;
+    const email = typeof rawEmail === 'string' ? rawEmail.trim().toLowerCase() : '';
+
+    // Always return the same generic message to prevent email enumeration.
+    const GENERIC = { message: 'Eğer bu e-posta kayıtlıysa, şifre sıfırlama bağlantısı gönderilmiştir.' };
+
+    if (!email || !EMAIL_REGEX.test(email)) {
+        return res.status(200).json(GENERIC);
+    }
+
+    try {
+        const result = await pool.query(
+            'SELECT id FROM users WHERE email = $1 AND is_verified = true',
+            [email]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(200).json(GENERIC);
+        }
+
+        const user      = result.rows[0];
+        const rawToken  = crypto.randomBytes(32).toString('hex');
+        const tokenHash = await bcrypt.hash(rawToken, SALT_ROUNDS);
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+        await pool.query(
+            `UPDATE users SET reset_token_hash = $1, reset_token_expires_at = $2 WHERE id = $3`,
+            [tokenHash, expiresAt, user.id]
+        );
+
+        const appUrl    = `${req.protocol}://${req.get('host')}`;
+        const resetLink = `${appUrl}/pages/reset-password.html?token=${rawToken}&uid=${user.id}`;
+
+        await sendPasswordResetEmail(email, resetLink);
+
+        return res.status(200).json(GENERIC);
+    } catch (err) {
+        console.error('[forgotPassword] message:', err.message);
+        return res.status(200).json(GENERIC); // still generic on unexpected error
+    }
+};
+
+// --- ŞİFRE SIFIRLAMA (RESET PASSWORD) ---
+// POST /api/auth/reset-password
+// Body: { uid, token, newPassword }
+const resetPassword = async (req, res) => {
+    const { uid, token, newPassword } = req.body;
+
+    if (!uid || !token || !newPassword) {
+        return res.status(400).json({ message: 'Geçersiz istek.' });
+    }
+
+    if (!STRONG_PASSWORD_REGEX.test(newPassword)) {
+        return res.status(400).json({ message: STRONG_PASSWORD_MSG });
+    }
+
+    try {
+        const result = await pool.query(
+            `SELECT id, reset_token_hash, reset_token_expires_at
+             FROM users
+             WHERE id = $1 AND reset_token_hash IS NOT NULL`,
+            [uid]
+        );
+
+        const INVALID_MSG = { message: 'Geçersiz veya süresi dolmuş şifre sıfırlama bağlantısı.' };
+
+        if (result.rows.length === 0) {
+            return res.status(400).json(INVALID_MSG);
+        }
+
+        const user = result.rows[0];
+
+        if (new Date() > new Date(user.reset_token_expires_at)) {
+            return res.status(400).json({ message: 'Şifre sıfırlama bağlantısının süresi dolmuş. Lütfen yeni bağlantı talep edin.' });
+        }
+
+        const tokenMatch = await bcrypt.compare(String(token), user.reset_token_hash);
+
+        if (!tokenMatch) {
+            return res.status(400).json(INVALID_MSG);
+        }
+
+        // Reject if new password matches any of the last 3 passwords.
+        const historyResult = await pool.query(
+            `SELECT password_hash FROM password_history
+             WHERE user_id = $1
+             ORDER BY created_at DESC
+             LIMIT 3`,
+            [user.id]
+        );
+
+        for (const row of historyResult.rows) {
+            const match = await bcrypt.compare(newPassword, row.password_hash);
+            if (match) {
+                return res.status(400).json({ message: 'Yeni şifre son 3 şifrenizden farklı olmalıdır.' });
+            }
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+        await pool.query(
+            `UPDATE users
+             SET password = $1, reset_token_hash = NULL, reset_token_expires_at = NULL
+             WHERE id = $2`,
+            [hashedPassword, user.id]
+        );
+
+        await pool.query(
+            'INSERT INTO password_history (user_id, password_hash) VALUES ($1, $2)',
+            [user.id, hashedPassword]
+        );
+
+        // Prune history; retain only the latest 3 records per user.
+        await pool.query(
+            `DELETE FROM password_history
+             WHERE user_id = $1
+               AND id NOT IN (
+                   SELECT id FROM password_history
+                   WHERE user_id = $1
+                   ORDER BY created_at DESC
+                   LIMIT 3
+               )`,
+            [user.id]
+        );
+
+        return res.status(200).json({ message: 'Şifreniz başarıyla güncellendi.' });
+    } catch (err) {
+        console.error('[resetPassword] message:', err.message);
+        return res.status(500).json({ message: 'Sunucu hatası.' });
+    }
+};
+
+module.exports = { register, verifyEmail, resendCode, login, forgotPassword, resetPassword };

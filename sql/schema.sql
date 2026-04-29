@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS users (
     verification_code_hash         TEXT,
     verification_code_expires_at   TIMESTAMP,
     verified_at                    TIMESTAMP,
+    reset_token_hash               TEXT,
+    reset_token_expires_at         TIMESTAMP,
     created_at                     TIMESTAMP     NOT NULL DEFAULT NOW()
 );
 
@@ -35,6 +37,17 @@ CREATE TABLE IF NOT EXISTS emission_records (
 );
 
 CREATE INDEX ON emission_records (user_id, date DESC);
+
+-- Password history: keeps the last N hashed passwords per user to prevent reuse.
+CREATE TABLE IF NOT EXISTS password_history (
+    id            SERIAL    PRIMARY KEY,
+    user_id       INTEGER   NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    password_hash TEXT      NOT NULL,
+    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS password_history_user_id_idx
+    ON password_history (user_id, created_at DESC);
 
 -- Onboarding profile for individual users.
 CREATE TABLE IF NOT EXISTS individual_profiles (

@@ -58,5 +58,46 @@ const sendVerificationEmail = async (email, code) => {
     }
 };
 
-module.exports = { sendVerificationEmail };
+const sendPasswordResetEmail = async (email, resetLink) => {
+    if (!transporter) {
+        console.warn('--- [MOCK MAIL SERVICE] ---');
+        console.warn(`To: ${email}`);
+        console.warn(`Reset Link: ${resetLink}`);
+        console.warn('---------------------------');
+        return;
+    }
+
+    try {
+        await transporter.sendMail({
+            from:    process.env.EMAIL_FROM || '"emissiON" <noreply@emission.com>',
+            to:      email,
+            subject: 'emissiON – Şifre Sıfırlama',
+            text:    `Şifrenizi sıfırlamak için aşağıdaki bağlantıya tıklayın:\n\n${resetLink}\n\nBu bağlantı 15 dakika geçerlidir.\nEğer bu işlemi siz yapmadıysanız lütfen dikkate almayın.`,
+            html: `
+                <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:24px">
+                    <h2 style="color:#2d6a4f;margin-bottom:4px">emissiON</h2>
+                    <p style="color:#444">Şifrenizi sıfırlamak için aşağıdaki butona tıklayın:</p>
+                    <div style="margin:20px 0;text-align:center">
+                        <a href="${resetLink}"
+                           style="display:inline-block;padding:12px 28px;background:#2d6a4f;color:#fff;
+                                  text-decoration:none;border-radius:6px;font-weight:bold;font-size:1rem">
+                            Şifremi Sıfırla
+                        </a>
+                    </div>
+                    <p style="color:#888;font-size:0.85rem">
+                        Bu bağlantı 15 dakika geçerlidir.<br>
+                        Eğer bu işlemi siz yapmadıysanız lütfen dikkate almayın.
+                    </p>
+                    <p style="color:#aaa;font-size:0.75rem;word-break:break-all">
+                        Buton çalışmıyorsa şu adresi tarayıcınıza kopyalayın:<br>${resetLink}
+                    </p>
+                </div>
+            `,
+        });
+    } catch (err) {
+        console.error('[sendPasswordResetEmail] Error:', err.message);
+    }
+};
+
+module.exports = { sendVerificationEmail, sendPasswordResetEmail };
 

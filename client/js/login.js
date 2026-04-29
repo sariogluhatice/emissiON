@@ -22,12 +22,7 @@ bindFieldValidation(emailInput,    emailError,    () => validateEmail(emailInput
 bindFieldValidation(passwordInput, passwordError, () => validatePassword(passwordInput.value, 1));
 
 forgotPasswordBtn.addEventListener('click', () => {
-  const email = window.prompt('E-posta adresinizi girin, size bir sıfırlama bağlantısı gönderelim:');
-  if (email === null) return; // kullanıcı iptal etti
-  apiMessage.textContent = email.trim()
-    ? 'Eğer bu e-posta kayıtlıysa, şifre sıfırlama bağlantısı gönderilmiştir.'
-    : 'Lütfen geçerli bir e-posta adresi girin.';
-  apiMessage.className = 'api-message is-success';
+  window.location.href = 'forgot-password.html';
 });
 
 function setApiMessage(text, isError) {

@@ -14,6 +14,14 @@ export function validatePassword(value, minLength = 8) {
   return '';
 }
 
+export function validateStrongPassword(value) {
+  if (!value) return 'Password is required.';
+  if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$/.test(value)) {
+    return 'Şifre en az 8 karakter olmalı; büyük harf, küçük harf, rakam ve sembol içermelidir.';
+  }
+  return '';
+}
+
 export function validateConfirmPassword(value, original) {
   if (!value) return 'Please confirm your password.';
   if (value !== original) return 'Passwords do not match.';

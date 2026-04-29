@@ -36,6 +36,14 @@ export class AuthService {
         return await this.api.post('/auth/resend-code', { email });
     }
 
+    async forgotPassword(email) {
+        return await this.api.post('/auth/forgot-password', { email });
+    }
+
+    async resetPassword(uid, token, newPassword) {
+        return await this.api.post('/auth/reset-password', { uid, token, newPassword });
+    }
+
     logout() {
         TokenManager.remove();
     }

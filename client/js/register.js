@@ -1,6 +1,6 @@
 import {
   validateEmail,
-  validatePassword,
+  validateStrongPassword,
   validateConfirmPassword,
   validateRequired,
   showError,
@@ -26,7 +26,7 @@ const confirmError  = document.getElementById('confirmPasswordError');
 
 bindFieldValidation(nameInput,     nameError,     () => validateRequired(nameInput.value, 'Ad Soyad'));
 bindFieldValidation(emailInput,    emailError,    () => validateEmail(emailInput.value));
-bindFieldValidation(passwordInput, passwordError, () => validatePassword(passwordInput.value));
+bindFieldValidation(passwordInput, passwordError, () => validateStrongPassword(passwordInput.value));
 bindFieldValidation(confirmInput,  confirmError,  () => validateConfirmPassword(confirmInput.value, passwordInput.value));
 
 function setApiMessage(text, isError) {
@@ -39,7 +39,7 @@ form.addEventListener('submit', async (e) => {
 
   const nErr = validateRequired(nameInput.value, 'Ad Soyad');
   const eErr = validateEmail(emailInput.value);
-  const pErr = validatePassword(passwordInput.value);
+  const pErr = validateStrongPassword(passwordInput.value);
   const cErr = validateConfirmPassword(confirmInput.value, passwordInput.value);
 
   showError(nameInput,     nameError,     nErr);
