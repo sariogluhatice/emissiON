@@ -48,6 +48,7 @@ form.addEventListener('submit', async (e) => {
     const response = await authService.login(emailInput.value.trim(), passwordInput.value, rememberMeInput.checked);
     setApiMessage('Giriş başarılı! Yönlendiriliyorsunuz…', false);
     setTimeout(() => {
+      sessionStorage.removeItem('post_auth_redirect');
       const needsOnboarding = response?.user?.onboarding_completed === false;
       window.location.href = needsOnboarding ? 'onboarding.html' : 'dashboard.html';
     }, 1000);

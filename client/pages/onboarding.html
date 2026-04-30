@@ -5,31 +5,265 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Setup – EMISSON</title>
     <link rel="stylesheet" href="../css/main.css" />
+    <style>
+      /* ── Onboarding wizard overrides ── */
+      .onboarding-card {
+        max-width: 860px;
+        min-height: 560px;
+        align-items: stretch;
+      }
+
+      .ob-left {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        overflow-y: auto;
+      }
+
+      /* Progress bar */
+      .ob-progress {
+        margin-bottom: 28px;
+      }
+
+      .ob-progress-track {
+        height: 4px;
+        background: var(--color-border);
+        border-radius: 2px;
+        overflow: hidden;
+        margin-bottom: 8px;
+      }
+
+      .ob-progress-fill {
+        height: 100%;
+        background: var(--color-primary);
+        border-radius: 2px;
+        transition: width 0.35s ease;
+      }
+
+      .ob-progress-label {
+        font-size: 12px;
+        color: var(--color-text-muted);
+        font-weight: 600;
+        letter-spacing: 0.5px;
+      }
+
+      /* Step heading */
+      .ob-step-title {
+        font-size: 20px;
+        margin-bottom: 4px;
+      }
+
+      .ob-step-subtitle {
+        font-size: 13px;
+        color: var(--color-text-muted);
+        margin-bottom: 22px;
+        margin-top: 0;
+      }
+
+      /* Radio-group (pill style) */
+      .radio-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 4px;
+      }
+
+      .radio-group input[type="radio"] {
+        display: none;
+      }
+
+      .radio-group label {
+        display: inline-block;
+        padding: 7px 14px;
+        border: 1.5px solid var(--color-border);
+        border-radius: 20px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.15s;
+        background: var(--color-surface-muted);
+        color: var(--color-text);
+        user-select: none;
+      }
+
+      .radio-group input[type="radio"]:checked + label {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        color: #fff;
+        font-weight: 600;
+      }
+
+      .radio-group label:hover {
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+      }
+
+      .radio-group input[type="radio"]:checked + label:hover {
+        color: #fff;
+      }
+
+      /* Checkbox-group */
+      .checkbox-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 4px;
+      }
+
+      .checkbox-group input[type="checkbox"] {
+        display: none;
+      }
+
+      .checkbox-group label {
+        display: inline-block;
+        padding: 7px 14px;
+        border: 1.5px solid var(--color-border);
+        border-radius: 20px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.15s;
+        background: var(--color-surface-muted);
+        color: var(--color-text);
+        user-select: none;
+      }
+
+      .checkbox-group input[type="checkbox"]:checked + label {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        color: #fff;
+        font-weight: 600;
+      }
+
+      .checkbox-group label:hover {
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+      }
+
+      /* Field wrapper (handles show/hide transitions) */
+      .ob-field-wrapper {
+        margin-bottom: 18px;
+        transition: opacity 0.2s;
+      }
+
+      .ob-field-wrapper.ob-hidden {
+        display: none;
+      }
+
+      /* Navigation row */
+      .ob-nav {
+        display: flex;
+        gap: 10px;
+        margin-top: 24px;
+        padding-top: 16px;
+        border-top: 1px solid var(--color-border);
+      }
+
+      .ob-nav .btn-secondary {
+        min-width: 90px;
+      }
+
+      .ob-nav .btn-primary {
+        flex: 1;
+      }
+
+      /* Right panel decoration */
+      .ob-right-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 32px;
+        padding: 40px 32px;
+        text-align: center;
+        color: var(--color-text-muted);
+      }
+
+      .ob-right-icon {
+        font-size: 52px;
+        line-height: 1;
+      }
+
+      .ob-right-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--color-brand-text);
+      }
+
+      .ob-right-desc {
+        font-size: 13px;
+        line-height: 1.6;
+        max-width: 200px;
+      }
+
+      .ob-step-dots {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+        flex-wrap: wrap;
+        max-width: 200px;
+      }
+
+      .ob-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--color-border);
+        transition: background 0.2s;
+      }
+
+      .ob-dot.active {
+        background: var(--color-primary);
+      }
+
+      .ob-dot.done {
+        background: var(--color-success);
+      }
+
+      @media (max-width: 767px) {
+        .auth-right { display: none; }
+      }
+    </style>
   </head>
   <body>
     <main class="auth-page">
-      <div class="auth-card">
-        <!-- Left Panel: dynamic form -->
-        <div class="auth-left">
+      <div class="auth-card onboarding-card">
+
+        <!-- Left: wizard form -->
+        <div class="auth-left ob-left">
           <div class="auth-brand">EMISSON</div>
-          <h1 class="auth-heading" id="onboardingHeading">Set up your account</h1>
-          <p id="onboardingSubtext" style="font-size:14px;color:var(--color-text-muted);margin-bottom:20px;margin-top:-16px;"></p>
 
-          <form id="onboardingForm" novalidate>
-            <div id="formFields">
-              <!-- Fields injected by onboarding.js based on role -->
+          <!-- Progress bar -->
+          <div class="ob-progress">
+            <div class="ob-progress-track">
+              <div class="ob-progress-fill" id="progressFill" style="width:0%"></div>
             </div>
+            <span class="ob-progress-label" id="progressLabel">Step 1</span>
+          </div>
 
-            <p class="api-message" id="apiMessage"></p>
+          <!-- Step content (rendered by JS) -->
+          <div id="stepContainer"></div>
 
-            <button type="submit" class="btn-primary" id="submitBtn" style="width:100%;">
-              Continue to Dashboard
-            </button>
-          </form>
+          <!-- API message -->
+          <p class="api-message" id="apiMessage"></p>
+
+          <!-- Navigation -->
+          <div class="ob-nav">
+            <button type="button" class="btn-secondary" id="backBtn" style="display:none">← Back</button>
+            <button type="button" class="btn-primary"   id="nextBtn">Next →</button>
+          </div>
         </div>
 
-        <!-- Right Panel -->
-        <div class="auth-right"></div>
+        <!-- Right: decorative panel -->
+        <div class="auth-right">
+          <div class="ob-right-inner">
+            <div class="ob-right-icon" id="stepIcon">🌿</div>
+            <div class="ob-right-title" id="stepRightTitle">Carbon Profile</div>
+            <p class="ob-right-desc" id="stepRightDesc">
+              Answer a few questions so we can personalise your dashboard and insights.
+            </p>
+            <div class="ob-step-dots" id="stepDots"></div>
+          </div>
+        </div>
+
       </div>
     </main>
 

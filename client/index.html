@@ -2,15 +2,282 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <script>
-      // Akıllı Yönlendirme: Kullanıcının zaten giriş yapıp yapmadığını kontrol et
-      const token = localStorage.getItem('emission_token');
-      if (token) {
-        window.location.replace('pages/dashboard.html');
-      } else {
-        window.location.replace('pages/login.html');
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EMISSON – Carbon Footprint Tracker</title>
+    <link rel="stylesheet" href="css/main.css" />
+    <style>
+      .landing-page {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
       }
-    </script>
+
+      /* ── Nav ── */
+      .landing-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 40px;
+        background: var(--color-surface);
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      .landing-nav-brand {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        color: var(--color-brand-text);
+        text-decoration: none;
+      }
+
+      .landing-nav-links {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .landing-nav-links a.nav-link {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--color-text);
+        text-decoration: none;
+        padding: 8px 14px;
+        border-radius: var(--radius-md);
+        transition: background 0.15s;
+      }
+
+      .landing-nav-links a.nav-link:hover {
+        background: var(--color-bg);
+        color: var(--color-text);
+      }
+
+      .landing-nav-links a.btn-primary {
+        padding: 8px 18px;
+        font-size: 13px;
+        text-decoration: none;
+      }
+
+      /* ── Hero ── */
+      .landing-hero {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 80px 24px 60px;
+        background: linear-gradient(160deg, #f0f4ff 0%, #f0f0f0 70%);
+      }
+
+      .landing-badge {
+        display: inline-block;
+        background: rgba(46, 74, 143, 0.1);
+        color: var(--color-primary);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        padding: 6px 16px;
+        border-radius: 20px;
+        margin-bottom: 28px;
+      }
+
+      .landing-hero h1 {
+        font-size: 44px;
+        font-weight: 800;
+        color: var(--color-brand-text);
+        line-height: 1.2;
+        margin-bottom: 20px;
+        max-width: 620px;
+      }
+
+      .landing-hero p {
+        font-size: 16px;
+        color: var(--color-text-muted);
+        max-width: 480px;
+        line-height: 1.65;
+        margin-bottom: 36px;
+      }
+
+      #ctaBtn {
+        font-size: 15px;
+        padding: 14px 36px;
+        letter-spacing: 0.3px;
+      }
+
+      /* ── Feature cards ── */
+      .landing-features {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        padding: 0 24px 64px;
+        background: linear-gradient(160deg, #f0f4ff 0%, #f0f0f0 70%);
+      }
+
+      .feature-card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        padding: 28px 24px;
+        width: 190px;
+        text-align: center;
+        box-shadow: var(--shadow-card);
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+      }
+
+      .feature-card-icon {
+        font-size: 30px;
+        margin-bottom: 14px;
+      }
+
+      .feature-card h3 {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--color-brand-text);
+        margin-bottom: 8px;
+      }
+
+      .feature-card p {
+        font-size: 12px;
+        color: var(--color-text-muted);
+        line-height: 1.55;
+      }
+
+      /* ── Footer ── */
+      .landing-footer {
+        text-align: center;
+        padding: 20px;
+        font-size: 12px;
+        color: var(--color-placeholder);
+        border-top: 1px solid var(--color-border);
+        background: var(--color-surface);
+      }
+
+      @media (max-width: 600px) {
+        .landing-nav  { padding: 16px 20px; }
+        .landing-hero h1 { font-size: 28px; }
+        .landing-hero p  { font-size: 14px; }
+        .landing-features { flex-direction: column; align-items: center; }
+        .feature-card { width: 100%; max-width: 320px; }
+      }
+    </style>
   </head>
-  <body></body>
+  <body class="page-body">
+
+    <!--
+      Inline auth guard (runs before page renders).
+      Logged-in users never need to see the landing page:
+        - onboarding pending  → onboarding
+        - onboarding done     → dashboard
+    -->
+    <script>
+      (function () {
+        var token =
+          localStorage.getItem('emission_token') ||
+          sessionStorage.getItem('emission_token');
+        if (!token) return;
+        try {
+          var user = JSON.parse(localStorage.getItem('user') || 'null');
+          if (user && user.onboarding_completed === false) {
+            window.location.replace('pages/onboarding.html');
+          } else {
+            window.location.replace('pages/dashboard.html');
+          }
+        } catch (_) {
+          window.location.replace('pages/dashboard.html');
+        }
+      })();
+    </script>
+
+    <div class="landing-page">
+
+      <!-- Navigation -->
+      <nav class="landing-nav">
+        <span class="landing-nav-brand">EMISSON</span>
+        <div class="landing-nav-links">
+          <a href="pages/login.html" class="nav-link">Login</a>
+          <a href="pages/register.html" class="btn-primary">Register</a>
+        </div>
+      </nav>
+
+      <!-- Hero -->
+      <section class="landing-hero">
+        <span class="landing-badge">Carbon Footprint Tracker</span>
+
+        <h1>Discover your carbon<br>emission profile</h1>
+
+        <p>
+          Take a 2-minute test to understand your personal, household, or company
+          carbon footprint — and get tailored insights to help you reduce it.
+        </p>
+
+        <button id="ctaBtn" class="btn-primary">
+          Find Your Emission Type &rarr;
+        </button>
+      </section>
+
+      <!-- Feature cards -->
+      <section class="landing-features">
+        <div class="feature-card">
+          <div class="feature-card-icon">👤</div>
+          <h3>Individual</h3>
+          <p>Track your personal transport, energy, and shopping emissions.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon">🏠</div>
+          <h3>Household</h3>
+          <p>Monitor shared energy use and vehicle habits for your whole family.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon">🏢</div>
+          <h3>Company</h3>
+          <p>Manage and report company-wide emissions across departments.</p>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="landing-footer">
+        &copy; 2025 EMISSON &mdash; Carbon Emission Tracking Platform
+      </footer>
+
+    </div>
+
+    <!--
+      CTA routing logic.
+      Uses ES module import so TokenManager is the single source of truth
+      for token storage keys — no duplication.
+    -->
+    <script type="module">
+      import { TokenManager } from './js/api/tokenManager.js';
+
+      document.getElementById('ctaBtn').addEventListener('click', () => {
+        if (TokenManager.exists()) {
+          // Logged in: the inline guard above would have redirected on load,
+          // but handle the click path defensively as well.
+          try {
+            const user = JSON.parse(localStorage.getItem('user') || 'null');
+            if (user && user.onboarding_completed === false) {
+              window.location.href = 'pages/onboarding.html';
+            } else {
+              window.location.href = 'pages/dashboard.html';
+            }
+          } catch (_) {
+            window.location.href = 'pages/dashboard.html';
+          }
+        } else {
+          // Not logged in: record the intent so login.js can pick it up
+          // after the full register → verify-email → login flow completes.
+          sessionStorage.setItem('post_auth_redirect', 'onboarding');
+          window.location.href = 'pages/register.html';
+        }
+      });
+    </script>
+
+  </body>
 </html>

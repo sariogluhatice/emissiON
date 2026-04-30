@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Settings – EMISSON</title>
+    <link rel="stylesheet" href="../css/main.css" />
+    <style>
+      .settings-current-value {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        background: var(--color-bg-alt);
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        font-size: 14px;
+        color: var(--color-text-muted);
+        margin-bottom: 4px;
+      }
+      .settings-divider {
+        border: none;
+        border-top: 1px solid var(--color-border);
+        margin: 24px 0;
+      }
+      .verify-code-input {
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: 0.5rem;
+        text-align: center;
+        padding: 14px;
+        border: 2px solid var(--color-border);
+        border-radius: 10px;
+        width: 100%;
+        box-sizing: border-box;
+        background: var(--color-bg-alt);
+        color: var(--color-text);
+        transition: border-color 0.2s;
+      }
+      .verify-code-input:focus {
+        outline: none;
+        border-color: var(--color-primary);
+      }
+      .verify-hint {
+        font-size: 13px;
+        color: var(--color-text-muted);
+        margin-top: 8px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">EMISSON</div>
+        <nav class="sidebar-nav">
+          <a href="dashboard.html" class="nav-item" id="nav-dashboard">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>
+            Dashboard
+          </a>
+          <a href="emissions.html" class="nav-item" id="nav-emissions">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"></path><path d="M3 9h18M3 15h18M9 3v18"></path></svg>
+            My Emissions
+          </a>
+          <a href="ocr-import.html" class="nav-item" id="nav-ocr">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"></path><path d="M8 8h8M8 12h8M8 16h5"></path></svg>
+            OCR Import
+          </a>
+          <a href="shopping-receipt.html" class="nav-item" id="nav-shopping">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+            Shopping CO₂
+          </a>
+          <a href="smart-insights.html" class="nav-item" id="nav-insights">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            Smart Insights
+          </a>
+          <a href="profile.html" class="nav-item" id="nav-profile">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path></svg>
+            Profile
+          </a>
+          <a href="settings.html" class="nav-item active" id="nav-settings">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Settings
+          </a>
+        </nav>
+        <div class="sidebar-footer">
+          <button class="btn-logout" id="logoutBtn">Log out</button>
+        </div>
+      </aside>
+
+      <div class="main-content">
+        <header class="topbar">
+          <span class="topbar-title">Settings</span>
+          <div class="topbar-user">
+            <div class="user-avatar" id="userInitials">?</div>
+            <span id="userName">Loading…</span>
+          </div>
+        </header>
+
+        <main class="page-body settings-body">
+          <div class="settings-layout">
+
+            <!-- Settings nav (sticky left panel) -->
+            <nav class="settings-nav" id="settingsNav">
+              <a href="#edit-profile"   class="settings-nav-item active">Edit Profile</a>
+              <a href="#security"       class="settings-nav-item">Security</a>
+              <a href="#notifications"  class="settings-nav-item">Notifications</a>
+              <a href="#carbon-profile" class="settings-nav-item">Carbon Profile</a>
+              <a href="#account"        class="settings-nav-item">Account</a>
+            </nav>
+
+            <!-- Settings content -->
+            <div class="settings-content">
+
+              <!-- ── Edit Profile ── -->
+              <section id="edit-profile" class="content-card settings-section">
+                <div class="content-card-header">
+                  <span class="content-card-title">Edit Profile</span>
+                </div>
+
+                <!-- Name form (instant save) -->
+                <form id="editNameForm" novalidate>
+                  <div class="form-group">
+                    <label class="label" for="editName">Full Name</label>
+                    <input class="input" type="text" id="editName" autocomplete="name" />
+                  </div>
+                  <p class="api-message" id="editNameMsg"></p>
+                  <button type="submit" class="btn-primary" id="saveNameBtn">Save Name</button>
+                </form>
+
+                <hr class="settings-divider" />
+
+                <!-- Email change form (2-step verification) -->
+                <form id="emailChangeForm" novalidate>
+                  <div class="form-group">
+                    <label class="label">Current Email</label>
+                    <div class="settings-current-value" id="currentEmailDisplay">—</div>
+                  </div>
+                  <div class="form-group">
+                    <label class="label" for="newEmail">New Email Address</label>
+                    <input class="input" type="email" id="newEmail" autocomplete="email"
+                           placeholder="Enter new email address" />
+                    <span class="form-hint">A 6-digit verification code will be sent to the new address.</span>
+                  </div>
+                  <p class="api-message" id="emailChangeMsg"></p>
+                  <button type="submit" class="btn-primary" id="requestEmailChangeBtn">Send Verification Code</button>
+                </form>
+              </section>
+
+              <!-- ── Security / Change Password ── -->
+              <section id="security" class="content-card settings-section">
+                <div class="content-card-header">
+                  <span class="content-card-title">Change Password</span>
+                </div>
+                <form id="changePasswordForm" novalidate>
+                  <div class="form-group">
+                    <label class="label" for="currentPassword">Current Password</label>
+                    <input class="input" type="password" id="currentPassword" autocomplete="current-password" />
+                  </div>
+                  <div class="form-group">
+                    <label class="label" for="newPassword">New Password</label>
+                    <input class="input" type="password" id="newPassword" autocomplete="new-password" />
+                    <span class="form-hint">Min. 8 characters — uppercase, lowercase, digit, symbol.</span>
+                  </div>
+                  <div class="form-group">
+                    <label class="label" for="confirmPassword">Confirm New Password</label>
+                    <input class="input" type="password" id="confirmPassword" autocomplete="new-password" />
+                  </div>
+                  <p class="api-message" id="changePasswordMsg"></p>
+                  <button type="submit" class="btn-primary" id="savePasswordBtn">Send Verification Code</button>
+                </form>
+              </section>
+
+              <!-- ── Notifications ── -->
+              <section id="notifications" class="content-card settings-section">
+                <div class="content-card-header">
+                  <span class="content-card-title">Notification Preferences</span>
+                </div>
+                <div class="settings-toggle-row">
+                  <div>
+                    <div class="settings-toggle-label">Email notifications</div>
+                    <div class="settings-toggle-desc">Receive important account and emission alerts by email.</div>
+                  </div>
+                  <label class="settings-toggle">
+                    <input type="checkbox" id="emailNotifications" />
+                    <span class="settings-toggle-track"></span>
+                  </label>
+                </div>
+                <div class="settings-toggle-row">
+                  <div>
+                    <div class="settings-toggle-label">Carbon tips</div>
+                    <div class="settings-toggle-desc">Receive weekly tips and insights to reduce your carbon footprint.</div>
+                  </div>
+                  <label class="settings-toggle">
+                    <input type="checkbox" id="carbonTips" />
+                    <span class="settings-toggle-track"></span>
+                  </label>
+                </div>
+                <p class="api-message" id="notifMsg"></p>
+              </section>
+
+              <!-- ── Carbon Profile ── -->
+              <section id="carbon-profile" class="content-card settings-section">
+                <div class="content-card-header">
+                  <span class="content-card-title">Carbon Profile</span>
+                </div>
+                <p style="font-size:14px;color:var(--color-text-muted);margin-bottom:16px">
+                  Your carbon profile was collected during onboarding and is used to personalise your
+                  dashboard, estimates, and AI insights. You can update it at any time.
+                </p>
+                <div class="settings-warning">
+                  Retaking the carbon profile test will update your stored answers and normalised profile data.
+                  Your emission records will not be affected.
+                </div>
+                <div id="obStatusRow" style="margin-bottom:16px"></div>
+                <a href="onboarding.html?retake=1" class="btn-secondary">Retake Carbon Profile Test →</a>
+              </section>
+
+              <!-- ── Account ── -->
+              <section id="account" class="content-card settings-section">
+                <div class="content-card-header">
+                  <span class="content-card-title">Account</span>
+                </div>
+                <div class="settings-account-row">
+                  <div>
+                    <div class="settings-toggle-label">Sign out</div>
+                    <div class="settings-toggle-desc">End your current session on this device.</div>
+                  </div>
+                  <button class="btn-secondary" id="settingsLogoutBtn">Log out</button>
+                </div>
+                <div class="settings-account-row settings-danger-row">
+                  <div>
+                    <div class="settings-toggle-label settings-danger-label">Delete account</div>
+                    <div class="settings-toggle-desc">Permanently delete your account and all emission data. This cannot be undone.</div>
+                  </div>
+                  <button class="btn-danger" id="deleteAccountBtn">Delete account</button>
+                </div>
+              </section>
+
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Verification code modal (email change + password change) -->
+    <div class="modal-backdrop" id="verifyModal" style="display:none">
+      <div class="modal-box">
+        <h3 class="modal-title" id="verifyModalTitle">Enter Verification Code</h3>
+        <p class="modal-body" id="verifyModalDesc">A 6-digit code was sent to your email. Enter it below to confirm the change.</p>
+        <div class="form-group" style="margin-top:16px">
+          <input class="verify-code-input" type="text" id="verifyCode"
+                 inputmode="numeric" maxlength="6" placeholder="——————"
+                 autocomplete="one-time-code" />
+          <p class="verify-hint">Code expires in 10 minutes.</p>
+        </div>
+        <p class="api-message" id="verifyMsg"></p>
+        <div class="modal-actions">
+          <button class="btn-secondary" id="verifyCancelBtn">Cancel</button>
+          <button class="btn-primary"   id="verifyConfirmBtn">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete account confirmation modal -->
+    <div class="modal-backdrop" id="deleteModal" style="display:none">
+      <div class="modal-box">
+        <h3 class="modal-title">Delete Account</h3>
+        <p class="modal-body">This will permanently delete your account and all emission records. Enter your password to confirm.</p>
+        <div class="form-group" style="margin-top:16px">
+          <label class="label" for="deletePassword">Password</label>
+          <input class="input" type="password" id="deletePassword" placeholder="Your current password" />
+        </div>
+        <p class="api-message" id="deleteMsg"></p>
+        <div class="modal-actions">
+          <button class="btn-secondary" id="deleteCancelBtn">Cancel</button>
+          <button class="btn-danger"    id="deleteConfirmBtn">Yes, delete my account</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="../js/settings.js"></script>
+  </body>
+</html>

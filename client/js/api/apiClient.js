@@ -48,5 +48,9 @@ export class ApiClient {
     get(endpoint, options = {}) { return this.request(endpoint, { ...options, method: 'GET' }); }
     post(endpoint, body, options = {}) { return this.request(endpoint, { ...options, method: 'POST', body: JSON.stringify(body) }); }
     put(endpoint, body, options = {}) { return this.request(endpoint, { ...options, method: 'PUT', body: JSON.stringify(body) }); }
-    delete(endpoint, options = {}) { return this.request(endpoint, { ...options, method: 'DELETE' }); }
+    delete(endpoint, body = null, options = {}) {
+        const opts = { ...options, method: 'DELETE' };
+        if (body !== null) opts.body = JSON.stringify(body);
+        return this.request(endpoint, opts);
+    }
 }

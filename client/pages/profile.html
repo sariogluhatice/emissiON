@@ -3,17 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Profile – EmissiON</title>
-    <meta
-      name="description"
-      content="View and update your EmissiON account profile."
-    />
-    <!-- Tüm sayfalar için ortak ana stil dosyası -->
+    <title>Profile – EMISSON</title>
     <link rel="stylesheet" href="../css/main.css" />
   </head>
   <body>
     <div class="app-shell">
-      <!-- Sidebar (Yan Menü) Bölümü -->
       <aside class="sidebar">
         <div class="sidebar-brand">EMISSON</div>
         <nav class="sidebar-nav">
@@ -41,13 +35,16 @@
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path></svg>
             Profile
           </a>
+          <a href="settings.html" class="nav-item" id="nav-settings">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Settings
+          </a>
         </nav>
         <div class="sidebar-footer">
           <button class="btn-logout" id="logoutBtn">Log out</button>
         </div>
       </aside>
 
-      <!-- Ana İçerik Bölgesi -->
       <div class="main-content">
         <header class="topbar">
           <span class="topbar-title">Profile</span>
@@ -60,113 +57,66 @@
         <main class="page-body">
           <div class="page-header">
             <h1>My Profile</h1>
-            <p>Hesap detayları ve genel istatistik özeti.</p>
+            <p>Account details and your carbon footprint profile.</p>
           </div>
 
           <div class="profile-grid">
-            <!-- Profil Kartı (Avatar ve Kimlik Bilgileri) -->
-            <div class="profile-avatar-card">
-              <div class="profile-avatar-circle" id="profileAvatarCircle">
-                ?
-              </div>
+
+            <!-- Left: Identity card -->
+            <div class="profile-identity-card">
+              <div class="profile-avatar-circle" id="profileAvatar">?</div>
               <div class="profile-name" id="profileName">—</div>
               <div class="profile-email" id="profileEmail">—</div>
-              <span class="profile-role-badge" id="profileRole">user</span>
-              <div class="profile-since" id="profileSince">Member since —</div>
+              <span class="profile-role-badge" id="profileRole">—</span>
+              <div class="profile-since" id="profileSince">—</div>
+              <div class="profile-ob-badge" id="obStatusBadge">—</div>
+              <div class="profile-identity-actions">
+                <a href="settings.html" class="btn-secondary profile-action-link">Edit Profile</a>
+                <a href="settings.html#carbon-profile" class="btn-secondary profile-action-link">Carbon Settings</a>
+              </div>
             </div>
 
-            <!-- Sağ Taraf: Detaylı Bilgiler ve İstatistikler -->
+            <!-- Right: Stats + Carbon Profile -->
             <div>
-              <div class="content-card">
-                <div class="content-card-header">
-                  <span class="content-card-title">Account Information</span>
-                </div>
-                <div class="form-group">
-                  <label class="label" for="profileNameInput">Full Name</label>
-                  <input
-                    class="input"
-                    type="text"
-                    id="profileNameInput"
-                    readonly
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="label" for="profileEmailInput"
-                    >Email Address</label
-                  >
-                  <input
-                    class="input"
-                    type="email"
-                    id="profileEmailInput"
-                    readonly
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="label" for="profileRoleInput"
-                    >Account Role</label
-                  >
-                  <input
-                    class="input"
-                    type="text"
-                    id="profileRoleInput"
-                    readonly
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="label" for="profileCreatedInput"
-                    >Join Date</label
-                  >
-                  <input
-                    class="input"
-                    type="text"
-                    id="profileCreatedInput"
-                    readonly
-                  />
-                </div>
-              </div>
 
-              <!-- Emisyon Özeti -->
+              <!-- Emission stats -->
               <div class="content-card">
                 <div class="content-card-header">
-                  <span class="content-card-title"
-                    >Emission Activity Overview</span
-                  >
+                  <span class="content-card-title">Emission Activity</span>
+                  <a href="emissions.html" style="font-size:12px;color:var(--color-primary);text-decoration:none">View all →</a>
                 </div>
-                <p
-                  style="
-                    font-size: 13px;
-                    color: var(--color-text-muted);
-                    margin-bottom: 24px;
-                  "
-                >
-                  Kullanım alışkanlıklarınızın karbon ayak iziniz üzerindeki
-                  genel etkisi.
-                </p>
-                <div class="card-grid" style="margin-bottom: 0">
+                <div class="card-grid" style="margin-bottom:0">
                   <div class="stat-card">
-                    <span class="stat-label">Toplam Emisyon</span>
+                    <span class="stat-label">Total Emissions</span>
                     <span class="stat-value" id="profileStatTotal">—</span>
                     <span class="stat-unit">kg CO₂e</span>
                   </div>
                   <div class="stat-card accent-green">
-                    <span class="stat-label">Bu Ayki Emisyon</span>
+                    <span class="stat-label">This Month</span>
                     <span class="stat-value" id="profileStatMonth">—</span>
                     <span class="stat-unit">kg CO₂e</span>
                   </div>
                   <div class="stat-card">
-                    <span class="stat-label">Toplam Giriş</span>
+                    <span class="stat-label">Total Entries</span>
                     <span class="stat-value" id="profileStatEntries">—</span>
-                    <span class="stat-unit">adet</span>
+                    <span class="stat-unit">records</span>
                   </div>
                 </div>
               </div>
+
+              <!-- Carbon profile (rendered by JS) -->
+              <div id="carbonProfileContainer">
+                <div class="content-card" style="text-align:center;padding:32px;color:var(--color-text-muted)">
+                  Loading carbon profile…
+                </div>
+              </div>
+
             </div>
           </div>
         </main>
       </div>
     </div>
 
-    <!-- Sayfa özel JS mantığı -->
     <script type="module" src="../js/profile.js"></script>
   </body>
 </html>
