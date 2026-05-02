@@ -46,8 +46,13 @@ function render() {
   const category = categoryFilter.value;
 
   const filtered = allEmissions.filter(e => {
-    const matchesSearch = !query || e.source.toLowerCase().includes(query);
-    const matchesCat    = !category || e.source === category;
+    const matchesSearch = !query || (
+      e.source.toLowerCase().includes(query) ||
+      String(e.date || '').toLowerCase().includes(query) ||
+      String(parseFloat(e.amount || 0).toFixed(1)).includes(query) ||
+      'karbon aktivite kaydı'.includes(query)
+    );
+    const matchesCat = !category || e.source === category;
     return matchesSearch && matchesCat;
   });
 

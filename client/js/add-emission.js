@@ -70,25 +70,34 @@ const aiInsightText = document.getElementById('aiInsightText');
 
 // Climatiq Aktivite Eşleşmeleri
 const ACTIVITY_MAP = {
-  Energy: [
-    { id: 'electricity-supply_grid-source_supplier_mix', label: 'Elektrik (Şebeke Karışımı)', unit: 'kWh' },
-    { id: 'fuel-type_gaseous_fuels_net-fuel_use_na', label: 'Doğalgaz', unit: 'kWh' }
+  energy: [
+    { id: 'electricity-supply_grid-source_supplier_mix', label: 'Elektrik', unit: 'kWh' },
   ],
-  Transport: [
+  water: [
+    { id: 'water_supply-type_na', label: 'Su Kullanımı', unit: 'l' },
+  ],
+  gas: [
+    { id: 'fuel-type_gaseous_fuels_net-fuel_use_na', label: 'Doğalgaz', unit: 'kWh' },
+  ],
+  transport: [
     { id: 'passenger_vehicle-vehicle_type_car-fuel_source_petrol-engine_size_na-vehicle_age_na-vehicle_weight_na', label: 'Benzinli Araç', unit: 'km' },
-    { id: 'passenger_vehicle-vehicle_type_car-fuel_source_diesel-engine_size_na-vehicle_age_na-vehicle_weight_na', label: 'Dizel Araç', unit: 'km' }
+    { id: 'passenger_vehicle-vehicle_type_car-fuel_source_diesel-engine_size_na-vehicle_age_na-vehicle_weight_na', label: 'Dizel Araç', unit: 'km' },
+    { id: 'passenger_vehicle-vehicle_type_bus-fuel_source_na-engine_size_na-vehicle_age_na-vehicle_weight_na', label: 'Otobüs', unit: 'km' },
+    { id: '__flight__', label: 'Uçuş (Rota)', unit: 'rota', flight: true },
   ],
-  Flight: [
-    { id: 'transport_flight-passenger_flight-type_domestic-distance_na', label: 'Yurtiçi Uçuş (KM)', unit: 'km' },
-    { id: 'transport_flight-passenger_flight-type_short_haul-distance_na', label: 'Kısa Mesafe Uçuş (KM)', unit: 'km' },
-    { id: 'transport_flight-passenger_flight-type_long_haul-distance_na', label: 'Uzun Mesafe Uçuş (KM)', unit: 'km' }
+  materials: [
+    { id: 'paper_and_cardboard-type_paper_average_source', label: 'Kağıt', unit: 'kg' },
+    { id: 'general_retail-type_nonstore_retailers', label: 'Plastik / Ambalaj (Harcama)', unit: 'usd' },
   ],
-  Other: [
-    { id: 'general_retail-type_nonstore_retailers', label: 'Alışveriş / Genel Perakende', unit: 'usd' },
+  waste: [
     { id: 'waste_management-type_solid_waste_disposal-disposal_method_managed_waste_disposal_sites', label: 'Genel Atık', unit: 'kg' },
-    { id: 'paper_and_cardboard-type_paper_average_source', label: 'Kağıt Tüketimi', unit: 'kg' },
-    { id: 'water_supply-type_na', label: 'Su Kullanımı', unit: 'l' }
-  ]
+  ],
+  food: [
+    { id: 'general_retail-type_nonstore_retailers', label: 'Gıda Harcaması', unit: 'usd' },
+  ],
+  other: [
+    { id: 'general_retail-type_nonstore_retailers', label: 'Genel Perakende / Alışveriş', unit: 'usd' },
+  ],
 };
 
 categoryEl.addEventListener('change', () => {
@@ -106,16 +115,9 @@ categoryEl.addEventListener('change', () => {
 
   if (ACTIVITY_MAP[cat]) {
     climatiqBox.style.display = 'block';
-    
-    if (cat === 'Flight') {
-      standardBlock.style.display = 'none';
-      flightBlock.style.display = 'block';
-    } else {
-      standardBlock.style.display = 'block';
-      flightBlock.style.display = 'none';
-    }
-    
-    // Aktiviteleri doldur
+    standardBlock.style.display = 'block';
+    flightBlock.style.display = 'none';
+
     const activities = ACTIVITY_MAP[cat];
     activityEl.innerHTML = '<option value="">Bir aktivite seçin…</option>';
     activities.forEach(acc => {
@@ -126,21 +128,28 @@ categoryEl.addEventListener('change', () => {
       activityEl.appendChild(opt);
     });
 
-    // İlk aktiviteyi ve birimini varsayılan yap
     if (activities.length > 0) {
       activityEl.selectedIndex = 1;
       unitLabel.textContent = activities[0].unit;
+      activityEl.dispatchEvent(new Event('change'));
     }
   } else {
     climatiqBox.style.display = 'none';
   }
 });
 
-// Aktivite Değişimi -> Birimi güncelle ve hesaplamayı tetikle
+// Aktivite Değişimi -> Birimi güncelle, uçuş bloğunu toggle et, hesapla
 activityEl.addEventListener('change', () => {
   const selected = activityEl.options[activityEl.selectedIndex];
-  if (selected && selected.dataset.unit) {
-    unitLabel.textContent = selected.dataset.unit;
+  const isFlightActivity = selected?.value === '__flight__';
+
+  if (isFlightActivity) {
+    standardBlock.style.display = 'none';
+    flightBlock.style.display = 'block';
+  } else {
+    standardBlock.style.display = 'block';
+    flightBlock.style.display = 'none';
+    if (selected?.dataset.unit) unitLabel.textContent = selected.dataset.unit;
   }
   triggerCalculation();
 });
@@ -151,7 +160,8 @@ const triggerCalculation = async () => {
   let payload = {};
 
   try {
-    if (cat === 'Flight') {
+    const isFlightActivity = activityEl.value === '__flight__';
+    if (isFlightActivity) {
       const from = originEl.value.trim().toUpperCase();
       const to = destEl.value.trim().toUpperCase();
       if (from.length < 3 || to.length < 3) {
@@ -159,7 +169,7 @@ const triggerCalculation = async () => {
         calcStatus.textContent = 'Rota bekleniyor (örn. IST -> LHR)...';
         return;
       }
-      payload = { from, to, category: cat };
+      payload = { from, to };
     } else {
       const activityId = activityEl.value;
       const quantity   = parseFloat(quantityEl.value);
@@ -211,8 +221,8 @@ const triggerCalculation = async () => {
         // AI için gerekli etiketi belirle
         const from = originEl.value.trim().toUpperCase();
         const to = destEl.value.trim().toUpperCase();
-        const displayLabel = (cat === 'Flight') 
-          ? `Uçuş (${from} - ${to})` 
+        const displayLabel = (activityEl.value === '__flight__')
+          ? `Uçuş (${from} - ${to})`
           : (activityEl.options[activityEl.selectedIndex]?.textContent || 'Bilinmeyen Aktivite');
 
         const insightRes = await fetch('/api/emissions/generate-insight', {
@@ -323,11 +333,16 @@ if (isEdit) {
                 
                 // Try to guess category from source
                 const source = record.source.toLowerCase();
-                let category = 'Other';
-                
-                if (source.includes('electricity') || source.includes('gas')) category = 'Energy';
-                else if (source.includes('car')) category = 'Transport';
-                else if (source.includes('flight')) category = 'Flight';
+                let category = 'other';
+
+                if (source.includes('electricity') || source.includes('elektrik')) category = 'energy';
+                else if (source.includes('water') || source.includes('su')) category = 'water';
+                else if (source.includes('gas') || source.includes('doğalgaz')) category = 'gas';
+                else if (source.includes('car') || source.includes('araç') || source.includes('bus') || source.includes('otobüs')) category = 'transport';
+                else if (source.includes('flight') || source.includes('uçuş')) category = 'transport';
+                else if (source.includes('paper') || source.includes('kağıt') || source.includes('plastic')) category = 'materials';
+                else if (source.includes('waste') || source.includes('atık')) category = 'waste';
+                else if (source.includes('food') || source.includes('gıda')) category = 'food';
                 
                 categoryEl.value = category;
                 categoryEl.dispatchEvent(new Event('change'));
@@ -358,23 +373,16 @@ form.addEventListener('submit', async (e) => {
 
   try {
     // Kayıt için açıklayıcı bir "kaynak" (source) belirle
-    let source = categoryEl.value; 
     const fromInput = originEl.value.trim();
     const toInput   = destEl.value.trim();
+    let source;
 
-    if (fromInput && toInput) {
+    if (activityEl.value === '__flight__' && fromInput && toInput) {
       source = `Uçuş: ${fromInput.toUpperCase()}-${toInput.toUpperCase()}`;
     } else {
       const catList = ACTIVITY_MAP[categoryEl.value];
-      if (catList) {
-        const item = catList.find(i => i.id === activityEl.value);
-        if (item) source = item.label;
-      }
-    }
-
-    // Hata Giderme: Eğer kaynak hala genel kategoriyse, boş kalmasından iyidir.
-    if (!source || source === "") {
-        source = categoryEl.value || "Diğer Aktivite";
+      const item = catList?.find(i => i.id === activityEl.value);
+      source = item?.label || categoryEl.value || 'Diğer Aktivite';
     }
 
     const payload = {

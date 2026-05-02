@@ -25,8 +25,8 @@ function extractQuantityAndUnit(text) {
     for (const { re, unit } of patterns) {
         const m = text.match(re);
         if (m) {
-            const raw = m[1].replace(/,/g, '');
-            const quantity = parseFloat(raw);
+            const raw = parseTurkishNumber(m[1]);
+            const quantity = raw;
             if (Number.isFinite(quantity) && quantity > 0) {
                 return { quantity, unit };
             }
@@ -120,6 +120,63 @@ function normalizeExpenseData(expenseDoc) {
 // Turkish grand-total label patterns on e-fatura / receipts
 const TR_TOTAL_RE = /genel toplam|toplam tutar|ödenecek tutar|ödenecek|kdv dahil|genel tutar/i;
 
+/**
+ * Türkçe ve İngilizce sayı formatlarını float'a çevirir.
+ * TR: 1.268,86 → 1268.86  |  268,86 → 268.86
+ * EN: 1,268.86 → 1268.86  |  268.86 → 268.86
+ * Ambiguous (Textract virgülü nokta olarak okursa): 1.268.86 → 1268.86
+ */
+function parseTurkishNumber(str) {
+    let t = String(str || '').trim();
+    if (!t) return null;
+
+    // TR thousands + decimal: 1.268,86  /  12.345.678,90
+    if (/^\d{1,3}(\.\d{3})+,\d{1,2}$/.test(t)) {
+        const n = parseFloat(t.replace(/\./g, '').replace(',', '.'));
+        return Number.isFinite(n) && n > 0 ? n : null;
+    }
+
+    // EN thousands + decimal: 1,268.86
+    if (/^\d{1,3}(,\d{3})+\.\d{1,2}$/.test(t)) {
+        const n = parseFloat(t.replace(/,/g, ''));
+        return Number.isFinite(n) && n > 0 ? n : null;
+    }
+
+    // Ambiguous two-dot (Textract OCR'd comma as dot): 1.268.86
+    // Heuristic: middle group(s) have 3 digits, last group has 1-2 digits → TR decimal
+    if (/^\d{1,3}(\.\d{3})+\.\d{1,2}$/.test(t)) {
+        const lastDot = t.lastIndexOf('.');
+        const n = parseFloat(t.slice(0, lastDot).replace(/\./g, '') + '.' + t.slice(lastDot + 1));
+        return Number.isFinite(n) && n > 0 ? n : null;
+    }
+
+    // Pure thousands groups: 1.392 or 1,392
+    if (/^\d{1,3}([.,]\d{3})+$/.test(t)) {
+        const n = parseFloat(t.replace(/[.,]/g, ''));
+        return Number.isFinite(n) && n > 0 ? n : null;
+    }
+
+    // TR decimal comma (no thousands): 392,86
+    if (/^\d+,\d{1,2}$/.test(t)) {
+        const n = parseFloat(t.replace(',', '.'));
+        return Number.isFinite(n) && n > 0 ? n : null;
+    }
+
+    // EN decimal dot (no thousands): 392.86
+    if (/^\d+\.\d{1,2}$/.test(t)) {
+        const n = parseFloat(t);
+        return Number.isFinite(n) && n > 0 ? n : null;
+    }
+
+    // Integer
+    if (/^\d+$/.test(t)) {
+        const n = parseFloat(t);
+        return Number.isFinite(n) && n > 0 ? n : null;
+    }
+
+    return null;
+}
+
 function parseAmount(str) {
     const raw = String(str || '')
         .replace(/[₺€$£¥]/g, ' ')
@@ -131,52 +188,7 @@ function parseAmount(str) {
 
     const tokens = raw.match(/\d[\d.,]*/g) || [];
 
-    const parseTokenAmount = (token) => {
-        let t = String(token || '').trim();
-        if (!t) return null;
-
-        // TR thousands + decimal: 1.392,30
-        if (/^\d{1,3}(\.\d{3})+,\d{1,2}$/.test(t)) {
-            t = t.replace(/\./g, '').replace(',', '.');
-            const n = parseFloat(t);
-            return Number.isFinite(n) && n > 0 ? n : null;
-        }
-
-        // EN thousands + decimal: 1,392.30
-        if (/^\d{1,3}(,\d{3})+\.\d{1,2}$/.test(t)) {
-            t = t.replace(/,/g, '');
-            const n = parseFloat(t);
-            return Number.isFinite(n) && n > 0 ? n : null;
-        }
-
-        // Pure thousands groups: 1.392 or 1,392
-        if (/^\d{1,3}([.,]\d{3})+$/.test(t)) {
-            t = t.replace(/[.,]/g, '');
-            const n = parseFloat(t);
-            return Number.isFinite(n) && n > 0 ? n : null;
-        }
-
-        // Decimal comma: 392,30
-        if (/^\d+,\d{1,2}$/.test(t)) {
-            t = t.replace(',', '.');
-            const n = parseFloat(t);
-            return Number.isFinite(n) && n > 0 ? n : null;
-        }
-
-        // Decimal dot: 392.30
-        if (/^\d+\.\d{1,2}$/.test(t)) {
-            const n = parseFloat(t);
-            return Number.isFinite(n) && n > 0 ? n : null;
-        }
-
-        // Integer: 1300
-        if (/^\d+$/.test(t)) {
-            const n = parseFloat(t);
-            return Number.isFinite(n) && n > 0 ? n : null;
-        }
-
-        return null;
-    };
+    const parseTokenAmount = (token) => parseTurkishNumber(token);
 
     const values = tokens
         .map(parseTokenAmount)

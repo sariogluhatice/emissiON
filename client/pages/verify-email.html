@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Verify Email – EMISSON</title>
+    <title>E-posta Doğrulama – EMISSON</title>
     <link rel="stylesheet" href="../css/main.css" />
   </head>
   <body>
@@ -12,17 +12,17 @@
         <!-- Left Panel -->
         <div class="auth-left">
           <div class="auth-brand">EMISSON</div>
-          <h1 class="auth-heading">Verify Your Email</h1>
+          <h1 class="auth-heading">E-posta Adresinizi Doğrulayın</h1>
 
           <form id="verifyForm" novalidate>
             <!-- Email -->
             <div class="form-group">
-              <label class="label" for="email">Email</label>
+              <label class="label" for="email">E-posta</label>
               <input
                 class="input"
                 type="email"
                 id="email"
-                placeholder="Enter your email"
+                placeholder="E-posta adresinizi girin"
                 autocomplete="email"
               />
               <span class="error-msg" id="emailError"></span>
@@ -30,12 +30,12 @@
 
             <!-- Verification Code -->
             <div class="form-group">
-              <label class="label" for="code">Verification Code</label>
+              <label class="label" for="code">Doğrulama Kodu</label>
               <input
                 class="input"
                 type="text"
                 id="code"
-                placeholder="Enter 6-digit code"
+                placeholder="6 haneli kodu girin"
                 inputmode="numeric"
                 maxlength="6"
                 autocomplete="one-time-code"
@@ -47,14 +47,18 @@
             <p class="api-message" id="apiMessage"></p>
 
             <!-- Verify button -->
-            <button type="submit" class="btn-primary" id="submitBtn">Verify Email</button>
+            <button type="submit" class="btn-primary" id="submitBtn">
+              E-postayı Doğrula
+            </button>
 
             <!-- Resend code -->
-            <button type="button" class="btn-secondary" id="resendBtn">Resend Code</button>
+            <button type="button" class="btn-secondary" id="resendBtn">
+              Kodu Yeniden Gönder
+            </button>
 
             <!-- Back to login -->
             <p class="bottom-text">
-              Already verified? <a href="login.html">Login</a>
+              Zaten doğruladınız mı? <a href="login.html">Giriş Yap</a>
             </p>
           </form>
         </div>

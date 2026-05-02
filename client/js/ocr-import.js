@@ -24,7 +24,7 @@ const calcPreviewEl = document.getElementById('calcPreview');
 const confirmCreateBtn = document.getElementById('confirmCreateBtn');
 
 const CATEGORY_ACTIVITY = {
-  electricity: {
+  energy: {
     activityId: 'electricity-supply_grid-source_supplier_mix',
     expectedUnit: 'kWh',
     sourceLabel: 'Electricity Bill (OCR)'
@@ -34,12 +34,23 @@ const CATEGORY_ACTIVITY = {
     expectedUnit: 'l',
     sourceLabel: 'Water Bill (OCR)'
   },
-  natural_gas: {
+  gas: {
     activityId: 'fuel-type_gaseous_fuels_net-fuel_use_na',
     expectedUnit: 'kWh',
     sourceLabel: 'Natural Gas Bill (OCR)'
   }
 };
+
+// OCR ham kategori → sistem kategori + activityType dönüşümü
+const OCR_CATEGORY_MAP = {
+  electricity: { category: 'energy', activityType: 'electricity' },
+  water:       { category: 'water',  activityType: 'water'       },
+  natural_gas: { category: 'gas',    activityType: 'natural_gas' },
+};
+
+function mapOcrCategory(raw) {
+  return OCR_CATEGORY_MAP[raw] ?? { category: raw || '', activityType: raw || '' };
+}
 
 function normalizeQuantityForCalculation(category, quantity, unit) {
   const cleanUnit = String(unit || '').trim().toLowerCase();
@@ -86,10 +97,22 @@ runOcrBtn.addEventListener('click', async () => {
   try {
     const imageBase64 = await fileToBase64(file);
     const { ocrText, extracted } = await emissionService.extractOcrFromImage(imageBase64);
+    console.log('[OCR DEBUG] ocrText:', ocrText);
+    console.log('[OCR DEBUG] extracted:', extracted);
+
+    let debugPre = document.getElementById('_ocrDebugBlock');
+    if (!debugPre) {
+      debugPre = document.createElement('pre');
+      debugPre.id = '_ocrDebugBlock';
+      debugPre.style.cssText = 'background:#1e1e1e;color:#0f0;padding:12px;font-size:12px;white-space:pre-wrap;border-radius:6px;margin-top:12px;max-height:300px;overflow:auto;';
+      ocrTextEl.parentElement.appendChild(debugPre);
+    }
+    debugPre.textContent = '[RAW OCR TEXT]\n' + (ocrText || '(empty)');
 
     ocrTextEl.value = ocrText || '';
-    categoryEl.value = extracted?.category || '';
-    activityTypeEl.value = extracted?.activity_type || '';
+    const mapped = mapOcrCategory(extracted?.category);
+    categoryEl.value = mapped.category;
+    activityTypeEl.value = extracted?.activity_type || mapped.activityType;
     quantityEl.value = extracted?.quantity ?? '';
     unitEl.value = extracted?.unit || '';
     periodEl.value = extracted?.date || '';
@@ -132,8 +155,9 @@ extractBtn.addEventListener('click', async () => {
   try {
     const { extracted } = await emissionService.extractOcr(text);
 
-    categoryEl.value = extracted?.category || '';
-    activityTypeEl.value = extracted?.activity_type || '';
+    const mappedExtract = mapOcrCategory(extracted?.category);
+    categoryEl.value = mappedExtract.category;
+    activityTypeEl.value = extracted?.activity_type || mappedExtract.activityType;
     quantityEl.value = extracted?.quantity ?? '';
     unitEl.value = extracted?.unit || '';
     periodEl.value = extracted?.date || '';

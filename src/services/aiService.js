@@ -1,7 +1,4 @@
-/**
- * Gemini AI ile emisyon verilerini anlamlı bir kıyaslamaya dönüştüren servis.
- * Doğrudan REST API kullanarak kütüphane ve model ismi hatalarını bypass eder.
- */
+
 class AiService {
     async generateImpactInsight(activity, amount, unit, category = 'Genel') {
         const apiKey = process.env.GEMINI_API_KEY;
@@ -55,11 +52,6 @@ class AiService {
     }
 
     async extractUtilityBillData(ocrText) {
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-            throw new Error('GEMINI_API_KEY tanimli degil.');
-        }
-
         const safeText = String(ocrText || '').trim();
         if (!safeText) {
             throw new Error('OCR metni bos.');
@@ -69,7 +61,7 @@ class AiService {
 
 Your task is to extract structured data from OCR text of a utility bill and map it to the system's input fields.
 
-Return ONLY JSON.
+Return ONLY valid JSON, no explanation, no markdown.
 
 Fields to extract:
 - category (electricity, water, natural_gas)
@@ -94,28 +86,42 @@ OCR TEXT:
 ${safeText.slice(0, 12000)}
 """`;
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
+        const keys = [
+            process.env.GEMINI_API_KEY2,
+            process.env.GEMINI_API_KEY3,
+            process.env.GEMINI_API_KEY,
+        ].filter(Boolean);
 
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                    temperature: 0.1,
-                    responseMimeType: 'application/json'
+        if (!keys.length) throw new Error('Hic Gemini API anahtari tanimli degil.');
+
+        let rawText = null;
+        let lastError;
+        for (const key of keys) {
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${key}`;
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: { temperature: 0.1, responseMimeType: 'application/json' },
+                    }),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    const msg = data.error?.message || 'Gemini API hatasi';
+                    if (msg.includes('RESOURCE_EXHAUSTED') || msg.includes('quota')) { lastError = new Error(msg); continue; }
+                    throw new Error(msg);
                 }
-            })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            console.error('[AiService.extractUtilityBillData] API Error:', data);
-            throw new Error(data.error?.message || 'AI veri cikarma basarisiz oldu.');
+                rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (rawText) break;
+            } catch (err) {
+                if (err.message.includes('RESOURCE_EXHAUSTED') || err.message.includes('quota')) { lastError = err; continue; }
+                throw err;
+            }
         }
 
-        const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!rawText) throw lastError || new Error('AI yaniti bos geldi.');
         if (!rawText) {
             throw new Error('AI yaniti bos geldi.');
         }

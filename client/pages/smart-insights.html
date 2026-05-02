@@ -64,7 +64,12 @@
         flex-shrink: 0;
       }
       .skeleton {
-        background: linear-gradient(90deg, var(--color-border) 25%, var(--color-bg-alt) 50%, var(--color-border) 75%);
+        background: linear-gradient(
+          90deg,
+          var(--color-border) 25%,
+          var(--color-bg-alt) 50%,
+          var(--color-border) 75%
+        );
         background-size: 200% 100%;
         animation: loading 1.5s infinite;
         height: 20px;
@@ -72,11 +77,17 @@
         margin-bottom: 10px;
       }
       @keyframes loading {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
+        }
       }
       @media (max-width: 992px) {
-        .insight-grid { grid-template-columns: 1fr; }
+        .insight-grid {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
   </head>
@@ -86,36 +97,96 @@
         <div class="sidebar-brand">EMISSON</div>
         <nav class="sidebar-nav">
           <a href="dashboard.html" class="nav-item" id="nav-dashboard">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>
+            <svg
+              class="nav-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+            </svg>
             Dashboard
           </a>
           <a href="emissions.html" class="nav-item" id="nav-emissions">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"></path><path d="M3 9h18M3 15h18M9 3v18"></path></svg>
-            My Emissions
+            <svg
+              class="nav-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M3 3h18v18H3z"></path>
+              <path d="M3 9h18M3 15h18M9 3v18"></path>
+            </svg>
+            My Emission
           </a>
-          <a href="ocr-import.html" class="nav-item" id="nav-ocr">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"></path><path d="M8 8h8M8 12h8M8 16h5"></path></svg>
-            OCR Import
+          <a href="add-entry.html" class="nav-item" id="nav-add">
+            <svg
+              class="nav-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="16" />
+              <line x1="8" y1="12" x2="16" y2="12" />
+            </svg>
+            Yeni Kayıt
           </a>
-          <a href="shopping-receipt.html" class="nav-item" id="nav-shopping">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-            Shopping CO₂
-          </a>
-          <a href="smart-insights.html" class="nav-item active" id="nav-insights">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          <a
+            href="smart-insights.html"
+            class="nav-item active"
+            id="nav-insights"
+          >
+            <svg
+              class="nav-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+              />
+            </svg>
             Smart Insights
           </a>
           <a href="profile.html" class="nav-item" id="nav-profile">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path></svg>
+            <svg
+              class="nav-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="8" r="4"></circle>
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path>
+            </svg>
             Profile
           </a>
           <a href="settings.html" class="nav-item" id="nav-settings">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <svg
+              class="nav-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+              />
+            </svg>
             Settings
           </a>
         </nav>
         <div class="sidebar-footer">
-          <button class="btn-logout" id="logoutBtn">Log out</button>
+          <button class="btn-logout" id="logoutBtn">Çıkış Yap</button>
         </div>
       </aside>
 
@@ -131,7 +202,10 @@
         <main class="page-body">
           <div class="page-header">
             <h1>🔮 Karbon Zekası</h1>
-            <p>Geçmiş verilerin ve davranış profilin yapay zeka tarafından analiz edildi.</p>
+            <p>
+              Geçmiş verilerin ve davranış profilin yapay zeka tarafından analiz
+              edildi.
+            </p>
           </div>
 
           <div class="insight-grid">
@@ -139,7 +213,7 @@
             <div class="insight-card">
               <div class="ai-header">
                 <span class="ai-badge">Tahmin</span>
-                <h3 style="margin:0">Gelecek Ay Öngörüsü</h3>
+                <h3 style="margin: 0">Gelecek Ay Öngörüsü</h3>
               </div>
               <div id="predictionContent">
                 <div class="skeleton" style="width: 80%"></div>
@@ -151,7 +225,7 @@
             <div class="insight-card">
               <div class="ai-header">
                 <span class="ai-badge">Trend</span>
-                <h3 style="margin:0">Gidişat Analizi</h3>
+                <h3 style="margin: 0">Gidişat Analizi</h3>
               </div>
               <div id="trendContent">
                 <div class="skeleton" style="width: 90%"></div>
@@ -163,7 +237,7 @@
             <div class="insight-card" style="grid-column: 1 / -1">
               <div class="ai-header">
                 <span class="ai-badge">Tavsiyeler</span>
-                <h3 style="margin:0">Sana Özel Azaltma Önerileri</h3>
+                <h3 style="margin: 0">Sana Özel Azaltma Önerileri</h3>
               </div>
               <div id="recommendationContent">
                 <div class="skeleton" style="width: 100%"></div>

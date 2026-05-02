@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/sariogluhatice/emissiON#readme",
   "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.1041.0",
     "@aws-sdk/client-s3": "^3.1035.0",
     "@aws-sdk/client-textract": "^3.1035.0",
     "@google/generative-ai": "^0.24.1",

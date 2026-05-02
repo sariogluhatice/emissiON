@@ -55,6 +55,17 @@ scanBtn.addEventListener('click', async () => {
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Scan failed.');
 
+        // DEBUG — remove when done
+        console.log('[Shopping OCR raw response]', data);
+        let dbg = document.getElementById('_shopDebug');
+        if (!dbg) {
+            dbg = document.createElement('pre');
+            dbg.id = '_shopDebug';
+            dbg.style.cssText = 'background:#111;color:#0f0;font-size:11px;padding:10px;border-radius:6px;white-space:pre-wrap;margin-top:12px;max-height:200px;overflow:auto;';
+            extractedBox.after(dbg);
+        }
+        dbg.textContent = JSON.stringify(data, null, 2);
+
         // Show extracted data
         extractedBox.style.display = 'block';
         extAmount.textContent   = `${data.originalAmount} ${data.currency}`;

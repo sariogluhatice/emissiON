@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login – EMISSON</title>
+    <title>Giriş – EMISSON</title>
     <link rel="stylesheet" href="../css/main.css" />
   </head>
   <body>
@@ -12,17 +12,17 @@
         <!-- Left Panel -->
         <div class="auth-left">
           <div class="auth-brand">EMISSON</div>
-          <h1 class="auth-heading">Login to EMISSON</h1>
+          <h1 class="auth-heading">EMISSON'a Giriş</h1>
 
           <form id="loginForm" novalidate>
             <!-- Email -->
             <div class="form-group">
-              <label class="label" for="email">Email</label>
+              <label class="label" for="email">E-posta</label>
               <input
                 class="input"
                 type="email"
                 id="email"
-                placeholder="Enter your email"
+                placeholder="E-posta adresinizi girin"
                 autocomplete="email"
               />
               <span class="error-msg" id="emailError"></span>
@@ -30,12 +30,12 @@
 
             <!-- Password -->
             <div class="form-group">
-              <label class="label" for="password">Password</label>
+              <label class="label" for="password">Parola</label>
               <input
                 class="input"
                 type="password"
                 id="password"
-                placeholder="Enter your password"
+                placeholder="Parolanızı girin"
                 autocomplete="current-password"
               />
               <span class="error-msg" id="passwordError"></span>
@@ -45,20 +45,24 @@
             <div class="auth-row">
               <label class="checkbox-label">
                 <input type="checkbox" id="rememberMe" />
-                Remember me
+                Beni hatırla
               </label>
-              <button type="button" class="link-btn" id="forgotPasswordBtn">Forgot Password?</button>
+              <button type="button" class="link-btn" id="forgotPasswordBtn">
+                Parolayı mı unuttunuz?
+              </button>
             </div>
 
             <!-- API mesajı (hata / başarı) -->
             <p class="api-message" id="apiMessage"></p>
 
             <!-- Submit -->
-            <button type="submit" class="btn-primary" id="submitBtn">Login</button>
+            <button type="submit" class="btn-primary" id="submitBtn">
+              Giriş Yap
+            </button>
 
             <!-- Register link -->
             <p class="bottom-text">
-              Don't have an account? <a href="register.html">Register</a>
+              Hesabınız yok mu? <a href="register.html">Kayıt Ol</a>
             </p>
           </form>
         </div>
