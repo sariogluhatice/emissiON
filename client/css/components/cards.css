@@ -1,52 +1,52 @@
+
 /* ============================================================
    COMPONENTS / CARDS — İstatistik ve İçerik Kartları
-   
-   Dashboard üzerindeki rakamsal özetleri ve içerik bloklarını 
-   sergilemek için kullanılan kart tasarımlarıdır.
    ============================================================ */
 
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: var(--spacing-lg);
   margin-bottom: var(--spacing-xl);
 }
 
-.stat-card {
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
+/* Glassmorphism Temel Kartı */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--card-shadow);
   padding: var(--spacing-lg);
-  box-shadow: var(--shadow-card);
-  border-left: 4px solid var(--color-primary);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--neon-glow);
+}
+
+/* İstatistik Kartı Özelleştirmesi */
+.stat-card {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
-  transition: all 0.2s ease;
+  gap: 8px;
 }
-
-.stat-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-}
-
-/* Durum renklerine göre sol kenarlık vurguları */
-.stat-card.accent-green { border-left-color: var(--color-success); }
-.stat-card.accent-orange { border-left-color: #e67e22; }
-.stat-card.accent-red    { border-left-color: var(--color-error); }
 
 .stat-label {
   font-size: 11px;
   font-weight: 700;
   color: var(--color-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 1px;
 }
 
 .stat-value {
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 800;
-  color: var(--color-brand-text);
-  line-height: 1.2;
+  color: var(--color-text);
+  line-height: 1.1;
 }
 
 .stat-unit {
@@ -55,15 +55,7 @@
   font-weight: 500;
 }
 
-/* Standart İçerik Kartı */
-.content-card {
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  padding: var(--spacing-lg);
-  margin-bottom: var(--spacing-lg);
-}
-
+/* Kart Başlıkları */
 .content-card-header {
   display: flex;
   justify-content: space-between;
@@ -74,7 +66,13 @@
 }
 
 .content-card-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
-  color: var(--color-brand-text);
+  color: var(--color-text);
+}
+
+/* AI Spotlight Özel Stili */
+.ai-spotlight {
+  background: linear-gradient(135deg, var(--glass-bg) 0%, rgba(0, 255, 140, 0.05) 100%);
+  border-left: 4px solid var(--color-primary);
 }

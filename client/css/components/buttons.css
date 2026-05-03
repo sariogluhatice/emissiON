@@ -4,25 +4,25 @@
 
 .btn-primary {
   background: var(--color-primary);
-  color: #ffffff;
-  padding: 12px 24px;
+  color: #000; /* Vivid lime üzerinde siyah metin daha okunaklı */
+  padding: 14px 28px;
   border: none;
-  border-radius: var(--radius-md);
-  font-size: 14px;
-  font-weight: 700;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 800;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 4px 12px rgba(46, 74, 143, 0.15);
+  box-shadow: 0 8px 20px rgba(0, 255, 140, 0.2);
 }
 
 .btn-primary:hover {
   background: var(--color-primary-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(46, 74, 143, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 25px rgba(0, 255, 140, 0.3);
 }
 
 .btn-primary:active {
@@ -37,7 +37,7 @@
 }
 
 .btn-secondary {
-  background: #f0f2f5;
+  background: var(--color-surface-mixed);
   color: var(--color-text);
   padding: 12px 24px;
   border: 1px solid var(--color-border);
@@ -53,6 +53,33 @@
 }
 
 .btn-secondary:hover {
-  background: #e4e6e9;
-  border-color: #d1d4d7;
+  background: var(--color-border);
+  border-color: var(--color-text-muted);
+}
+
+/* ── Ghost / Icon Buttons ── */
+.btn-icon-only {
+  background: rgba(128, 128, 128, 0.1);
+  color: var(--color-text);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.btn-icon-only svg {
+  width: 20px;
+  height: 20px;
+}
+
+.btn-icon-only:hover {
+  background: rgba(0, 255, 140, 0.2);
+  color: var(--color-primary);
+  transform: rotate(15deg);
 }

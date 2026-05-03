@@ -24,6 +24,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1; /* İsmin uzayıp barları sağa itmesini sağlar */
 }
 
 .record-source {
@@ -42,6 +43,9 @@
   font-weight: 700;
   color: var(--color-primary);
   white-space: nowrap;
+  min-width: 110px; /* Sabit alan sayesinde hepsi aynı hizaya gelir */
+  text-align: right; /* Sayıları nizami şekilde sağa yaslar */
+  margin-right: 10px;
 }
 
 .record-actions {

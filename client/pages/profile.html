@@ -1,124 +1,74 @@
+
 <!doctype html>
-<html lang="en">
+<html lang="tr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Profile – EMISSON</title>
+    <title>Profil – emissiON</title>
     <link rel="stylesheet" href="../css/main.css" />
   </head>
   <body>
     <div class="app-shell">
       <aside class="sidebar">
-        <div class="sidebar-brand">EMISSON</div>
+        <div class="sidebar-brand">emissiON</div>
         <nav class="sidebar-nav">
           <a href="dashboard.html" class="nav-item" id="nav-dashboard">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <rect x="3" y="3" width="7" height="7"></rect>
-              <rect x="14" y="3" width="7" height="7"></rect>
-              <rect x="3" y="14" width="7" height="7"></rect>
-              <rect x="14" y="14" width="7" height="7"></rect>
-            </svg>
-            Dashboard
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>
+            Genel Bakış
           </a>
           <a href="emissions.html" class="nav-item" id="nav-emissions">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M3 3h18v18H3z"></path>
-              <path d="M3 9h18M3 15h18M9 3v18"></path>
-            </svg>
-            My Emission
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"></path><path d="M3 9h18M3 15h18M9 3v18"></path></svg>
+            Emisyon Geçmişi
           </a>
-          <a href="add-entry.html" class="nav-item" id="nav-add">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="16" />
-              <line x1="8" y1="12" x2="16" y2="12" />
-            </svg>
-            Yeni Kayıt
+          <a href="add-emission.html" class="nav-item" id="nav-add">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></svg>
+            Veri Girişi
           </a>
           <a href="smart-insights.html" class="nav-item" id="nav-insights">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
-              />
-            </svg>
-            Smart Insights
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            Karbon Zekası
           </a>
-          <a href="profile.html" class="nav-item" id="nav-profile">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="8" r="4"></circle>
-              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path>
-            </svg>
-            Profile
+          <a href="profile.html" class="nav-item active" id="nav-profile">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path></svg>
+            Profilim
           </a>
           <a href="settings.html" class="nav-item" id="nav-settings">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="12" r="3" />
-              <path
-                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
-              />
-            </svg>
-            Settings
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1  1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Sistem Ayarları
           </a>
         </nav>
         <div class="sidebar-footer">
-          <button class="btn-logout" id="logoutBtn">Çıkış Yap</button>
+          <button class="btn-logout" id="logoutBtn">Oturumu Kapat</button>
         </div>
       </aside>
 
       <div class="main-content">
+        <div class="bg-decorative-element">
+          <img src="../assets/login-visual.png" alt="Profil Simülasyonu" style="opacity: 0.1; filter: blur(30px);" />
+        </div>
+
         <header class="topbar">
-          <span class="topbar-title">Profile</span>
+          <div style="display: flex; align-items: center; gap: 20px;">
+            <span class="topbar-title">Profil Analizi</span>
+          </div>
           <div class="topbar-user">
+            <button id="themeToggle" class="btn-icon-only" title="Temayı Değiştir">
+              <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+            </button>
             <div class="user-avatar" id="userInitials">?</div>
-            <span id="userName">Loading…</span>
+            <span id="userName" class="userName">Bağlanıyor…</span>
           </div>
         </header>
 
         <main class="page-body">
           <div class="page-header">
-            <h1>My Profile</h1>
-            <p>Account details and your carbon footprint profile.</p>
+            <h1>Profilim</h1>
+            <p>Hesap detaylarınız ve kişisel karbon ayak izi simülasyonunuz.</p>
           </div>
 
           <div class="profile-grid">
-            <!-- Left: Identity card -->
-            <div class="profile-identity-card">
+            <!-- Sol Panel -->
+            <div class="profile-identity-card glass-card">
               <div class="profile-avatar-circle" id="profileAvatar">?</div>
               <div class="profile-name" id="profileName">—</div>
               <div class="profile-email" id="profileEmail">—</div>
@@ -126,65 +76,39 @@
               <div class="profile-since" id="profileSince">—</div>
               <div class="profile-ob-badge" id="obStatusBadge">—</div>
               <div class="profile-identity-actions">
-                <a
-                  href="settings.html"
-                  class="btn-secondary profile-action-link"
-                  >Edit Profile</a
-                >
-                <a
-                  href="settings.html#carbon-profile"
-                  class="btn-secondary profile-action-link"
-                  >Carbon Settings</a
-                >
+                <a href="settings.html" class="btn-primary" style="width: 100%; margin-bottom: 8px;">Profili Düzenle</a>
+                <a href="settings.html#carbon-profile" class="btn-secondary" style="width: 100%;">Karbon Ayarları</a>
               </div>
             </div>
 
-            <!-- Right: Stats + Carbon Profile -->
+            <!-- Sağ Panel -->
             <div>
-              <!-- Emission stats -->
-              <div class="content-card">
+              <div class="content-card glass-card" style="margin-bottom: 24px;">
                 <div class="content-card-header">
-                  <span class="content-card-title">Emission Activity</span>
-                  <a
-                    href="emissions.html"
-                    style="
-                      font-size: 12px;
-                      color: var(--color-primary);
-                      text-decoration: none;
-                    "
-                    >View all →</a
-                  >
+                  <span class="content-card-title">Genel Bakış</span>
                 </div>
                 <div class="card-grid" style="margin-bottom: 0">
-                  <div class="stat-card">
-                    <span class="stat-label">Total Emissions</span>
+                  <div class="stat-card glass-card" style="border-left: 3px solid var(--color-primary);">
+                    <span class="stat-label">Toplam Emisyon</span>
                     <span class="stat-value" id="profileStatTotal">—</span>
                     <span class="stat-unit">kg CO₂e</span>
                   </div>
-                  <div class="stat-card accent-green">
-                    <span class="stat-label">This Month</span>
+                  <div class="stat-card glass-card" style="border-left: 3px solid var(--color-success);">
+                    <span class="stat-label">Bu Ay</span>
                     <span class="stat-value" id="profileStatMonth">—</span>
                     <span class="stat-unit">kg CO₂e</span>
                   </div>
-                  <div class="stat-card">
-                    <span class="stat-label">Total Entries</span>
+                  <div class="stat-card glass-card" style="border-left: 3px solid var(--color-text-muted);">
+                    <span class="stat-label">Toplam Kayıt</span>
                     <span class="stat-value" id="profileStatEntries">—</span>
-                    <span class="stat-unit">records</span>
+                    <span class="stat-unit">kayıt</span>
                   </div>
                 </div>
               </div>
 
-              <!-- Carbon profile (rendered by JS) -->
               <div id="carbonProfileContainer">
-                <div
-                  class="content-card"
-                  style="
-                    text-align: center;
-                    padding: 32px;
-                    color: var(--color-text-muted);
-                  "
-                >
-                  Loading carbon profile…
+                <div class="content-card glass-card" style="text-align: center; padding: 48px; opacity: 0.6;">
+                  Karbon profili verileri simülasyondan çekiliyor…
                 </div>
               </div>
             </div>
@@ -194,5 +118,10 @@
     </div>
 
     <script type="module" src="../js/profile.js"></script>
+    <script type="module">
+      import { ThemeManager } from '../js/utils/themeManager.js';
+      ThemeManager.init();
+      document.getElementById('themeToggle')?.addEventListener('click', () => ThemeManager.toggle());
+    </script>
   </body>
 </html>

@@ -143,16 +143,25 @@ function initChart(data) {
       labels: labels,
       datasets: [{
         data: values,
-        backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#6b7280'],
-        borderWidth: 2,
-        hoverOffset: 4
+        // Daha modern, pastel ve göz yormayan Premium renk paleti
+        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#6366f1', '#8b5cf6'],
+        borderWidth: 0, // Çizgileri kaldırıp saf renk görünümü
+        hoverOffset: 8
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { position: 'right' } },
-      cutout: '70%'
+      layout: {
+        padding: 24 // Grafiğin kenarlara/birbirine yapışmasını engeller
+      },
+      plugins: { 
+        legend: { 
+          position: 'right',
+          labels: { padding: 20, font: { family: "'Outfit', sans-serif" } }
+        } 
+      },
+      cutout: '78%' // Çok daha zarif ve ince dilimler
     }
   });
 }

@@ -4,25 +4,38 @@
 
 .label {
   display: block;
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--color-text);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  opacity: 0.8;
 }
 
 .input {
   width: 100%;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 10px 14px;
+  border-radius: 12px;
+  padding: 12px 16px;
   font-size: 14px;
   color: var(--color-text);
-  background: var(--color-surface-muted);
+  background: var(--color-surface); /* bg yerine surface formlar için daha okunabilirdir */
   outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.2s ease;
+  color-scheme: light dark; /* Takvim gibi araçların sistem temasını anlamasını sağlar */
+}
+
+.input:hover {
+  background: var(--color-bg);
 }
 
 .input:focus {
   border-color: var(--color-primary);
+  background: var(--color-surface);
+}
+
+/* Chrome/Safari'de takvim ikonunun karanlık modda görünmesi için */
+[data-theme="dark"] .input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
 }
 
 .input.is-invalid {
@@ -32,7 +45,7 @@
 .form-group {
   display: flex;
   flex-direction: column;
-  margin-bottom: var(--spacing-xs);
+  margin-bottom: 16px;
 }
 
 .error-msg {

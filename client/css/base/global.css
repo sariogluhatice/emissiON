@@ -1,37 +1,99 @@
+
 /* ============================================================
    BASE / GLOBAL — body varsayılanları, linkler, temel tipografi
    ============================================================ */
 
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+
 body {
-  font-family: 'Segoe UI', Arial, sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 14px;
   color: var(--color-text);
   background-color: var(--color-bg);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
 }
 
-/* Sayfa geçiş animasyonu (Sunum kalitesi için eklendi) */
-.page-body {
-  animation: fadeIn 0.4s ease-out;
+/* ── Dünya Simülasyonu Arka Plan Katmanı ── */
+.app-shell::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 70% 30%, rgba(0, 255, 140, 0.05), transparent 40%),
+              radial-gradient(circle at 20% 80%, rgba(0, 255, 140, 0.03), transparent 40%);
+  pointer-events: none;
+  z-index: -1;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Sayfa Arka Plan Görseli (Hafif & Şık) */
+.bg-decorative-element {
+  position: fixed;
+  bottom: -10%;
+  right: -5%;
+  width: 600px;
+  height: 600px;
+  opacity: 0.05;
+  filter: blur(40px);
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 0.5s ease;
+}
+
+[data-theme='dark'] .bg-decorative-element {
+  opacity: 0.12;
+}
+
+/* ── Metin & Linkler ── */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-text);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+p {
+  color: var(--color-text-muted);
+  line-height: 1.6;
 }
 
 a {
   color: var(--color-primary);
-  text-decoration: underline;
+  text-decoration: none;
+  transition: all 0.2s;
 }
 
 a:hover {
   color: var(--color-primary-dark);
+  text-shadow: var(--neon-glow);
+}
+
+/* Sayfa geçiş animasyonu */
+.page-body {
+  animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Modal & Glass Effects ── */
+.modal-backdrop {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+}
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--card-shadow);
+  border-radius: var(--radius-xl);
+  color: var(--color-text);
 }

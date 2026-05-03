@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Settings – EMISSON</title>
+    <title>Ayarlar – emissiON</title>
     <link rel="stylesheet" href="../css/main.css" />
     <style>
       .settings-current-value {
@@ -52,254 +52,131 @@
   <body>
     <div class="app-shell">
       <aside class="sidebar">
-        <div class="sidebar-brand">EMISSON</div>
+        <div class="sidebar-brand">emissiON</div>
         <nav class="sidebar-nav">
           <a href="dashboard.html" class="nav-item" id="nav-dashboard">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <rect x="3" y="3" width="7" height="7"></rect>
-              <rect x="14" y="3" width="7" height="7"></rect>
-              <rect x="3" y="14" width="7" height="7"></rect>
-              <rect x="14" y="14" width="7" height="7"></rect>
-            </svg>
-            Dashboard
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>
+            Genel Bakış
           </a>
           <a href="emissions.html" class="nav-item" id="nav-emissions">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M3 3h18v18H3z"></path>
-              <path d="M3 9h18M3 15h18M9 3v18"></path>
-            </svg>
-            My Emission
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"></path><path d="M3 9h18M3 15h18M9 3v18"></path></svg>
+            Emisyon Geçmişi
           </a>
-          <a href="add-entry.html" class="nav-item" id="nav-add">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="16" />
-              <line x1="8" y1="12" x2="16" y2="12" />
-            </svg>
-            Yeni Kayıt
+          <a href="add-emission.html" class="nav-item" id="nav-add">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></svg>
+            Veri Girişi
           </a>
           <a href="smart-insights.html" class="nav-item" id="nav-insights">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
-              />
-            </svg>
-            Smart Insights
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            Karbon Zekası
           </a>
           <a href="profile.html" class="nav-item" id="nav-profile">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="8" r="4"></circle>
-              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path>
-            </svg>
-            Profile
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path></svg>
+            Profilim
           </a>
           <a href="settings.html" class="nav-item active" id="nav-settings">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="12" r="3" />
-              <path
-                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
-              />
-            </svg>
-            Settings
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1  1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Sistem Ayarları
           </a>
         </nav>
         <div class="sidebar-footer">
-          <button class="btn-logout" id="logoutBtn">Çıkış Yap</button>
+          <button class="btn-logout" id="logoutBtn">Oturumu Kapat</button>
         </div>
       </aside>
 
       <div class="main-content">
+        <div class="bg-decorative-element">
+          <img src="../assets/login-visual.png" alt="Ayarlar Simülasyonu" style="opacity: 0.1; filter: blur(30px);" />
+        </div>
+
         <header class="topbar">
-          <span class="topbar-title">Settings</span>
+          <div style="display: flex; align-items: center; gap: 20px;">
+            <span class="topbar-title">Sistem Ayarları</span>
+          </div>
           <div class="topbar-user">
+            <button id="themeToggle" class="btn-icon-only" title="Temayı Değiştir">
+              <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+            </button>
             <div class="user-avatar" id="userInitials">?</div>
-            <span id="userName">Loading…</span>
+            <span id="userName" class="userName">Bağlanıyor…</span>
           </div>
         </header>
 
         <main class="page-body settings-body">
           <div class="settings-layout">
-            <!-- Settings nav (sticky left panel) -->
             <nav class="settings-nav" id="settingsNav">
-              <a href="#edit-profile" class="settings-nav-item active"
-                >Edit Profile</a
-              >
-              <a href="#security" class="settings-nav-item">Security</a>
-              <a href="#notifications" class="settings-nav-item"
-                >Notifications</a
-              >
-              <a href="#carbon-profile" class="settings-nav-item"
-                >Carbon Profile</a
-              >
-              <a href="#account" class="settings-nav-item">Account</a>
+              <a href="#edit-profile" class="settings-nav-item active">Profili Düzenle</a>
+              <a href="#security" class="settings-nav-item">Güvenlik</a>
+              <a href="#notifications" class="settings-nav-item">Bildirimler</a>
+              <a href="#carbon-profile" class="settings-nav-item">Karbon Profili</a>
+              <a href="#account" class="settings-nav-item">Hesap</a>
             </nav>
 
-            <!-- Settings content -->
             <div class="settings-content">
-              <!-- ── Edit Profile ── -->
-              <section id="edit-profile" class="content-card settings-section">
+              <!-- ── Profili Düzenle ── -->
+              <section id="edit-profile" class="content-card glass-card settings-section">
                 <div class="content-card-header">
-                  <span class="content-card-title">Edit Profile</span>
+                  <span class="content-card-title">Profili Düzenle</span>
                 </div>
-
-                <!-- Name form (instant save) -->
                 <form id="editNameForm" novalidate>
                   <div class="form-group">
-                    <label class="label" for="editName">Full Name</label>
-                    <input
-                      class="input"
-                      type="text"
-                      id="editName"
-                      autocomplete="name"
-                    />
+                    <label class="label" for="editName">Tam Adınız</label>
+                    <input class="input" type="text" id="editName" autocomplete="name" />
                   </div>
                   <p class="api-message" id="editNameMsg"></p>
-                  <button type="submit" class="btn-primary" id="saveNameBtn">
-                    Save Name
-                  </button>
+                  <button type="submit" class="btn-primary" id="saveNameBtn">İsmi Kaydet</button>
                 </form>
 
                 <hr class="settings-divider" />
 
-                <!-- Email change form (2-step verification) -->
                 <form id="emailChangeForm" novalidate>
                   <div class="form-group">
-                    <label class="label">Current Email</label>
-                    <div
-                      class="settings-current-value"
-                      id="currentEmailDisplay"
-                    >
-                      —
-                    </div>
+                    <label class="label">Mevcut E-posta</label>
+                    <div class="settings-current-value" id="currentEmailDisplay">—</div>
                   </div>
                   <div class="form-group">
-                    <label class="label" for="newEmail"
-                      >New Email Address</label
-                    >
-                    <input
-                      class="input"
-                      type="email"
-                      id="newEmail"
-                      autocomplete="email"
-                      placeholder="Enter new email address"
-                    />
-                    <span class="form-hint"
-                      >A 6-digit verification code will be sent to the new
-                      address.</span
-                    >
+                    <label class="label" for="newEmail">Yeni E-posta Adresi</label>
+                    <input class="input" type="email" id="newEmail" autocomplete="email" placeholder="Yeni e-posta adresini girin" />
+                    <span class="form-hint">Yeni adrese 6 haneli bir doğrulama kodu gönderilecektir.</span>
                   </div>
                   <p class="api-message" id="emailChangeMsg"></p>
-                  <button
-                    type="submit"
-                    class="btn-primary"
-                    id="requestEmailChangeBtn"
-                  >
-                    Send Verification Code
-                  </button>
+                  <button type="submit" class="btn-primary" id="requestEmailChangeBtn">Doğrulama Kodu Gönder</button>
                 </form>
               </section>
 
-              <!-- ── Security / Change Password ── -->
-              <section id="security" class="content-card settings-section">
+              <!-- ── Güvenlik ── -->
+              <section id="security" class="content-card glass-card settings-section">
                 <div class="content-card-header">
-                  <span class="content-card-title">Change Password</span>
+                  <span class="content-card-title">Şifre Değiştir</span>
                 </div>
                 <form id="changePasswordForm" novalidate>
                   <div class="form-group">
-                    <label class="label" for="currentPassword"
-                      >Current Password</label
-                    >
-                    <input
-                      class="input"
-                      type="password"
-                      id="currentPassword"
-                      autocomplete="current-password"
-                    />
+                    <label class="label" for="currentPassword">Mevcut Şifre</label>
+                    <input class="input" type="password" id="currentPassword" autocomplete="current-password" />
                   </div>
                   <div class="form-group">
-                    <label class="label" for="newPassword">New Password</label>
-                    <input
-                      class="input"
-                      type="password"
-                      id="newPassword"
-                      autocomplete="new-password"
-                    />
-                    <span class="form-hint"
-                      >Min. 8 characters — uppercase, lowercase, digit,
-                      symbol.</span
-                    >
+                    <label class="label" for="newPassword">Yeni Şifre</label>
+                    <input class="input" type="password" id="newPassword" autocomplete="new-password" />
+                    <span class="form-hint">En az 8 karakter; büyük harf, küçük harf, rakam ve sembol içermelidir.</span>
                   </div>
                   <div class="form-group">
-                    <label class="label" for="confirmPassword"
-                      >Confirm New Password</label
-                    >
-                    <input
-                      class="input"
-                      type="password"
-                      id="confirmPassword"
-                      autocomplete="new-password"
-                    />
+                    <label class="label" for="confirmPassword">Yeni Şifreyi Onayla</label>
+                    <input class="input" type="password" id="confirmPassword" autocomplete="new-password" />
                   </div>
                   <p class="api-message" id="changePasswordMsg"></p>
-                  <button
-                    type="submit"
-                    class="btn-primary"
-                    id="savePasswordBtn"
-                  >
-                    Send Verification Code
-                  </button>
+                  <button type="submit" class="btn-primary" id="savePasswordBtn">Şifreyi Güncelle</button>
                 </form>
               </section>
 
-              <!-- ── Notifications ── -->
-              <section id="notifications" class="content-card settings-section">
+              <!-- ── Bildirimler ── -->
+              <section id="notifications" class="content-card glass-card settings-section">
                 <div class="content-card-header">
-                  <span class="content-card-title"
-                    >Notification Preferences</span
-                  >
+                  <span class="content-card-title">Bildirim Tercihleri</span>
                 </div>
                 <div class="settings-toggle-row">
                   <div>
-                    <div class="settings-toggle-label">Email notifications</div>
-                    <div class="settings-toggle-desc">
-                      Receive important account and emission alerts by email.
-                    </div>
+                    <div class="settings-toggle-label">E-posta bildirimleri</div>
+                    <div class="settings-toggle-desc">Önemli hesap ve emisyon uyarılarını e-posta ile alın.</div>
                   </div>
                   <label class="settings-toggle">
                     <input type="checkbox" id="emailNotifications" />
@@ -308,11 +185,8 @@
                 </div>
                 <div class="settings-toggle-row">
                   <div>
-                    <div class="settings-toggle-label">Carbon tips</div>
-                    <div class="settings-toggle-desc">
-                      Receive weekly tips and insights to reduce your carbon
-                      footprint.
-                    </div>
+                    <div class="settings-toggle-label">Karbon ipuçları</div>
+                    <div class="settings-toggle-desc">Karbon ayak izinizi azaltmak için haftalık ipuçları alın.</div>
                   </div>
                   <label class="settings-toggle">
                     <input type="checkbox" id="carbonTips" />
@@ -322,65 +196,39 @@
                 <p class="api-message" id="notifMsg"></p>
               </section>
 
-              <!-- ── Carbon Profile ── -->
-              <section
-                id="carbon-profile"
-                class="content-card settings-section"
-              >
+              <!-- ── Karbon Profili ── -->
+              <section id="carbon-profile" class="content-card glass-card settings-section">
                 <div class="content-card-header">
-                  <span class="content-card-title">Carbon Profile</span>
+                  <span class="content-card-title">Karbon Profili</span>
                 </div>
-                <p
-                  style="
-                    font-size: 14px;
-                    color: var(--color-text-muted);
-                    margin-bottom: 16px;
-                  "
-                >
-                  Your carbon profile was collected during onboarding and is
-                  used to personalise your dashboard, estimates, and AI
-                  insights. You can update it at any time.
+                <p style="font-size: 14px; color: var(--color-text-muted); margin-bottom: 16px;">
+                  Karbon profiliniz başlangıçta toplanmıştır ve analizlerimizi size özel hale getirmek için kullanılır. İstediğiniz zaman güncelleyebilirsiniz.
                 </p>
                 <div class="settings-warning">
-                  Retaking the carbon profile test will update your stored
-                  answers and normalised profile data. Your emission records
-                  will not be affected.
+                  Testi tekrar çözmek kayıtlı cevaplarınızı ve profil verilerinizi güncelleyecektir. Mevcut emisyon kayıtlarınız etkilenmez.
                 </div>
                 <div id="obStatusRow" style="margin-bottom: 16px"></div>
-                <a href="onboarding.html?retake=1" class="btn-secondary"
-                  >Retake Carbon Profile Test →</a
-                >
+                <a href="onboarding.html?retake=1" class="btn-secondary">Testi Tekrar Çöz →</a>
               </section>
 
-              <!-- ── Account ── -->
-              <section id="account" class="content-card settings-section">
+              <!-- ── Hesap ── -->
+              <section id="account" class="content-card glass-card settings-section">
                 <div class="content-card-header">
-                  <span class="content-card-title">Account</span>
+                  <span class="content-card-title">Hesap</span>
                 </div>
                 <div class="settings-account-row">
                   <div>
-                    <div class="settings-toggle-label">Sign out</div>
-                    <div class="settings-toggle-desc">
-                      End your current session on this device.
-                    </div>
+                    <div class="settings-toggle-label">Oturumu Kapat</div>
+                    <div class="settings-toggle-desc">Mevcut oturumunuzu bu cihazda sonlandırın.</div>
                   </div>
-                  <button class="btn-secondary" id="settingsLogoutBtn">
-                    Çıkış Yap
-                  </button>
+                  <button class="btn-secondary" id="settingsLogoutBtn">Çıkış Yap</button>
                 </div>
                 <div class="settings-account-row settings-danger-row">
                   <div>
-                    <div class="settings-toggle-label settings-danger-label">
-                      Delete account
-                    </div>
-                    <div class="settings-toggle-desc">
-                      Permanently delete your account and all emission data.
-                      This cannot be undone.
-                    </div>
+                    <div class="settings-toggle-label settings-danger-label">Hesabı Sil</div>
+                    <div class="settings-toggle-desc">Hesabınızı ve tüm verilerinizi kalıcı olarak silin. Bu işlem geri alınamaz.</div>
                   </div>
-                  <button class="btn-danger" id="deleteAccountBtn">
-                    Delete account
-                  </button>
+                  <button class="btn-danger" id="deleteAccountBtn">Hesabı Sil</button>
                 </div>
               </section>
             </div>
@@ -389,63 +237,44 @@
       </div>
     </div>
 
-    <!-- Verification code modal (email change + password change) -->
+    <!-- Modallar -->
     <div class="modal-backdrop" id="verifyModal" style="display: none">
-      <div class="modal-box">
-        <h3 class="modal-title" id="verifyModalTitle">
-          Enter Verification Code
-        </h3>
-        <p class="modal-body" id="verifyModalDesc">
-          A 6-digit code was sent to your email. Enter it below to confirm the
-          change.
-        </p>
+      <div class="modal-box glass-card">
+        <h3 class="modal-title" id="verifyModalTitle">Doğrulama Kodunu Girin</h3>
+        <p class="modal-body" id="verifyModalDesc">E-posta adresinize 6 haneli bir kod gönderildi.</p>
         <div class="form-group" style="margin-top: 16px">
-          <input
-            class="verify-code-input"
-            type="text"
-            id="verifyCode"
-            inputmode="numeric"
-            maxlength="6"
-            placeholder="——————"
-            autocomplete="one-time-code"
-          />
-          <p class="verify-hint">Code expires in 10 minutes.</p>
+          <input class="verify-code-input" type="text" id="verifyCode" inputmode="numeric" maxlength="6" placeholder="——————" />
+          <p class="verify-hint">Kod 10 dakika içinde sona erer.</p>
         </div>
         <p class="api-message" id="verifyMsg"></p>
         <div class="modal-actions">
-          <button class="btn-secondary" id="verifyCancelBtn">Cancel</button>
-          <button class="btn-primary" id="verifyConfirmBtn">Confirm</button>
+          <button class="btn-secondary" id="verifyCancelBtn">İptal</button>
+          <button class="btn-primary" id="verifyConfirmBtn">Onayla</button>
         </div>
       </div>
     </div>
 
-    <!-- Delete account confirmation modal -->
     <div class="modal-backdrop" id="deleteModal" style="display: none">
-      <div class="modal-box">
-        <h3 class="modal-title">Delete Account</h3>
-        <p class="modal-body">
-          This will permanently delete your account and all emission records.
-          Enter your password to confirm.
-        </p>
+      <div class="modal-box glass-card">
+        <h3 class="modal-title">Hesabı Sil</h3>
+        <p class="modal-body">Bu işlem kalıcıdır. Onaylamak için şifrenizi girin.</p>
         <div class="form-group" style="margin-top: 16px">
-          <label class="label" for="deletePassword">Password</label>
-          <input
-            class="input"
-            type="password"
-            id="deletePassword"
-            placeholder="Your current password"
-          />
+          <label class="label" for="deletePassword">Şifre</label>
+          <input class="input" type="password" id="deletePassword" placeholder="Mevcut şifreniz" />
         </div>
         <p class="api-message" id="deleteMsg"></p>
         <div class="modal-actions">
-          <button class="btn-secondary" id="deleteCancelBtn">Cancel</button>
-          <button class="btn-danger" id="deleteConfirmBtn">
-            Yes, delete my account
-          </button>
+          <button class="btn-secondary" id="deleteCancelBtn">İptal</button>
+          <button class="btn-danger" id="deleteConfirmBtn">Evet, Hesabımı Sil</button>
         </div>
       </div>
     </div>
 
     <script type="module" src="../js/settings.js"></script>
+    <script type="module">
+      import { ThemeManager } from '../js/utils/themeManager.js';
+      ThemeManager.init();
+      document.getElementById('themeToggle')?.addEventListener('click', () => ThemeManager.toggle());
+    </script>
   </body>
 </html>

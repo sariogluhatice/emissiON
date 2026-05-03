@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Giriş – EMISSON</title>
+    <title>Giriş – emissiON</title>
     <link rel="stylesheet" href="../css/main.css" />
   </head>
   <body>
@@ -11,33 +11,26 @@
       <div class="auth-card">
         <!-- Left Panel -->
         <div class="auth-left">
-          <div class="auth-brand">EMISSON</div>
-          <h1 class="auth-heading">EMISSON'a Giriş</h1>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
+            <a href="../index.html" class="auth-brand" style="text-decoration: none; margin-bottom: 0;">emissiON</a>
+            <button id="themeToggle" class="btn-icon-only" title="Temayı Değiştir" style="background: none; border: none; color: var(--color-primary); cursor: pointer; padding: 5px;">
+              <svg id="themeIcon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+            </button>
+          </div>
+          <h1 class="auth-heading">Hoş Geldiniz</h1>
 
           <form id="loginForm" novalidate>
             <!-- Email -->
             <div class="form-group">
               <label class="label" for="email">E-posta</label>
-              <input
-                class="input"
-                type="email"
-                id="email"
-                placeholder="E-posta adresinizi girin"
-                autocomplete="email"
-              />
+              <input class="input" type="email" id="email" placeholder="E-posta adresinizi girin" autocomplete="email" />
               <span class="error-msg" id="emailError"></span>
             </div>
 
             <!-- Password -->
             <div class="form-group">
               <label class="label" for="password">Parola</label>
-              <input
-                class="input"
-                type="password"
-                id="password"
-                placeholder="Parolanızı girin"
-                autocomplete="current-password"
-              />
+              <input class="input" type="password" id="password" placeholder="Parolanızı girin" autocomplete="current-password" />
               <span class="error-msg" id="passwordError"></span>
             </div>
 
@@ -47,31 +40,36 @@
                 <input type="checkbox" id="rememberMe" />
                 Beni hatırla
               </label>
-              <button type="button" class="link-btn" id="forgotPasswordBtn">
-                Parolayı mı unuttunuz?
-              </button>
+              <button type="button" class="link-btn" id="forgotPasswordBtn">Parolayı mı unuttunuz?</button>
             </div>
 
-            <!-- API mesajı (hata / başarı) -->
+            <!-- API mesajı -->
             <p class="api-message" id="apiMessage"></p>
 
-            <!-- Submit -->
-            <button type="submit" class="btn-primary" id="submitBtn">
-              Giriş Yap
-            </button>
+            <button type="submit" class="btn-primary" id="submitBtn">Oturum Aç</button>
 
-            <!-- Register link -->
             <p class="bottom-text">
-              Hesabınız yok mu? <a href="register.html">Kayıt Ol</a>
+              Henüz hesabın yok mu? <a href="register.html">Hemen Katıl</a>
             </p>
           </form>
         </div>
 
         <!-- Right Panel -->
-        <div class="auth-right"></div>
+        <div class="auth-right">
+          <img src="../assets/login_globe.png" alt="Dünya Simülasyonu" class="auth-visual-img" />
+          <div class="auth-visual-content">
+            <h2>Dijital İkiz Analizi</h2>
+            <p>Emisyon verilerini gerçek zamanlı bir simülasyona dönüştürerek gezegenin geleceğine yön ver.</p>
+          </div>
+        </div>
       </div>
     </main>
 
     <script type="module" src="../js/login.js"></script>
+    <script type="module">
+      import { ThemeManager } from '../js/utils/themeManager.js';
+      ThemeManager.init();
+      document.getElementById('themeToggle')?.addEventListener('click', () => ThemeManager.toggle());
+    </script>
   </body>
 </html>

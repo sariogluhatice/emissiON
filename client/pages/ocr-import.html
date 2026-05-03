@@ -1,103 +1,39 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OCR Import - EmissiON</title>
-    <meta
-      name="description"
-      content="Extract utility bill data with OCR and create a verified emission entry."
-    />
+    <title>Akıllı Tarama – emissiON</title>
     <link rel="stylesheet" href="../css/main.css" />
   </head>
   <body>
     <div class="app-shell">
       <aside class="sidebar">
-        <div class="sidebar-brand">EMISSON</div>
+        <div class="sidebar-brand">emissiON</div>
         <nav class="sidebar-nav">
           <a href="dashboard.html" class="nav-item" id="nav-dashboard">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <rect x="3" y="3" width="7" height="7"></rect>
-              <rect x="14" y="3" width="7" height="7"></rect>
-              <rect x="3" y="14" width="7" height="7"></rect>
-              <rect x="14" y="14" width="7" height="7"></rect>
-            </svg>
-            Dashboard
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>
+            Panel
           </a>
           <a href="emissions.html" class="nav-item" id="nav-emissions">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M3 3h18v18H3z"></path>
-              <path d="M3 9h18M3 15h18M9 3v18"></path>
-            </svg>
-            My Emission
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"></path><path d="M3 9h18M3 15h18M9 3v18"></path></svg>
+            Emisyonlarım
           </a>
-          <a href="add-entry.html" class="nav-item" id="nav-add">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="16" />
-              <line x1="8" y1="12" x2="16" y2="12" />
-            </svg>
+          <a href="add-emission.html" class="nav-item active" id="nav-add">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></svg>
             Yeni Kayıt
           </a>
           <a href="smart-insights.html" class="nav-item" id="nav-insights">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
-              />
-            </svg>
-            Smart Insights
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            Akıllı İçgörüler
           </a>
           <a href="profile.html" class="nav-item" id="nav-profile">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="8" r="4"></circle>
-              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path>
-            </svg>
-            Profile
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path></svg>
+            Profil
           </a>
           <a href="settings.html" class="nav-item" id="nav-settings">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="12" r="3" />
-              <path
-                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
-              />
-            </svg>
-            Settings
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Ayarlar
           </a>
         </nav>
         <div class="sidebar-footer">
@@ -106,135 +42,98 @@
       </aside>
 
       <div class="main-content">
+        <div class="bg-decorative-element">
+          <img src="../assets/scanner_visual.png" alt="Akıllı Tarama" style="opacity: 0.15; filter: blur(20px) saturate(1.5);" />
+        </div>
+
         <header class="topbar">
-          <span class="topbar-title">OCR Bill Import</span>
+          <div style="display: flex; align-items: center; gap: 20px;">
+            <span class="topbar-title">OCR Fatura İçe Aktarma</span>
+          </div>
           <div class="topbar-user">
+            <button id="themeToggle" class="btn-icon-only" title="Temayı Değiştir">
+              <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+            </button>
             <div class="user-avatar" id="userInitials">?</div>
-            <span id="userName">Loading...</span>
+            <span id="userName" class="userName">Bağlanıyor…</span>
           </div>
         </header>
 
         <main class="page-body">
           <div class="page-header">
-            <h1>Import Utility Bill</h1>
-            <p>
-              Upload a bill image, review extracted data, confirm, then create a
-              new emission entry.
-            </p>
+            <h1>Faturadan Veri Çıkar</h1>
+            <p>Fatura görselini yükleyin, verileri onaylayın ve emisyon kaydını otomatik oluşturun.</p>
           </div>
 
           <div class="ocr-grid">
-            <section class="content-card ocr-card">
+            <section class="content-card glass-card ocr-card">
               <div class="content-card-header">
-                <span class="content-card-title">1) Upload and OCR</span>
+                <span class="content-card-title">1) Yükle ve Tara</span>
               </div>
 
               <div class="form-group">
-                <label class="label" for="billImage">Bill Image</label>
-                <input
-                  class="input"
-                  type="file"
-                  id="billImage"
-                  accept="image/*"
-                />
+                <label class="label" for="billImage">Fatura Görseli</label>
+                <input class="input" type="file" id="billImage" accept="image/*" />
               </div>
 
               <div class="ocr-actions">
-                <button class="btn-primary" id="runOcrBtn" type="button">
-                  Read Image
-                </button>
-                <span id="ocrProgress" class="ocr-progress"
-                  >Waiting for file...</span
-                >
+                <button class="btn-primary" id="runOcrBtn" type="button">Görseli Oku</button>
+                <span id="ocrProgress" class="ocr-progress">Dosya bekleniyor...</span>
               </div>
 
               <div class="form-group">
-                <label class="label" for="ocrText">OCR Text</label>
-                <textarea
-                  class="input ocr-textarea"
-                  id="ocrText"
-                  placeholder="OCR output will appear here..."
-                ></textarea>
+                <label class="label" for="ocrText">OCR Çıktısı</label>
+                <textarea class="input ocr-textarea" id="ocrText" placeholder="Okunan metin burada görünecek..."></textarea>
               </div>
 
               <div class="ocr-actions">
-                <button class="btn-secondary" id="extractBtn" type="button">
-                  Extract Structured Data
-                </button>
+                <button class="btn-secondary" id="extractBtn" type="button">Verileri Yapılandır (AI)</button>
               </div>
             </section>
 
-            <section class="content-card ocr-card">
+            <section class="content-card glass-card ocr-card">
               <div class="content-card-header">
-                <span class="content-card-title"
-                  >2) Verify and Create Entry</span
-                >
+                <span class="content-card-title">2) Onayla ve Kaydet</span>
               </div>
 
               <form id="verifyForm" novalidate>
                 <div class="form-group">
-                  <label class="label" for="category">Category</label>
+                  <label class="label" for="category">Kategori</label>
                   <select class="input" id="category" required>
-                    <option value="">Select...</option>
-                    <option value="energy">energy</option>
-                    <option value="water">water</option>
-                    <option value="gas">gas</option>
+                    <option value="">Seçin...</option>
+                    <option value="energy">Enerji</option>
+                    <option value="water">Su</option>
+                    <option value="gas">Doğalgaz</option>
                   </select>
                 </div>
 
                 <div class="form-group">
-                  <label class="label" for="activityType">Activity Type</label>
-                  <input
-                    class="input"
-                    type="text"
-                    id="activityType"
-                    placeholder="e.g. Monthly Electricity Bill"
-                    required
-                  />
+                  <label class="label" for="activityType">Aktivite Türü</label>
+                  <input class="input" type="text" id="activityType" placeholder="Örn: Aylık Elektrik Faturası" required />
                 </div>
 
                 <div class="ocr-inline-fields">
                   <div class="form-group">
-                    <label class="label" for="quantity">Quantity</label>
-                    <input
-                      class="input"
-                      type="number"
-                      id="quantity"
-                      min="0"
-                      step="any"
-                      required
-                    />
+                    <label class="label" for="quantity">Miktar</label>
+                    <input class="input" type="number" id="quantity" min="0" step="any" required />
                   </div>
                   <div class="form-group">
-                    <label class="label" for="unit">Unit</label>
-                    <input
-                      class="input"
-                      type="text"
-                      id="unit"
-                      placeholder="kWh / m3 / l"
-                      required
-                    />
+                    <label class="label" for="unit">Birim</label>
+                    <input class="input" type="text" id="unit" placeholder="kWh / m3 / l" required />
                   </div>
                 </div>
 
                 <div class="form-group">
-                  <label class="label" for="period">Billing Period</label>
+                  <label class="label" for="period">Fatura Dönemi</label>
                   <input class="input" type="month" id="period" required />
                 </div>
 
                 <div class="ocr-result-box" id="calcPreview">
-                  Calculated carbon impact preview will appear after
-                  confirmation.
+                  Onaydan sonra karbon etkisi tahmini burada görünecek.
                 </div>
 
                 <div class="ocr-actions">
-                  <button
-                    class="btn-primary"
-                    id="confirmCreateBtn"
-                    type="submit"
-                  >
-                    Confirm and Create Entry
-                  </button>
+                  <button class="btn-primary" id="confirmCreateBtn" type="submit">Onayla ve Kaydı Oluştur</button>
                 </div>
               </form>
             </section>
@@ -244,5 +143,10 @@
     </div>
 
     <script type="module" src="../js/ocr-import.js"></script>
+    <script type="module">
+      import { ThemeManager } from '../js/utils/themeManager.js';
+      ThemeManager.init();
+      document.getElementById('themeToggle')?.addEventListener('click', () => ThemeManager.toggle());
+    </script>
   </body>
 </html>

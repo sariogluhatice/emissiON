@@ -1,265 +1,127 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Emissions – EmissiON</title>
-    <meta
-      name="description"
-      content="View and manage all your carbon emission records."
-    />
-    <!-- Global CSS -->
+    <title>Emisyonlarım – emissiON</title>
     <link rel="stylesheet" href="../css/main.css" />
   </head>
   <body>
     <div class="app-shell">
-      <!-- Sidebar (Yan Menü) -->
       <aside class="sidebar">
-        <div class="sidebar-brand">EMISSON</div>
+        <div class="sidebar-brand">emissiON</div>
         <nav class="sidebar-nav">
           <a href="dashboard.html" class="nav-item" id="nav-dashboard">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <rect x="3" y="3" width="7" height="7"></rect>
-              <rect x="14" y="3" width="7" height="7"></rect>
-              <rect x="3" y="14" width="7" height="7"></rect>
-              <rect x="14" y="14" width="7" height="7"></rect>
-            </svg>
-            Dashboard
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>
+            Genel Bakış
           </a>
           <a href="emissions.html" class="nav-item active" id="nav-emissions">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M3 3h18v18H3z"></path>
-              <path d="M3 9h18M3 15h18M9 3v18"></path>
-            </svg>
-            My Emission
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"></path><path d="M3 9h18M3 15h18M9 3v18"></path></svg>
+            Emisyon Geçmişi
           </a>
-          <a href="add-entry.html" class="nav-item" id="nav-add">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="16" />
-              <line x1="8" y1="12" x2="16" y2="12" />
-            </svg>
-            Yeni Kayıt
+          <a href="add-emission.html" class="nav-item" id="nav-add">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></svg>
+            Veri Girişi
           </a>
           <a href="smart-insights.html" class="nav-item" id="nav-insights">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
-              />
-            </svg>
-            Smart Insights
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            Karbon Zekası
           </a>
           <a href="profile.html" class="nav-item" id="nav-profile">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="8" r="4"></circle>
-              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path>
-            </svg>
-            Profile
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path></svg>
+            Profilim
           </a>
           <a href="settings.html" class="nav-item" id="nav-settings">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="12" r="3" />
-              <path
-                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
-              />
-            </svg>
-            Settings
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1  1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Sistem Ayarları
           </a>
         </nav>
         <div class="sidebar-footer">
-          <button class="btn-logout" id="logoutBtn">Çıkış Yap</button>
+          <button class="btn-logout" id="logoutBtn">Oturumu Kapat</button>
         </div>
       </aside>
 
-      <!-- Ana İçerik Alanı -->
       <div class="main-content">
+        <div class="bg-decorative-element">
+          <img src="../assets/login-visual.png" alt="Emisyon Geçmişi" style="opacity: 0.1; filter: blur(30px);" />
+        </div>
+
         <header class="topbar">
-          <span class="topbar-title">My Emissions</span>
+          <div style="display: flex; align-items: center; gap: 20px;">
+            <span class="topbar-title">Emisyon Kayıtları</span>
+          </div>
           <div class="topbar-user">
+            <button id="themeToggle" class="btn-icon-only" title="Temayı Değiştir">
+              <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+            </button>
             <div class="user-avatar" id="userInitials">?</div>
-            <span id="userName">Loading…</span>
+            <span id="userName" class="userName">Bağlanıyor…</span>
           </div>
         </header>
 
         <main class="page-body">
           <div class="page-header">
-            <h1>My Emission Records</h1>
-            <p>Kayıtlarınızı arayın, listeleyin ve yönetin.</p>
+            <h1>Emisyon Kayıtlarım</h1>
+            <p>Geçmiş aktivitelerinizi inceleyin, filtreleyin ve yönetin.</p>
           </div>
 
-          <div class="content-card">
-            <!-- Araç Çubuğu (Arama ve Filtreleme) -->
+          <div class="content-card glass-card">
             <div class="table-actions">
-              <input
-                class="input"
-                type="search"
-                id="searchInput"
-                placeholder="Search entries…"
-                style="max-width: 300px"
-              />
+              <input class="input" type="search" id="searchInput" placeholder="Kayıtlarda ara…" style="max-width: 300px" />
               <div style="display: flex; gap: 12px; align-items: center">
-                <select
-                  class="input"
-                  id="categoryFilter"
-                  style="width: auto; min-width: 160px"
-                >
-                  <option value="">All categories</option>
-                  <option value="Transport">Transport</option>
-                  <option value="Energy">Energy</option>
-                  <option value="Food">Food</option>
-                  <option value="Shopping">Shopping</option>
-                  <option value="Other">Other</option>
+                <select class="input" id="categoryFilter" style="width: auto; min-width: 160px">
+                  <option value="">Tüm Kategoriler</option>
+                  <option value="Transport">Ulaşım</option>
+                  <option value="Energy">Enerji</option>
+                  <option value="Food">Gıda</option>
+                  <option value="Shopping">Alışveriş</option>
+                  <option value="Other">Diğer</option>
                 </select>
-                <a
-                  href="add-emission.html"
-                  class="btn-primary"
-                  id="addEntryBtn"
-                  style="padding: 10px 18px; font-size: 13px"
-                  >+ Add Entry</a
-                >
               </div>
             </div>
 
-            <!-- Kayıt Listeleme Tablosu -->
             <div class="table-wrapper">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Date</th>
-                    <th>Category</th>
-                    <th>Description</th>
-                    <th>Amount (kg CO₂e)</th>
-                    <th>Actions</th>
+                    <th>Tarih</th>
+                    <th>Kategori</th>
+                    <th>Açıklama</th>
+                    <th>Miktar (kg CO₂e)</th>
+                    <th>İşlemler</th>
                   </tr>
                 </thead>
                 <tbody id="emissionsTableBody">
-                  <tr>
-                    <td colspan="6" class="table-empty">
-                      Kayıtlar yükleniyor…
-                    </td>
-                  </tr>
+                  <tr><td colspan="5" class="table-empty">Kayıtlar yükleniyor…</td></tr>
                 </tbody>
               </table>
             </div>
 
-            <!-- Filtrelenen Verilerin Özeti -->
-            <div
-              style="
-                padding: 12px 0 0;
-                text-align: right;
-                font-size: 13px;
-                color: var(--color-text-muted);
-              "
-            >
-              Toplam: <strong id="totalShown">0</strong> kayıt —
-              <strong id="totalCO2">0</strong> kg CO₂e
+            <div style="padding: 12px 0 0; text-align: right; font-size: 13px; color: var(--color-text-muted);">
+              Toplam: <strong id="totalShown">0</strong> kayıt — <strong id="totalCO2">0</strong> kg CO₂e
             </div>
           </div>
         </main>
       </div>
     </div>
 
-    <!-- Kayıt Silme Onay Ekranı (Modal) -->
-    <div
-      id="deleteModal"
-      style="
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(26, 26, 46, 0.5);
-        z-index: 200;
-        align-items: center;
-        justify-content: center;
-        backdrop-filter: blur(2px);
-      "
-    >
-      <div
-        style="
-          background: #fff;
-          border-radius: 12px;
-          padding: 32px;
-          max-width: 400px;
-          width: 95%;
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-        "
-      >
-        <h2
-          style="
-            font-size: 18px;
-            font-weight: 800;
-            color: var(--color-brand-text);
-            margin-bottom: 12px;
-          "
-        >
-          Delete Entry
-        </h2>
-        <p
-          style="
-            font-size: 14px;
-            color: var(--color-text-muted);
-            margin-bottom: 28px;
-            line-height: 1.5;
-          "
-        >
-          Bu emisyon kaydını kalıcı olarak silmek istediğinizden emin misiniz?
-          Bu işlem geri alınamaz.
-        </p>
-        <div style="display: flex; gap: 12px; justify-content: flex-end">
-          <button
-            class="btn-secondary"
-            id="cancelDeleteBtn"
-            style="padding: 10px 20px"
-          >
-            Cancel
-          </button>
-          <button
-            class="btn-primary"
-            id="confirmDeleteBtn"
-            style="padding: 10px 20px; background: var(--color-error)"
-          >
-            Delete
-          </button>
+    <!-- Delete Modal -->
+    <div id="deleteModal" class="modal-backdrop" style="display: none">
+      <div class="modal-box glass-card">
+        <h2 class="modal-title">Kaydı Sil</h2>
+        <p class="modal-body">Bu emisyon kaydını kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.</p>
+        <div class="modal-actions">
+          <button class="btn-secondary" id="cancelDeleteBtn">İptal</button>
+          <button class="btn-danger" id="confirmDeleteBtn">Sil</button>
         </div>
       </div>
     </div>
 
-    <!-- Sayfa özel JS mantığı -->
     <script type="module" src="../js/emissions.js"></script>
+    <script type="module">
+      import { ThemeManager } from '../js/utils/themeManager.js';
+      ThemeManager.init();
+      document.getElementById('themeToggle')?.addEventListener('click', () => ThemeManager.toggle());
+    </script>
   </body>
 </html>

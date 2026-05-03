@@ -128,10 +128,19 @@ categoryEl.addEventListener('change', () => {
       activityEl.appendChild(opt);
     });
 
-    if (activities.length > 0) {
+    const activityGroup = document.getElementById('activityTypeGroup');
+
+    if (activities.length === 1) {
+      // Sadece tek seçenek varsa dropdown'u gizle ve otomatik seç
+      if (activityGroup) activityGroup.style.display = 'none';
       activityEl.selectedIndex = 1;
       unitLabel.textContent = activities[0].unit;
       activityEl.dispatchEvent(new Event('change'));
+    } else if (activities.length > 1) {
+      // Birden fazla seçenek varsa dropdown'u göster
+      if (activityGroup) activityGroup.style.display = 'flex'; // form-group display:flex
+      activityEl.selectedIndex = 0;
+      unitLabel.textContent = 'birim';
     }
   } else {
     climatiqBox.style.display = 'none';

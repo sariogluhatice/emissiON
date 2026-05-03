@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Kayıt – EMISSON</title>
+    <title>Kayıt – emissiON</title>
     <link rel="stylesheet" href="../css/main.css" />
   </head>
   <body>
@@ -11,20 +11,19 @@
       <div class="auth-card">
         <!-- Left Panel -->
         <div class="auth-left">
-          <div class="auth-brand">EMISSON</div>
-          <h1 class="auth-heading">Hesap Oluştur</h1>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
+            <a href="../index.html" class="auth-brand" style="text-decoration: none; margin-bottom: 0;">emissiON</a>
+            <button id="themeToggle" class="btn-icon-only" title="Temayı Değiştir" style="background: none; border: none; color: var(--color-primary); cursor: pointer; padding: 5px;">
+              <svg id="themeIcon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+            </button>
+          </div>
+          <h1 class="auth-heading">Aramıza Katıl</h1>
 
           <form id="registerForm" novalidate>
             <!-- Full Name -->
             <div class="form-group">
-              <label class="label" for="name">Ad Soyad</label>
-              <input
-                class="input"
-                type="text"
-                id="name"
-                placeholder="Adınızı ve soyadınızı girin"
-                autocomplete="name"
-              />
+              <label class="label" for="name">Tam Adınız</label>
+              <input class="input" type="text" id="name" placeholder="Adınızı ve soyadınızı girin" autocomplete="name" />
               <span class="error-msg" id="nameError"></span>
             </div>
 
@@ -41,62 +40,52 @@
             <!-- Email -->
             <div class="form-group">
               <label class="label" for="email">E-posta</label>
-              <input
-                class="input"
-                type="email"
-                id="email"
-                placeholder="E-posta adresinizi girin"
-                autocomplete="email"
-              />
+              <input class="input" type="email" id="email" placeholder="E-posta adresinizi girin" autocomplete="email" />
               <span class="error-msg" id="emailError"></span>
             </div>
 
             <!-- Password -->
             <div class="form-group">
               <label class="label" for="password">Parola</label>
-              <input
-                class="input"
-                type="password"
-                id="password"
-                placeholder="Parola oluşturun"
-                autocomplete="new-password"
-              />
+              <input class="input" type="password" id="password" placeholder="Parola oluşturun" autocomplete="new-password" />
               <span class="error-msg" id="passwordError"></span>
             </div>
 
             <!-- Confirm Password -->
             <div class="form-group">
               <label class="label" for="confirmPassword">Parolayı Onayla</label>
-              <input
-                class="input"
-                type="password"
-                id="confirmPassword"
-                placeholder="Parolanızı onaylayın"
-                autocomplete="new-password"
-              />
+              <input class="input" type="password" id="confirmPassword" placeholder="Parolanızı onaylayın" autocomplete="new-password" />
               <span class="error-msg" id="confirmPasswordError"></span>
             </div>
 
-            <!-- API mesajı (hata / başarı) -->
+            <!-- API mesajı -->
             <p class="api-message" id="apiMessage"></p>
 
-            <!-- Submit -->
-            <button type="submit" class="btn-primary" id="submitBtn">
-              Kayıt Ol
-            </button>
+            <button type="submit" class="btn-primary" id="submitBtn">Hesabı Oluştur</button>
 
-            <!-- Login link -->
             <p class="bottom-text">
-              Zaten hesabınız var mı? <a href="login.html">Giriş Yap</a>
+              Zaten üye misin? <a href="login.html">Giriş Yap</a>
             </p>
           </form>
         </div>
 
         <!-- Right Panel -->
-        <div class="auth-right"></div>
+        <div class="auth-right">
+          <div class="auth-visual-overlay"></div>
+          <img src="../assets/dual_earth.png" alt="EmissiON İkili Dünya Simülasyonu" class="auth-visual-img" />
+          <div class="auth-visual-content">
+            <h2>Hangi Dünyayı Seçersin?</h2>
+            <p>Bugün attığın her adım, yarının simülasyonunu değiştirir. Aramıza katıl ve değişimi başlat.</p>
+          </div>
+        </div>
       </div>
     </main>
 
     <script type="module" src="../js/register.js"></script>
+    <script type="module">
+      import { ThemeManager } from '../js/utils/themeManager.js';
+      ThemeManager.init();
+      document.getElementById('themeToggle')?.addEventListener('click', () => ThemeManager.toggle());
+    </script>
   </body>
 </html>

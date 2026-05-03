@@ -1,6 +1,7 @@
 import { TokenManager }   from './api/tokenManager.js';
 import { ApiClient }      from './api/apiClient.js';
 import { getCurrentUser } from './utils/uiUtils.js';
+import { ThemeManager } from './utils/themeManager.js';
 
 // ── Auth guard ──────────────────────────────────────────────────────────────
 if (!TokenManager.exists()) window.location.replace('login.html');
@@ -27,211 +28,199 @@ const txt  = (key, label,          required = true,  roles = 'all') =>
 const IH = ['individual', 'household']; // shorthand
 
 // ── Step definitions ─────────────────────────────────────────────────────────
+// ── Adım Tanımları (Tam Türkçe) ───────────────────────────────────────────────
 const ALL_STEPS = [
-
-  // ── 1. Profile (role-specific) ───────────────────────────────────────────
   {
-    id: 'profile', title: 'Your Profile',
-    subtitle: 'Help us understand your situation.',
+    id: 'profile', title: 'Profilin',
+    subtitle: 'Sizin için en doğru analizi yapabilmemiz adına durumunuzu anlayalım.',
+    rightDesc: 'Kişisel profiliniz, platformdaki tüm hesaplamaların temel taşını oluşturur. Size özel bir karbon yol haritası için ilk adımı atıyorsunuz.',
     icon: '👤', roles: 'all',
     fields: [
-      // Individual
-      rad('home_type', 'Housing type',
-        [['apartment','Apartment'],['house','House'],['detached','Detached House'],
-         ['shared','Shared House'],['dormitory','Dormitory']],
+      rad('home_type', 'Konut Tipi',
+        [['apartment','Apartman Dairesi'],['house','Müstakil Ev'],['detached','Villa / Köşk'],
+         ['shared','Paylaşımlı Ev'],['dormitory','Öğrenci Yurdu']],
         true, ['individual']),
-      rad('household_size', 'How many people live in your home (including yourself)?',
-        [['1','Just me'],['2','2'],['3','3'],['4','4'],['5','5'],['6+','6+']],
+      rad('household_size', 'Evde kaç kişi yaşıyorsunuz?',
+        [['1','Sadece Ben'],['2','2'],['3','3'],['4','4'],['5','5'],['6+','6+']],
         true, ['individual']),
-      // Household
-      rad('household_size', 'How many people are in your household?',
+      rad('household_size', 'Hane halkı kaç kişiden oluşuyor?',
         [['2','2'],['3','3'],['4','4'],['5','5'],['6+','6+']],
         true, ['household']),
-      rad('is_household_head', 'Are you the household head / primary account holder?',
-        [['true','Yes'],['false','No']],
+      rad('is_household_head', 'Hanenin birincil hesap sahibi misiniz?',
+        [['true','Evet'],['false','Hayır']],
         true, ['household']),
-      rad('home_type', 'Home type',
-        [['apartment','Apartment'],['house','House'],['detached','Detached House'],['shared','Shared / Rented']],
+      rad('home_type', 'Ev Tipi',
+        [['apartment','Apartman Dairesi'],['house','Müstakil Ev'],['detached','Villa / Köşk'],['shared','Paylaşımlı / Kiralık Oda']],
         true, ['household']),
-      // Company
-      txt('company_name', 'Company name', true, ['company']),
-      sel('industry', 'Industry',
-        [['manufacturing','Manufacturing'],['technology','Technology'],['retail','Retail'],
-         ['healthcare','Healthcare'],['finance','Finance'],['transportation','Transportation'],
-         ['education','Education'],['construction','Construction'],['energy','Energy'],['other','Other']],
+      txt('company_name', 'Şirket Adı', true, ['company']),
+      sel('industry', 'Sektör',
+        [['manufacturing','Üretim'],['technology','Teknoloji'],['retail','Perakende'],
+         ['healthcare','Sağlık'],['finance','Finans'],['transportation','Ulaşım'],
+         ['education','Eğitim'],['construction','İnşaat'],['energy','Enerji'],['other','Diğer']],
         true, ['company']),
-      rad('employee_count_range', 'Number of employees',
+      rad('employee_count_range', 'Çalışan Sayısı',
         [['1-10','1–10'],['11-50','11–50'],['51-200','51–200'],['201-1000','201–1000'],['1000+','1000+']],
         true, ['company']),
-      rad('department_count_range', 'Number of departments',
+      rad('department_count_range', 'Departman Sayısı',
         [['1-3','1–3'],['4-10','4–10'],['11-25','11–25'],['25+','25+']],
         true, ['company']),
     ],
   },
-
-  // ── 2. Home & Energy (individual + household) ───────────────────────────
   {
-    id: 'energy', title: 'Home & Energy',
-    subtitle: 'Home energy is typically the largest slice of a personal carbon footprint.',
+    id: 'energy', title: 'Ev & Enerji',
+    subtitle: 'Ev enerjisi genellikle kişisel karbon ayak izinin en büyük dilimidir.',
+    rightDesc: 'Evlerde kullanılan elektriğin yaklaşık %20\'si bekleme modundaki cihazlardan kaynaklanır. Küçük değişimler büyük etkiler yaratır.',
     icon: '⚡', roles: IH,
     fields: [
-      sel('monthly_kwh', 'Estimated monthly electricity usage',
-        [['<100','Less than 100 kWh'],['100-200','100–200 kWh'],['200-400','200–400 kWh'],
-         ['400-600','400–600 kWh'],['>600','Over 600 kWh'],['unknown','I don\'t know']]),
-      sel('heating_type', 'Primary heating source',
-        [['natural_gas','Natural Gas'],['electricity','Electricity'],['coal','Coal / Solid Fuel'],
-         ['wood','Wood / Biomass'],['heat_pump','Heat Pump'],['district','District Heating'],['none','No heating']]),
-      rad('has_ac', 'Do you use air conditioning?',
-        [['true','Yes'],['false','No']]),
-      sel('renewable_energy', 'Renewable energy at home',
-        [['solar','Solar panels'],['green_plan','Green electricity tariff'],['both','Both'],['none','Neither']]),
-      rad('water_saving_devices', 'Do you use water-saving devices (low-flow taps etc.)?',
-        [['true','Yes'],['false','No']], false),
+      sel('monthly_kwh', 'Tahmini aylık elektrik kullanımı',
+        [['<100','100 kWh\'den az'],['100-200','100–200 kWh'],['200-400','200–400 kWh'],
+         ['400-600','400–600 kWh'],['>600','600 kWh üzeri'],['unknown','Bilmiyorum']]),
+      sel('heating_type', 'Birincil ısınma kaynağı',
+        [['natural_gas','Doğalgaz'],['electricity','Elektrik'],['coal','Kömür / Katı Yakıt'],
+         ['wood','Odun / Biyokütle'],['heat_pump','Isı Pompası'],['district','Merkezi Isıtma'],['none','Isınma yok']]),
+      rad('has_ac', 'Klima kullanıyor musunuz?',
+        [['true','Evet'],['false','Hayır']]),
+      sel('renewable_energy', 'Evdeki yenilenebilir enerji',
+        [['solar','Güneş Panelleri'],['green_plan','Yeşil Enerji Tarifesi'],['both','Her İkisi'],['none','Hiçbiri']]),
+      rad('water_saving_devices', 'Su tasarrufu sağlayan cihazlar (tasarruflu musluk vb.) kullanıyor musunuz?',
+        [['true','Evet'],['false','Hayır']], false),
     ],
   },
-
-  // ── 3. Office Energy (company only) ─────────────────────────────────────
   {
-    id: 'office_energy', title: 'Office & Energy',
-    subtitle: 'Tell us about your company\'s energy use.',
+    id: 'office_energy', title: 'Ofis & Enerji',
+    subtitle: 'Şirketinizin enerji kullanımı hakkında bize bilgi verin.',
+    rightDesc: 'Sürdürülebilir bir ofis sadece doğayı değil, şirket maliyetlerini de korur. Enerji kaynaklarınızı optimize ederek geleceği tasarlayın.',
     icon: '🏢', roles: ['company'],
     fields: [
-      sel('office_energy_source', 'Primary office energy source',
-        [['grid','Grid Electricity'],['natural_gas','Natural Gas + Electricity'],
-         ['renewable','Renewable / Green Energy'],['mixed','Mixed Sources']]),
-      rad('office_electricity_level', 'Estimated office electricity consumption',
-        [['low','Low (small office, < 1,000 kWh/mo)'],['medium','Medium (1,000–5,000 kWh/mo)'],
-         ['high','High (5,000–20,000 kWh/mo)'],['very_high','Very High (20,000+ kWh/mo)']]),
-      rad('remote_work_policy', 'Employee work policy',
-        [['on_site','Fully On-Site'],['hybrid','Hybrid'],['fully_remote','Fully Remote']], false),
+      sel('office_energy_source', 'Birincil ofis enerji kaynağı',
+        [['grid','Şebeke Elektriği'],['natural_gas','Doğalgaz + Elektrik'],
+         ['renewable','Yenilenebilir / Yeşil Enerji'],['mixed','Karma Kaynaklar']]),
+      rad('office_electricity_level', 'Tahmini ofis elektrik tüketimi',
+        [['low','Düşük (küçük ofis, < 1.000 kWh/ay)'],['medium','Orta (1.000–5.000 kWh/ay)'],
+         ['high','Yüksek (5.000–20.000 kWh/ay)'],['very_high','Çok Yüksek (20.000+ kWh/ay)']]),
+      rad('remote_work_policy', 'Çalışma politikası',
+        [['on_site','Tamamen Ofisten'],['hybrid','Hibrit'],['fully_remote','Tamamen Uzaktan']], false),
     ],
   },
-
-  // ── 4. Transportation ────────────────────────────────────────────────────
   {
-    id: 'transport', title: 'Transportation',
-    subtitle: 'How do you and your household get around day-to-day?',
+    id: 'transport', title: 'Ulaşım',
+    subtitle: 'Günlük hayatta nasıl seyahat ediyorsunuz?',
+    rightDesc: 'Günde sadece 10 km daha az araç sürmek, yılda yaklaşık 1 ton CO2 tasarrufu sağlar. Hareket tarzınız dünyayı değiştirir.',
     icon: '🚗', roles: 'all',
     fields: [
-      // Individual / household
-      rad('has_car', 'Do you own or regularly use a car?',
-        [['true','Yes'],['false','No']],
+      rad('has_car', 'Düzenli olarak araç kullanıyor musunuz?',
+        [['true','Evet'],['false','Hayır']],
         true, IH),
-      rad('car_fuel_type', 'Vehicle fuel type',
-        [['petrol','Petrol'],['diesel','Diesel'],['lpg','LPG'],['hybrid','Hybrid'],['electric','Electric']],
+      rad('car_fuel_type', 'Araç yakıt tipi',
+        [['petrol','Benzin'],['diesel','Dizel'],['lpg','LPG'],['hybrid','Hibrit'],['electric','Elektrikli']],
         true, IH, a => a.has_car === 'true'),
-      rad('weekly_km', 'Average kilometres driven per week',
+      rad('weekly_km', 'Haftalık ortalama sürüş mesafesi',
         [['<50','< 50 km'],['50-150','50–150 km'],['150-300','150–300 km'],
          ['300-500','300–500 km'],['>500','> 500 km']],
         false, IH, a => a.has_car === 'true'),
-      rad('carpooling', 'Do you carpool or car-share?',
-        [['true','Yes'],['false','No']],
+      rad('carpooling', 'Araç paylaşımı kullanıyor musunuz?',
+        [['true','Evet'],['false','Hayır']],
         false, IH, a => a.has_car === 'true'),
-      // Shared
-      sel('public_transport_freq', 'Public transport frequency',
-        [['daily','Daily'],['few_week','A few times a week'],['weekly','Weekly'],['rarely','Rarely'],['never','Never']]),
-      rad('public_transport_type', 'Main public transport type',
-        [['bus','Bus'],['metro','Metro / Subway'],['train','Train / Rail'],['ferry','Ferry'],['mixed','Mixed']],
+      sel('public_transport_freq', 'Toplu taşıma kullanım sıklığı',
+        [['daily','Günlük'],['few_week','Haftada birkaç kez'],['weekly','Haftalık'],['rarely','Nadiren'],['never','Hiçbir zaman']]),
+      rad('public_transport_type', 'Ana toplu taşıma türü',
+        [['bus','Otobüs'],['metro','Metro / Metrobüs'],['train','Tren / Raylı Sistem'],['ferry','Vapur'],['mixed','Karma']],
         false, 'all', a => a.public_transport_freq !== 'never' && !!a.public_transport_freq),
-      rad('cycles_or_walks', 'Do you regularly walk or cycle for daily trips?',
-        [['true','Yes'],['false','No']],
+      rad('cycles_or_walks', 'Düzenli olarak yürüyor veya bisiklete biniyor musunuz?',
+        [['true','Evet'],['false','Hayır']],
         true, IH),
-      sel('taxi_freq', 'Taxi / rideshare usage',
-        [['daily','Daily'],['weekly','Weekly'],['monthly','Monthly'],['rarely','Rarely'],['never','Never']],
+      sel('taxi_freq', 'Taksi / Uber kullanım sıklığı',
+        [['daily','Günlük'],['weekly','Haftalık'],['monthly','Aylık'],['rarely','Nadiren'],['never','Hiçbir zaman']],
         false, IH),
-      // Company
-      rad('has_company_vehicles', 'Does your company operate vehicles?',
-        [['true','Yes'],['false','No']],
+      rad('has_company_vehicles', 'Şirketinizin araç filosu var mı?',
+        [['true','Evet'],['false','Hayır']],
         true, ['company']),
-      rad('fleet_fuel', 'Fleet fuel type',
-        [['petrol','Mostly Petrol'],['diesel','Mostly Diesel'],['electric','Electric Fleet'],['mixed','Mixed']],
+      rad('fleet_fuel', 'Filo yakıt tipi',
+        [['petrol','Ağırlıklı Benzin'],['diesel','Ağırlıklı Dizel'],['electric','Elektrikli Filo'],['mixed','Karma']],
         false, ['company'], a => a.has_company_vehicles === 'true'),
-      rad('fleet_size', 'Fleet size (vehicles)',
+      rad('fleet_size', 'Filo boyutu (araç sayısı)',
         [['1-5','1–5'],['6-20','6–20'],['21-50','21–50'],['50+','50+']],
         false, ['company'], a => a.has_company_vehicles === 'true'),
     ],
   },
-
-  // ── 5. Flights & Travel ──────────────────────────────────────────────────
   {
-    id: 'flights', title: 'Flights & Travel',
-    subtitle: 'Aviation is one of the most carbon-intensive activities per kilometre.',
+    id: 'flights', title: 'Uçuş & Seyahat',
+    subtitle: 'Havacılık, kilometre başına en yoğun karbon salınımı yapan aktivitelerden biridir.',
+    rightDesc: 'Tek bir kıtalararası uçuş, bir kişinin yıllık ortalama karbon bütçesinin yarısını tüketebilir. Uçuşlarınızı dengelemek bizim işimiz.',
     icon: '✈️', roles: 'all',
     fields: [
-      rad('domestic_flights', 'Domestic flights per year',
-        [['0','None'],['1-2','1–2'],['3-5','3–5'],['6-10','6–10'],['10+','10+']]),
-      rad('international_flights', 'International flights per year',
-        [['0','None'],['1-2','1–2'],['3-5','3–5'],['6-10','6–10'],['10+','10+']]),
-      rad('typical_flight_distance', 'Typical flight length (if you fly)',
-        [['short','Short-haul (< 3 h)'],['medium','Medium-haul (3–7 h)'],['long','Long-haul (7 h+)']],
+      rad('domestic_flights', 'Yıllık yurt içi uçuş sayısı',
+        [['0','Hiç'],['1-2','1–2'],['3-5','3–5'],['6-10','6–10'],['10+','10+']]),
+      rad('international_flights', 'Yıllık yurt dışı uçuş sayısı',
+        [['0','Hiç'],['1-2','1–2'],['3-5','3–5'],['6-10','6–10'],['10+','10+']]),
+      rad('typical_flight_distance', 'Tipik uçuş süresi',
+        [['short','Kısa Mesafe (< 3 sa)'],['medium','Orta Mesafe (3–7 sa)'],['long','Uzun Mesafe (7 sa+)']],
         false, 'all', a => a.domestic_flights !== '0' || a.international_flights !== '0'),
-      rad('has_business_travel', 'Do you travel by air for work?',
-        [['true','Yes'],['false','No']], false),
+      rad('has_business_travel', 'İş amaçlı hava yoluyla seyahat ediyor musunuz?',
+        [['true','Evet'],['false','Hayır']],
+        false, 'all', a => (a.domestic_flights !== '0' && !!a.domestic_flights) || (a.international_flights !== '0' && !!a.international_flights)),
     ],
   },
-
-  // ── 6. Food & Diet (individual + household) ──────────────────────────────
   {
-    id: 'food', title: 'Food & Diet',
-    subtitle: 'Diet accounts for 10–30 % of the average household carbon footprint.',
+    id: 'food', title: 'Gıda & Beslenme',
+    subtitle: 'Beslenme, ortalama bir hane halkı karbon ayak izinin %10-30\'unu oluşturur.',
+    rightDesc: 'Bitki bazlı bir beslenme düzeni, gıda kaynaklı emisyonlarınızı %70\'e kadar düşürebilir. Tabağınızdaki tercihler iklimi korur.',
     icon: '🍽', roles: IH,
     fields: [
-      rad('diet_type', 'How would you describe your diet?',
-        [['vegan','Vegan'],['vegetarian','Vegetarian'],['pescatarian','Pescatarian'],
-         ['mixed','Mixed / Omnivore'],['meat_heavy','Meat-heavy']]),
-      sel('red_meat_freq', 'How often do you eat red meat?',
-        [['daily','Daily'],['few_week','A few times a week'],['weekly','Weekly'],
-         ['monthly','Monthly'],['rarely','Rarely / never']],
+      rad('diet_type', 'Beslenme tarzınızı nasıl tanımlarsınız?',
+        [['vegan','Vegan'],['vegetarian','Vejetaryen'],['pescatarian','Pesketaryen (Balık tüketen)'],
+         ['mixed','Karma / Her şeyi yiyen'],['meat_heavy','Et ağırlıklı']], true),
+      sel('red_meat_freq', 'Ne sıklıkla kırmızı et tüketirsiniz?',
+        [['daily','Günlük'],['few_week','Haftada birkaç kez'],['weekly','Haftalık'],
+         ['monthly','Aylık'],['rarely','Nadiren / Hiç']],
         false, IH, a => !['vegan','vegetarian','pescatarian'].includes(a.diet_type) && !!a.diet_type),
-      rad('dairy_level', 'Dairy consumption',
-        [['high','High'],['medium','Medium'],['low','Low'],['none','None']],
+      rad('dairy_level', 'Süt ve süt ürünü tüketimi',
+        [['high','Yüksek'],['medium','Orta'],['low','Düşük'],['none','Hiç']],
         false, IH, a => a.diet_type !== 'vegan' && !!a.diet_type),
-      rad('local_food_pref', 'Do you prefer local or seasonal produce?',
-        [['always','Always'],['often','Often'],['sometimes','Sometimes'],['rarely','Rarely']], false),
-      rad('food_waste', 'How much food do you typically waste?',
-        [['a_lot','A lot'],['some','Some'],['little','A little'],['minimal','Almost none']], false),
+      rad('local_food_pref', 'Yerel veya mevsimsel ürünleri mi tercih edersiniz?',
+        [['always','Her zaman'],['often','Sık sık'],['sometimes','Bazen'],['rarely','Nadiren']], false),
+      rad('food_waste', 'Genellikle ne kadar gıda israf edersiniz?',
+        [['a_lot','Çok fazla'],['some','Biraz'],['little','Çok az'],['minimal','Neredeyse hiç']], false),
     ],
   },
-
-  // ── 7. Shopping & Waste (individual + household) ─────────────────────────
   {
-    id: 'shopping', title: 'Shopping & Waste',
-    subtitle: 'Consumption and recycling habits complete your footprint picture.',
+    id: 'shopping', title: 'Alışveriş & Atık',
+    subtitle: 'Tüketim ve geri dönüşüm alışkanlıklarınız ayak izinizi tamamlar.',
+    rightDesc: 'Satın aldığınız her yeni ürünün bir \'karbon hikayesi\' vardır. İkinci el tercih etmek bu hikayeyi daha yeşil kılar.',
     icon: '🛍', roles: IH,
     fields: [
-      rad('online_shopping_freq', 'Online shopping frequency',
-        [['daily','Daily'],['weekly','Weekly'],['monthly','Monthly'],['rarely','Rarely']]),
-      rad('new_vs_secondhand', 'New vs. second-hand preference',
-        [['always_new','Always new'],['mostly_new','Mostly new'],
-         ['mixed','Mix of both'],['mostly_used','Mostly second-hand']]),
-      rad('fast_fashion', 'Do you buy fast fashion?',
-        [['yes','Yes, regularly'],['sometimes','Sometimes'],['no','Rarely / never']], false),
-      chk('recycling_categories', 'Which materials do you recycle? (select all that apply)',
-        [['paper','Paper'],['plastic','Plastic'],['glass','Glass'],
-         ['metal','Metal'],['ewaste','E-waste'],['none','I don\'t recycle currently']]),
-      rad('composting', 'Do you compost food/garden waste?',
-        [['true','Yes'],['false','No']], false),
-      rad('waste_bags_week', 'General waste bags put out per week',
-        [['1','1 bag'],['2','2 bags'],['3','3 bags'],['4+','4 or more']], false),
-      rad('single_use_plastic', 'Single-use plastic frequency',
-        [['daily','Daily'],['weekly','Weekly'],['sometimes','Sometimes'],['rarely','Rarely'],['never','Never']], false),
+      rad('online_shopping_freq', 'Online alışveriş sıklığı',
+        [['daily','Günlük'],['weekly','Haftalık'],['monthly','Aylık'],['rarely','Nadiren']]),
+      rad('new_vs_secondhand', 'Yeni mi yoksa ikinci el mi tercih edersiniz?',
+        [['always_new','Her zaman yeni'],['mostly_new','Çoğunlukla yeni'],
+         ['mixed','Her ikisinin karışımı'],['mostly_used','Çoğunlukla ikinci el']]),
+      rad('fast_fashion', 'Hızlı moda (fast-fashion) markalarından alışveriş yapar mısınız?',
+        [['yes','Evet, düzenli olarak'],['sometimes','Bazen'],['no','Nadiren / Hiç']], false),
+      chk('recycling_categories', 'Hangi malzemeleri geri dönüştürürsünüz?',
+        [['paper','Kağıt'],['plastic','Plastik'],['glass','Cam'],
+         ['metal','Metal'],['ewaste','E-atık'],['none','Şu an geri dönüşüm yapmıyorum']]),
+      rad('composting', 'Kompost yapıyor musunuz?',
+        [['true','Evet'],['false','Hayır']], false),
+      rad('waste_bags_week', 'Haftalık çıkan çöp torbası sayısı',
+        [['1','1 torba'],['2','2 torba'],['3','3 torba'],['4+','4 veya daha fazla']], false),
+      rad('single_use_plastic', 'Tek kullanımlık plastik kullanım sıklığı',
+        [['daily','Günlük'],['weekly','Haftalık'],['sometimes','Bazen'],['rarely','Nadiren'],['never','Hiçbir zaman']], false),
     ],
   },
-
-  // ── 8. Goals ─────────────────────────────────────────────────────────────
   {
-    id: 'goals', title: 'Your Goals',
-    subtitle: 'We\'ll tailor your dashboard and suggestions to what matters most to you.',
+    id: 'goals', title: 'Hedeflerin',
+    subtitle: 'Panelinizi ve önerilerimizi sizin için en önemli olan şeylere göre özelleştireceğiz.',
+    rightDesc: 'Size en uygun tasarruf önerilerini sunmak için önceliklerinizi anlıyoruz. Birlikte daha yeşil bir gelecek inşa edeceğiz.',
     icon: '🎯', roles: 'all',
     fields: [
-      rad('motivation', 'What is your main motivation for tracking emissions?',
-        [['save_money','Save money'],['reduce_carbon','Reduce my carbon footprint'],
-         ['company_reporting','Company reporting / compliance'],
-         ['environmental','Environmental awareness'],['academic','Academic / project use']]),
-      rad('priority_area', 'Which area do you most want to improve first?',
-        [['transport','Transport'],['energy','Home energy'],['flights','Flights & travel'],
-         ['food','Food & diet'],['shopping','Shopping'],['waste','Waste & recycling'],
-         ['supply_chain','Supply chain']]),
+      rad('motivation', 'Emisyon takibi yapmaktaki ana motivasyonunuz nedir?',
+        [['save_money','Para tasarrufu'],['reduce_carbon','Karbon ayak izimi azaltmak'],
+         ['company_reporting','Şirket raporlaması / uyumluluk'],
+         ['environmental','Çevresel farkındalık'],['academic','Akademik / Proje kullanımı']]),
+      rad('priority_area', 'İlk olarak hangi alanı iyileştirmek istersiniz?',
+        [['transport','Ulaşım'],['energy','Ev enerjisi'],['flights','Uçuş ve seyahat'],
+         ['food','Gıda ve beslenme'],['shopping','Alışveriş'],['waste','Atık ve geri dönüşüm'],
+         ['supply_chain','Tedarik zinciri']]),
     ],
   },
 ];
@@ -258,7 +247,6 @@ const backBtn       = document.getElementById('backBtn');
 const nextBtn       = document.getElementById('nextBtn');
 const apiMessage    = document.getElementById('apiMessage');
 const stepDots      = document.getElementById('stepDots');
-const stepIcon      = document.getElementById('stepIcon');
 const stepRightTitle= document.getElementById('stepRightTitle');
 const stepRightDesc = document.getElementById('stepRightDesc');
 
@@ -296,7 +284,7 @@ function buildFieldEl(field) {
     select.name      = field.key;
 
     const ph = document.createElement('option');
-    ph.value = ''; ph.textContent = 'Select…';
+    ph.value = ''; ph.textContent = 'Seçiniz…';
     select.appendChild(ph);
 
     field.options.forEach(([val, text]) => {
@@ -393,22 +381,21 @@ function refreshConditionals() {
   });
 }
 
-// ── Render current step ───────────────────────────────────────────────────────
+// ── Adımı Ekrana Bas ───────────────────────────────────────────────────────
 function renderStep() {
   const step  = visibleSteps[currentIndex];
   const total = visibleSteps.length;
 
-  // Progress bar
+  // İlerleme Çubuğu (Progress)
   const pct = (currentIndex / total) * 100;
   progressFill.style.width = `${pct}%`;
-  progressLabel.textContent = `Step ${currentIndex + 1} of ${total}`;
+  progressLabel.textContent = `Adım ${currentIndex + 1} / ${total}`;
 
-  // Right panel decorations
-  stepIcon.textContent       = step.icon ?? '🌿';
+  // Sağ Panel Dekorasyon
   stepRightTitle.textContent = step.title;
-  stepRightDesc.textContent  = step.subtitle ?? '';
+  stepRightDesc.textContent  = step.rightDesc ?? '';
 
-  // Step dots
+  // Adım Noktaları (Dots)
   stepDots.innerHTML = '';
   visibleSteps.forEach((_, i) => {
     const dot = document.createElement('div');
@@ -417,11 +404,11 @@ function renderStep() {
     stepDots.appendChild(dot);
   });
 
-  // Nav buttons
+  // Navigasyon Butonları
   backBtn.style.display = currentIndex === 0 ? 'none' : 'inline-flex';
-  nextBtn.textContent   = currentIndex === total - 1 ? 'Complete Setup ✓' : 'Next →';
+  nextBtn.textContent   = currentIndex === total - 1 ? 'Kurulumu Tamamla ✓' : 'İleri →';
 
-  // Build step HTML
+  // Adım HTML'ini İnşa Et
   stepContainer.innerHTML = '';
 
   const heading = document.createElement('h1');
@@ -440,18 +427,17 @@ function renderStep() {
   });
   stepContainer.appendChild(fieldsArea);
 
-  // Apply initial conditional visibility
   refreshConditionals();
-
   setApiMessage('', false);
 }
 
-// ── Validation ────────────────────────────────────────────────────────────────
+// ── Doğrulama (Validation) ────────────────────────────────────────────────────
 function validateStep() {
   const step   = visibleSteps[currentIndex];
   let   passed = true;
+  let   firstErrorField = null;
 
-  // Clear previous errors
+  // Önceki hataları temizle
   stepContainer.querySelectorAll('.error-msg').forEach(el => {
     el.textContent = '';
   });
@@ -459,7 +445,7 @@ function validateStep() {
   getVisibleFields(step).forEach(field => {
     if (!field.required) return;
 
-    // Skip hidden conditional fields
+    // Gizli (conditional) alanları atla
     const wrapper = document.getElementById(`fw-${field.key}`);
     if (!wrapper || wrapper.classList.contains('ob-hidden')) return;
 
@@ -470,29 +456,38 @@ function validateStep() {
 
     if (empty) {
       const errEl = document.getElementById(`err-${field.key}`);
-      if (errEl) errEl.textContent = 'Please make a selection.';
-      if (!passed) return; // already failing, just mark the rest
+      if (errEl) {
+        errEl.textContent = 'Bu alan zorunludur.';
+        if (!firstErrorField) firstErrorField = wrapper;
+      }
       passed = false;
     }
   });
 
+  if (!passed && firstErrorField) {
+    firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setApiMessage('Lütfen tüm zorunlu alanları doldurun.', true);
+  }
+
   return passed;
 }
 
-// ── Message helper ────────────────────────────────────────────────────────────
+// ── Mesaj Yardımcısı ──────────────────────────────────────────────────────────
 function setApiMessage(text, isError) {
+  if (!apiMessage) return;
   apiMessage.textContent = text;
   apiMessage.className   = `api-message ${isError ? 'is-error' : 'is-success'}`;
+  apiMessage.style.display = text ? 'block' : 'none';
 }
 
-// ── Navigation handlers ───────────────────────────────────────────────────────
+// ── Navigasyon ────────────────────────────────────────────────────────────────
 nextBtn.addEventListener('click', async () => {
   if (!validateStep()) return;
 
   if (currentIndex < visibleSteps.length - 1) {
     currentIndex++;
     renderStep();
-    stepContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   } else {
     await submitOnboarding();
   }
@@ -502,37 +497,43 @@ backBtn.addEventListener('click', () => {
   if (currentIndex > 0) {
     currentIndex--;
     renderStep();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 });
 
-// ── Submission ────────────────────────────────────────────────────────────────
+// ── Gönderim (Submission) ─────────────────────────────────────────────────────
 async function submitOnboarding() {
   nextBtn.disabled = true;
-  setApiMessage('Saving your profile…', false);
+  nextBtn.textContent = 'Kaydediliyor...';
+  setApiMessage('Profiliniz kaydediliyor, lütfen bekleyin...', false);
 
   try {
     await api.post('/onboarding', answers);
 
-    // Reflect completed state in localStorage
+    // localStorage güncelle
     const stored = getCurrentUser();
     if (stored) {
       stored.onboarding_completed = true;
       localStorage.setItem('user', JSON.stringify(stored));
     }
 
-    // Fill progress bar to 100 %
     progressFill.style.width = '100%';
-    progressLabel.textContent = 'Complete!';
-
-    setApiMessage(isRetake ? 'Carbon profile updated!' : 'Profile saved! Taking you to your dashboard…', false);
+    setApiMessage(isRetake ? 'Karbon profili başarıyla güncellendi!' : 'Profiliniz kaydedildi! Yönlendiriliyorsunuz...', false);
+    
     setTimeout(() => {
       window.location.href = isRetake ? 'profile.html' : 'dashboard.html';
-    }, 1200);
+    }, 1000);
   } catch (err) {
-    setApiMessage(err.message || 'Something went wrong. Please try again.', true);
+    console.error('Onboarding Hatası:', err);
+    setApiMessage(err.message || 'Kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.', true);
     nextBtn.disabled = false;
+    nextBtn.textContent = currentIndex === visibleSteps.length - 1 ? 'Kurulumu Tamamla ✓' : 'İleri →';
   }
 }
 
-// ── Kick off ──────────────────────────────────────────────────────────────────
+// ── Tema Kontrolü ─────────────────────────────────────────────────────────────
+ThemeManager.init();
+document.getElementById('themeToggle')?.addEventListener('click', () => ThemeManager.toggle());
+
+// ── Başlat ────────────────────────────────────────────────────────────────────
 renderStep();

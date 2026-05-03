@@ -1,222 +1,120 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Add Emission – EmissiON</title>
-    <meta name="description" content="Log a new carbon emission entry." />
-    <!-- Global CSS -->
+    <title>Yeni Kayıt – emissiON</title>
     <link rel="stylesheet" href="../css/main.css" />
   </head>
   <body>
     <div class="app-shell">
-      <!-- Sidebar (Yan Menü) -->
       <aside class="sidebar">
-        <div class="sidebar-brand">EMISSON</div>
+        <div class="sidebar-brand">emissiON</div>
         <nav class="sidebar-nav">
           <a href="dashboard.html" class="nav-item" id="nav-dashboard">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <rect x="3" y="3" width="7" height="7"></rect>
-              <rect x="14" y="3" width="7" height="7"></rect>
-              <rect x="3" y="14" width="7" height="7"></rect>
-              <rect x="14" y="14" width="7" height="7"></rect>
-            </svg>
-            Dashboard
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>
+            Genel Bakış
           </a>
-          <a href="emissions.html" class="nav-item active" id="nav-emissions">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M3 3h18v18H3z"></path>
-              <path d="M3 9h18M3 15h18M9 3v18"></path>
-            </svg>
-            My Emission
+          <a href="emissions.html" class="nav-item" id="nav-emissions">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"></path><path d="M3 9h18M3 15h18M9 3v18"></path></svg>
+            Emisyon Geçmişi
           </a>
-          <a href="add-entry.html" class="nav-item" id="nav-add">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="16" />
-              <line x1="8" y1="12" x2="16" y2="12" />
-            </svg>
-            Yeni Kayıt
+          <a href="add-emission.html" class="nav-item active" id="nav-add">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></svg>
+            Veri Girişi
           </a>
           <a href="smart-insights.html" class="nav-item" id="nav-insights">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
-              />
-            </svg>
-            Smart Insights
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            Karbon Zekası
           </a>
           <a href="profile.html" class="nav-item" id="nav-profile">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="8" r="4"></circle>
-              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path>
-            </svg>
-            Profile
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path></svg>
+            Profilim
           </a>
           <a href="settings.html" class="nav-item" id="nav-settings">
-            <svg
-              class="nav-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="12" r="3" />
-              <path
-                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
-              />
-            </svg>
-            Settings
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Sistem Ayarları
           </a>
         </nav>
         <div class="sidebar-footer">
-          <button class="btn-logout" id="logoutBtn">Çıkış Yap</button>
+          <button class="btn-logout" id="logoutBtn">Oturumu Kapat</button>
         </div>
       </aside>
 
-      <!-- Ana İçerik Alanı -->
       <div class="main-content">
+        <div class="bg-decorative-element">
+          <img src="../assets/simulation_globe.png" alt="Emisyon Simülasyonu" style="opacity: 0.15; filter: blur(20px) saturate(1.5);" />
+        </div>
+
         <header class="topbar">
-          <span class="topbar-title">Add Emission Entry</span>
+          <div style="display: flex; align-items: center; gap: 20px;">
+            <span class="topbar-title">Yeni Kayıt Oluştur</span>
+          </div>
           <div class="topbar-user">
+            <button id="themeToggle" class="btn-icon-only" title="Temayı Değiştir">
+              <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+            </button>
             <div class="user-avatar" id="userInitials">?</div>
-            <span id="userName">Loading…</span>
+            <span id="userName" class="userName">Bağlanıyor…</span>
           </div>
         </header>
 
         <main class="page-body">
           <div class="page-header">
-            <h1 id="pageTitle">Log a New Emission</h1>
-            <p id="pageDesc">
-              Enter your daily activities to track your carbon footprint.
-            </p>
+            <h1 id="pageTitle">Yeni Emisyon Kaydı</h1>
+            <p id="pageDesc">Karbon ayak izinizi takip etmek için günlük faaliyetlerinizi sisteme girin.</p>
           </div>
 
-          <div class="content-card" style="max-width: 620px">
+          <div class="content-card glass-card" style="max-width: 620px">
             <form id="addEmissionForm" novalidate>
-              <!-- 1. Kategori Seçimi -->
               <div class="form-group">
-                <label class="label" for="category">Source / Category</label>
+                <label class="label" for="category">Faaliyet Kategorisi</label>
                 <select class="input" id="category" name="category">
-                  <option value="">Kategori seçin…</option>
-                  <option value="energy">⚡ Enerji</option>
-                  <option value="water">💧 Su</option>
+                  <option value="">Lütfen seçim yapın…</option>
+                  <option value="energy">⚡ Enerji Tüketimi</option>
+                  <option value="water">💧 Su Kullanımı</option>
                   <option value="gas">🔥 Doğalgaz</option>
-                  <option value="transport">🚗 Ulaşım</option>
-                  <option value="materials">📦 Malzeme</option>
-                  <option value="waste">🗑️ Atık</option>
-                  <option value="food">🍽️ Gıda</option>
+                  <option value="transport">🚗 Ulaşım & Seyahat</option>
+                  <option value="materials">📦 Malzeme & Üretim</option>
+                  <option value="waste">🗑️ Atık Yönetimi</option>
+                  <option value="food">🍽️ Gıda & Beslenme</option>
                   <option value="other">🔘 Diğer</option>
                 </select>
                 <span class="error-msg" id="categoryError"></span>
               </div>
 
-              <!-- 2. Akıllı Form Blokları -->
               <div id="climatiqBox" class="climatiq-box" style="display: none">
                 <div class="calc-title">
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path
-                      d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
-                    />
-                  </svg>
-                  Climatiq Smart Assistant
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                  Akıllı Karbon Asistanı
                 </div>
 
-                <!-- Blok A: Standart Hesaplama (Enerji, Ulaşım vb.) -->
                 <div id="standardBlock">
-                  <div class="form-group">
-                    <label class="label" for="activity">Activity Type</label>
+                  <div class="form-group" id="activityTypeGroup">
+                    <label class="label" for="activity">Faaliyet Türü</label>
                     <select class="input" id="activity" name="activity">
-                      <option value="">Select an activity…</option>
+                      <option value="">Bir faaliyet seçin…</option>
                     </select>
                   </div>
 
                   <div class="form-group">
-                    <label class="label" for="quantity">Quantity</label>
+                    <label class="label" for="quantity">Kullanım Miktarı</label>
                     <div style="display: flex; gap: 8px">
-                      <input
-                        class="input"
-                        type="number"
-                        id="quantity"
-                        name="quantity"
-                        placeholder="0.00"
-                        step="any"
-                        style="flex: 1"
-                      />
-                      <div class="unit-badge" id="unitLabel">units</div>
+                      <input class="input" type="number" id="quantity" name="quantity" placeholder="0.00" step="any" style="flex: 1" />
+                      <div class="unit-badge" id="unitLabel">birim</div>
                     </div>
                   </div>
                 </div>
 
-                <!-- Blok B: Uçuş Rotası Hesaplama -->
                 <div id="flightBlock" style="display: none">
-                  <div
-                    style="
-                      display: grid;
-                      grid-template-columns: 1fr 1fr;
-                      gap: 16px;
-                    "
-                  >
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                     <div class="form-group">
-                      <label class="label" for="origin"
-                        >From (City or IATA)</label
-                      >
-                      <input
-                        class="input"
-                        type="text"
-                        id="origin"
-                        name="origin"
-                        placeholder="e.g. IST or Istanbul"
-                      />
+                      <label class="label" for="origin">Kalkış (Şehir veya IATA)</label>
+                      <input class="input" type="text" id="origin" name="origin" placeholder="Örn: IST veya İstanbul" />
                     </div>
                     <div class="form-group">
-                      <label class="label" for="destination"
-                        >To (City or IATA)</label
-                      >
-                      <input
-                        class="input"
-                        type="text"
-                        id="destination"
-                        name="destination"
-                        placeholder="e.g. LHR or London"
-                      />
+                      <label class="label" for="destination">Varış (Şehir veya IATA)</label>
+                      <input class="input" type="text" id="destination" name="destination" placeholder="Örn: LHR veya Londra" />
                     </div>
                   </div>
                 </div>
@@ -224,88 +122,32 @@
                 <div id="calcStatus" class="calc-status"></div>
               </div>
 
-              <!-- 3. Nihai Miktar (Sonuç) -->
               <div class="form-group" style="margin-top: 10px">
-                <label
-                  class="label"
-                  for="amount"
-                  style="font-weight: 700; color: var(--color-primary)"
-                  >Calculated Carbon Footprint</label
-                >
+                <label class="label" for="amount" style="font-weight: 700; color: var(--color-brand-text)">Hesaplanan Karbon Etkisi</label>
                 <div style="position: relative">
-                  <input
-                    class="input"
-                    type="number"
-                    id="amount"
-                    name="amount"
-                    placeholder="Scientific estimate will appear here..."
-                    min="0.01"
-                    step="any"
-                  />
-                  <span
-                    style="
-                      position: absolute;
-                      right: 14px;
-                      top: 50%;
-                      transform: translateY(-50%);
-                      font-size: 11px;
-                      font-weight: 700;
-                      color: var(--color-text-muted);
-                      pointer-events: none;
-                    "
-                    >kg CO₂e</span
-                  >
+                  <input class="input" type="number" id="amount" name="amount" placeholder="Hesaplama bekleniyor..." min="0.01" step="any" />
+                  <span style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: 700; color: var(--color-text-muted); pointer-events: none;">kg CO₂e</span>
                 </div>
                 <span class="error-msg" id="amountError"></span>
               </div>
 
-              <!-- AI İçgörü Kutusu (AI Insight Box) -->
-              <div
-                id="aiInsightBox"
-                class="ai-insight-box"
-                style="display: none"
-              >
+              <div id="aiInsightBox" class="ai-insight-box" style="display: none">
                 <div class="ai-box-header">
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    class="sparkle-icon"
-                  >
-                    <path
-                      d="M12 3l1.91 5.81L21 9l-5.81 1.91L12 21l-1.91-5.81L3 15l5.81-1.91z"
-                    />
-                  </svg>
-                  <span>AI Digital Twin Insight</span>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sparkle-icon"><path d="M12 3l1.91 5.81L21 9l-5.81 1.91L12 21l-1.91-5.81L3 15l5.81-1.91z"/></svg>
+                  <span>Yapay Zeka Analizi</span>
                 </div>
                 <p id="aiInsightText" class="ai-insight-text"></p>
               </div>
 
-              <!-- 4. Tarih -->
               <div class="form-group">
-                <label class="label" for="date">Date</label>
+                <label class="label" for="date">Faaliyet Tarihi</label>
                 <input class="input" type="date" id="date" name="date" />
                 <span class="error-msg" id="dateError"></span>
               </div>
 
               <div style="display: flex; gap: 16px; margin-top: 24px">
-                <button
-                  type="submit"
-                  class="btn-primary"
-                  id="submitBtn"
-                  style="flex: 1"
-                >
-                  Save Entry
-                </button>
-                <a
-                  href="dashboard.html"
-                  class="btn-secondary"
-                  style="flex: 1; text-align: center"
-                  >Cancel</a
-                >
+                <button type="submit" class="btn-primary" id="submitBtn" style="flex: 1">Kaydı Tamamla</button>
+                <a href="dashboard.html" class="btn-secondary" style="flex: 1; text-align: center">Vazgeç</a>
               </div>
             </form>
           </div>
@@ -313,7 +155,11 @@
       </div>
     </div>
 
-    <!-- Form mantığını yöneten JS modülü -->
     <script type="module" src="../js/add-emission.js"></script>
+    <script type="module">
+      import { ThemeManager } from '../js/utils/themeManager.js';
+      ThemeManager.init();
+      document.getElementById('themeToggle')?.addEventListener('click', () => ThemeManager.toggle());
+    </script>
   </body>
 </html>
