@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kurulum – emissiON</title>
+    <style>
+      html,
+      body {
+        background: #07090b;
+        color: #ffffff;
+      }
+    </style>
     <link rel="stylesheet" href="../css/main.css" />
     <style>
       /* ── Onboarding wizard overrides ── */
@@ -239,27 +246,38 @@
       }
 
       @media (max-width: 767px) {
-        .auth-right { display: none; }
+        .auth-right {
+          display: none;
+        }
       }
     </style>
   </head>
   <body>
     <main class="auth-page">
       <div class="auth-card onboarding-card">
-
         <!-- Left: wizard form -->
         <div class="auth-left ob-left">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-            <a href="../index.html" class="auth-brand" style="margin-bottom: 0">emissiON</a>
-            <button id="themeToggle" class="btn-icon-only" title="Temayı Değiştir" style="background: var(--color-surface); border: 1px solid var(--color-border); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--color-text);">
-              <svg id="themeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-            </button>
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 24px;
+            "
+          >
+            <a href="../index.html" class="auth-brand" style="margin-bottom: 0"
+              >emissiON</a
+            >
           </div>
 
           <!-- Progress bar -->
           <div class="ob-progress">
             <div class="ob-progress-track">
-              <div class="ob-progress-fill" id="progressFill" style="width:0%"></div>
+              <div
+                class="ob-progress-fill"
+                id="progressFill"
+                style="width: 0%"
+              ></div>
             </div>
             <span class="ob-progress-label" id="progressLabel">Adım 1</span>
           </div>
@@ -272,25 +290,41 @@
 
           <!-- Navigation -->
           <div class="ob-nav">
-            <button type="button" class="btn-secondary" id="backBtn" style="display:none">← Geri</button>
-            <button type="button" class="btn-primary"   id="nextBtn">İleri →</button>
+            <button
+              type="button"
+              class="btn-secondary"
+              id="backBtn"
+              style="display: none"
+            >
+              ← Geri
+            </button>
+            <button type="button" class="btn-primary" id="nextBtn">
+              İleri →
+            </button>
           </div>
         </div>
 
         <!-- Right: decorative panel -->
         <div class="auth-right">
           <div class="ob-right-inner">
-            <img src="../assets/onboarding-visual.png" alt="Simülasyon" class="auth-visual-img" style="opacity: 0.85; filter: saturate(1.2) contrast(1.1);" />
+            <img
+              src="../assets/onboarding-visual.png"
+              alt="Simülasyon"
+              class="auth-visual-img"
+              style="opacity: 0.85; filter: saturate(1.2) contrast(1.1)"
+            />
             <div class="ob-right-content">
-              <div class="ob-right-title" id="stepRightTitle">Karbon Profili</div>
+              <div class="ob-right-title" id="stepRightTitle">
+                Karbon Profili
+              </div>
               <p class="ob-right-desc" id="stepRightDesc">
-                Paneli ve analizleri size özel hale getirmemiz için birkaç soruyu yanıtlayın.
+                Paneli ve analizleri size özel hale getirmemiz için birkaç
+                soruyu yanıtlayın.
               </p>
               <div class="ob-step-dots" id="stepDots"></div>
             </div>
           </div>
         </div>
-
       </div>
     </main>
 

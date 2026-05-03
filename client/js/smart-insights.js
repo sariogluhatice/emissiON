@@ -1,19 +1,8 @@
-import { TokenManager } from './api/tokenManager.js';
 import { emissionService } from './api/emissionService.js';
-import {
-  getCurrentUser,
-  renderTopbarUser,
-  bindLogout
-} from './utils/uiUtils.js';
+import { renderLayout } from './layout.js';
 
-// Koruma
-if (!TokenManager.exists()) {
-  window.location.href = 'login.html';
-}
-
-const user = getCurrentUser();
-renderTopbarUser(user);
-bindLogout();
+const user = renderLayout({ activeNav: 'nav-insights', title: 'Akıllı AI Analizi' });
+if (!user) throw new Error('redirect');
 
 async function loadSmartInsights() {
   const predictionEl = document.getElementById('predictionContent');

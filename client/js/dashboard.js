@@ -1,23 +1,13 @@
-import { TokenManager } from './api/tokenManager.js';
 import { emissionService } from './api/emissionService.js';
+import { renderLayout } from './layout.js';
 import {
-  getCurrentUser,
-  renderTopbarUser,
-  bindLogout,
   calculateStats,
   categoryEmoji,
   formatDate,
 } from './utils/uiUtils.js';
 
-// Koruma: Kimlik doğrulaması yapılmamışsa giriş sayfasına yönlendir
-if (!TokenManager.exists()) {
-  window.location.href = 'login.html';
-}
-
-// Başlangıç Ayarları
-const user = getCurrentUser();
-renderTopbarUser(user);
-bindLogout();
+const user = renderLayout({ activeNav: 'nav-dashboard', title: 'Özet Panel' });
+if (!user) throw new Error('redirect');
 
 const welcomeEl = document.getElementById('welcomeName');
 if (welcomeEl) welcomeEl.textContent = user?.name ? user.name.split(' ')[0] : 'Misafir';

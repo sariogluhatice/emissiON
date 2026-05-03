@@ -1,17 +1,10 @@
 import { emissionService } from './api/emissionService.js';
 import { profileService }  from './api/profileService.js';
-import {
-  getCurrentUser,
-  renderTopbarUser,
-  bindLogout,
-  calculateStats,
-  showToast,
-} from './utils/uiUtils.js';
+import { renderLayout } from './layout.js';
+import { calculateStats, showToast } from './utils/uiUtils.js';
 
-const user = getCurrentUser();
-if (!user) window.location.replace('login.html');
-renderTopbarUser(user);
-bindLogout();
+const user = renderLayout({ activeNav: 'nav-profile', title: 'Profilim' });
+if (!user) throw new Error('redirect');
 
 // ── Human-readable label maps ────────────────────────────────────────────────
 

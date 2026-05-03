@@ -1,83 +1,89 @@
-
 <!doctype html>
 <html lang="tr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Panel – emissiON</title>
+    <style>
+      html,
+      body {
+        background: #07090b;
+        color: #ffffff;
+      }
+    </style>
     <link rel="stylesheet" href="../css/main.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
     <div class="app-shell">
-      <!-- Sidebar (Yan Menü) -->
-      <aside class="sidebar">
-        <div class="sidebar-brand">emissiON</div>
-        <nav class="sidebar-nav">
-          <a href="dashboard.html" class="nav-item active" id="nav-dashboard">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>
-            Özet Panel
-          </a>
-          <a href="emissions.html" class="nav-item" id="nav-emissions">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"></path><path d="M3 9h18M3 15h18M9 3v18"></path></svg>
-            Emisyon Takibi
-          </a>
-          <a href="add-emission.html" class="nav-item" id="nav-add">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></svg>
-            Yeni Kayıt Ekle
-          </a>
-          <a href="smart-insights.html" class="nav-item" id="nav-insights">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-            Karbon Zekası
-          </a>
-          <a href="profile.html" class="nav-item" id="nav-profile">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path></svg>
-            Profilim
-          </a>
-          <a href="settings.html" class="nav-item" id="nav-settings">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            Sistem Ayarları
-          </a>
-        </nav>
-        <div class="sidebar-footer">
-          <button class="btn-logout" id="logoutBtn">Oturumu Kapat</button>
-        </div>
-      </aside>
+      <aside class="sidebar" id="sidebar"></aside>
 
       <!-- Ana İçerik Alanı -->
       <div class="main-content">
         <!-- Arka Plan Görseli (Dünya Simülasyonu) -->
         <div class="bg-decorative-element">
-          <img src="../assets/simulation_globe.png" alt="Dünya Simülasyonu" style="width: 100%; height: 100%; object-fit: contain; opacity: 0.15; filter: blur(15px) saturate(1.5);" />
+          <img
+            src="../assets/simulation_globe.png"
+            alt="Dünya Simülasyonu"
+            style="
+              width: 100%;
+              height: 100%;
+              object-fit: contain;
+              opacity: 0.15;
+              filter: blur(15px) saturate(1.5);
+            "
+          />
         </div>
 
-        <header class="topbar">
-          <div style="display: flex; align-items: center; gap: 20px;">
-            <span class="topbar-title">Genel Bakış</span>
-          </div>
-          <div class="topbar-user">
-            <button id="themeToggle" class="btn-icon-only" title="Temayı Değiştir">
-              <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-            </button>
-            <div class="user-avatar" id="userInitials">?</div>
-            <span id="userName" class="userName">Bağlanıyor…</span>
-          </div>
-        </header>
+        <header class="topbar" id="topbar"></header>
 
         <main class="page-body">
           <div class="page-header">
             <h1>Tekrar hoş geldin, <span id="welcomeName">Kullanıcı</span>!</h1>
-            <p>Karbon ayak izindeki son değişimleri ve analizlerini buradan takip edebilirsin.</p>
+            <p>
+              Karbon ayak izindeki son değişimleri ve analizlerini buradan takip
+              edebilirsin.
+            </p>
           </div>
 
           <!-- Yapay Zeka Özeti -->
-          <div class="content-card glass-card ai-spotlight" style="margin-bottom: 24px; border-left: 4px solid var(--color-primary);">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div
+            class="content-card glass-card ai-spotlight"
+            style="
+              margin-bottom: 24px;
+              border-left: 4px solid var(--color-primary);
+            "
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              "
+            >
               <div>
-                <h3 style="margin: 0; font-size: 16px; color: var(--color-brand-text)">✨ Akıllı Karbon Özeti</h3>
-                <p id="aiSpotlightText" style="margin: 8px 0 0; font-size: 14px; opacity: 0.8;">Verilerin analiz ediliyor, lütfen bekle...</p>
+                <h3
+                  style="
+                    margin: 0;
+                    font-size: 16px;
+                    color: var(--color-brand-text);
+                  "
+                >
+                  ✨ Akıllı Karbon Özeti
+                </h3>
+                <p
+                  id="aiSpotlightText"
+                  style="margin: 8px 0 0; font-size: 14px; opacity: 0.8"
+                >
+                  Verilerin analiz ediliyor, lütfen bekle...
+                </p>
               </div>
-              <a href="smart-insights.html" class="btn-primary" style="padding: 8px 16px; font-size: 12px;">Detaylı Analiz</a>
+              <a
+                href="smart-insights.html"
+                class="btn-primary"
+                style="padding: 8px 16px; font-size: 12px"
+                >Detaylı Analiz</a
+              >
             </div>
           </div>
 
@@ -90,7 +96,12 @@
             </div>
             <div class="stat-card glass-card">
               <span class="stat-label">Bu Ayın Karnesi</span>
-              <span class="stat-value" id="statMonth" style="color: var(--color-primary)">—</span>
+              <span
+                class="stat-value"
+                id="statMonth"
+                style="color: var(--color-primary)"
+                >—</span
+              >
               <span class="stat-unit">kg CO₂e</span>
             </div>
             <div class="stat-card glass-card">
@@ -100,7 +111,12 @@
             </div>
             <div class="stat-card glass-card">
               <span class="stat-label">Kritik Kaynak</span>
-              <span class="stat-value" id="statTopCat" style="font-size: 18px; color: var(--color-error)">—</span>
+              <span
+                class="stat-value"
+                id="statTopCat"
+                style="font-size: 18px; color: var(--color-error)"
+                >—</span
+              >
               <span class="stat-unit">emisyon türü</span>
             </div>
           </div>
@@ -110,7 +126,14 @@
             <div class="content-card-header">
               <span class="content-card-title">Emisyon Dağılım Grafiği</span>
             </div>
-            <div style="height: 300px; display: flex; justify-content: center; align-items: center;">
+            <div
+              style="
+                height: 300px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+              "
+            >
               <canvas id="emissionChart"></canvas>
             </div>
           </div>
@@ -123,7 +146,16 @@
             <div id="recordList" class="record-list">
               <!-- JS ile yüklenecek -->
             </div>
-            <p class="empty-state" id="emptyState" style="display: none; padding: 40px; text-align: center; opacity: 0.6;">
+            <p
+              class="empty-state"
+              id="emptyState"
+              style="
+                display: none;
+                padding: 40px;
+                text-align: center;
+                opacity: 0.6;
+              "
+            >
               Henüz bir karbon kaydı girmedin.
             </p>
           </div>
@@ -132,10 +164,5 @@
     </div>
 
     <script type="module" src="../js/dashboard.js"></script>
-    <script type="module">
-      import { ThemeManager } from '../js/utils/themeManager.js';
-      ThemeManager.init();
-      document.getElementById('themeToggle')?.addEventListener('click', () => ThemeManager.toggle());
-    </script>
   </body>
 </html>

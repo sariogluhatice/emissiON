@@ -6,11 +6,34 @@ const MONTH_MAP = {
     jun: '06', jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12'
 };
 
+// Keywords that indicate the DOCUMENT FORMAT is electronic — not an electricity bill.
+// "Elektronik Olarak İletilmiştir", "e-Arşiv Fatura", "Belge Tipi: ELEKTRONIK" etc.
+const E_INVOICE_RE = /e-ar[sş]iv|e-fatura|efatura|earsivfatura|belge.{0,15}elektronik|elektronik olarak|e-archive|e-invoice/i;
+
+// Shopping / e-commerce positive signals.
+const SHOPPING_RE = /satış internet üzerinden|mağaza adı|sipariş|kargo|kredi kartı|birim fiyat|web adresi|ürün|mal hizmet|adet/i;
+
+// Genuine electricity consumption signals — "elektronik" is explicitly excluded.
+const ELEC_CONSUMPTION_RE = /\bkwh\b|kilowatt|aktif enerji|tesisat no|sayaç|dağıtım bedeli|enerji bedeli|elektrik tüketimi|elektrik faturası|electric supply/i;
+
 function detectCategory(text) {
     const t = text.toLowerCase();
-    if (/natural[\s-]?gas|gaz fatura|therm|\bbtu\b/.test(t)) return 'natural_gas';
-    if (/\bwater\b|water supply|su fatura|litre|liter|\bgallon\b/.test(t)) return 'water';
-    if (/\bkwh\b|kilowatt|electricit|electric supply/.test(t)) return 'electricity';
+    const isEInvoice  = E_INVOICE_RE.test(t);
+    const isShopping  = SHOPPING_RE.test(t);
+
+    // Shopping signals win over any weak utility signal.
+    if (isShopping) return null; // null → caller treats as shopping
+
+    if (/natural[\s-]?gas|gaz fatura|therm|\bbtu\b|doğalgaz|dogalgaz/.test(t)) return 'natural_gas';
+    if (/water supply|su fatura|su tüketimi|tüketim.*su/.test(t))               return 'water';
+    if (/\bwater\b/.test(t) && !isShopping)                                     return 'water';
+
+    // Electricity: require genuine consumption signals; e-invoice markers disqualify.
+    if (!isEInvoice && ELEC_CONSUMPTION_RE.test(t))                             return 'electricity';
+    // "elektrik" alone is enough only when there's a corroborating consumption word.
+    if (!isEInvoice && /\belektrik\b/.test(t) && /kwh|tüketim|sayaç|abonelik|tesisat/.test(t)) return 'electricity';
+
+    console.log('[detectCategory] reason=no_match isEInvoice=%s isShopping=%s', isEInvoice, isShopping);
     return null;
 }
 
@@ -118,7 +141,7 @@ function normalizeExpenseData(expenseDoc) {
 }
 
 // Turkish grand-total label patterns on e-fatura / receipts
-const TR_TOTAL_RE = /genel toplam|toplam tutar|ödenecek tutar|ödenecek|kdv dahil|genel tutar/i;
+const TR_TOTAL_RE = /ödenecek tutar|vergiler dahil toplam|genel toplam|toplam tutar|ödenecek|kdv dahil|genel tutar/i;
 
 /**
  * Türkçe ve İngilizce sayı formatlarını float'a çevirir.
@@ -222,46 +245,58 @@ function detectCurrencyFromAllFields(summaryFields) {
     return null;
 }
 
-// Raw-text fallback: find amount on the same line or the next line after a TR total keyword
+// Raw-text fallback: find amount using strict priority order.
+// Returns the amount found for the HIGHEST-PRIORITY label, not the largest number.
 function extractTotalFromLines(lineArr) {
-    // Ordered from most-specific to least-specific
-    const kwPatterns = [
-        /genel toplam/i,
-        /toplam tutar/i,
-        /ödenecek tutar/i,
-        /kdv dahil/i,
-        /genel tutar/i,
-        /ödenecek/i,
-        /toplam/i,           // generic — checked last
+    // These labels are intermediate subtotals — never use them as final amount.
+    const SUBTOTAL_LABELS = /(kdv matrah|vergi hariç|mal hizmet toplam|hizmet matrah|teslim.{0,10}matrah|ara toplam|subtotal|indirim|discount)/i;
+
+    // Checked in strict priority order — returns on the FIRST label that yields a valid amount.
+    const PRIORITY_PATTERNS = [
+        { re: /ödenecek tutar/i,          label: 'ödenecek tutar'          }, // 1 — final payable
+        { re: /vergiler dahil toplam/i,   label: 'vergiler dahil toplam'   }, // 2
+        { re: /genel toplam/i,            label: 'genel toplam'             }, // 3
+        { re: /toplam tutar/i,            label: 'toplam tutar'             }, // 4
+        { re: /ödenecek/i,                label: 'ödenecek'                 }, // 5
+        { re: /kdv dahil/i,               label: 'kdv dahil'                }, // 6
+        { re: /genel tutar/i,             label: 'genel tutar'              }, // 7
+        { re: /toplam/i,                  label: 'toplam (generic)'         }, // 8 — lowest
     ];
 
-    const bannedHint = /(kdv|vergi|tax|indirim|discount|ara toplam|subtotal)/i;
-    const found = [];
+    const amountCandidates = []; // debug only
 
-    for (const kw of kwPatterns) {
+    for (const { re, label } of PRIORITY_PATTERNS) {
+        const hits = [];
         for (let i = 0; i < lineArr.length; i++) {
-            if (!kw.test(lineArr[i])) continue;
+            if (!re.test(lineArr[i]))              continue;
+            if (SUBTOTAL_LABELS.test(lineArr[i])) continue; // skip subtotal rows
 
-            // Skip obvious tax/subtotal lines for generic total heuristics.
-            if (kw.source === 'toplam' && bannedHint.test(lineArr[i])) continue;
-
-            // Try to parse an amount from the same line (after the keyword)
-            const afterKw = lineArr[i].replace(kw, '').trim();
+            const afterKw = lineArr[i].replace(re, '').trim();
             const sameAmt = parseAmount(afterKw);
-            if (sameAmt) found.push(sameAmt);
+            if (sameAmt) hits.push({ amt: sameAmt, src: `${label} (same line)` });
 
-            // Try the next line
-            if (i + 1 < lineArr.length) {
-                if (kw.source === 'toplam' && bannedHint.test(lineArr[i + 1])) continue;
+            if (i + 1 < lineArr.length && !SUBTOTAL_LABELS.test(lineArr[i + 1])) {
                 const nextAmt = parseAmount(lineArr[i + 1]);
-                if (nextAmt) found.push(nextAmt);
+                if (nextAmt) hits.push({ amt: nextAmt, src: `${label} (next line)` });
             }
+        }
+
+        if (hits.length) {
+            const best = hits.sort((a, b) => b.amt - a.amt)[0];
+            amountCandidates.push(...hits);
+            console.log('[extractTotalFromLines] selected amount=%s source="%s" candidates=%j',
+                best.amt, best.src, amountCandidates);
+            return best.amt;
         }
     }
 
-    if (!found.length) return null;
-    return found.sort((a, b) => b - a)[0];
+    console.log('[extractTotalFromLines] no amount found in lines');
+    return null;
 }
+
+// Labels that indicate an intermediate subtotal — not the final payable amount.
+const SUBTOTAL_TYPE_RE = /SUBTOTAL|TAX|DISCOUNT/i;
+const SUBTOTAL_LABEL_RE = /(kdv matrah|vergi hariç|mal hizmet toplam|hizmet matrah|ara toplam|subtotal|indirim)/i;
 
 function extractShoppingData(expenseDoc) {
     const summaryFields = expenseDoc.SummaryFields || [];
@@ -271,34 +306,41 @@ function extractShoppingData(expenseDoc) {
         .map(b => b.Text.trim());
     const rawText = lineArr.join('\n');
 
-    // ── Step 1: structured SummaryFields ──────────────────────────
+    // ── Step 1: structured SummaryFields ──────────────────────────────────────
     const candidates = [];
     for (const field of summaryFields) {
         const typeText  = field?.Type?.Text  || '';
         const labelText = field?.LabelDetection?.Text  || '';
         const valText   = field?.ValueDetection?.Text || '';
 
+        // Skip known subtotal/tax field types
+        if (SUBTOTAL_TYPE_RE.test(typeText))  continue;
+        if (SUBTOTAL_LABEL_RE.test(labelText)) continue;
+
         let priority = null;
-        if (typeText === 'TOTAL')                priority = 1;
-        else if (TR_TOTAL_RE.test(labelText))    priority = 2;
-        else if (typeText === 'AMOUNT_PAID')     priority = 3;
-        else if (typeText === 'SUBTOTAL')        priority = 4;
+        if (/ödenecek tutar/i.test(labelText))      priority = 1; // highest
+        else if (/vergiler dahil toplam/i.test(labelText)) priority = 2;
+        else if (typeText === 'TOTAL')               priority = 3;
+        else if (TR_TOTAL_RE.test(labelText))        priority = 4;
+        else if (typeText === 'AMOUNT_PAID')         priority = 5;
 
         if (priority === null) continue;
 
         const amount   = parseAmount(valText);
         const currency = parseCurrency(valText) || parseCurrency(labelText);
 
-        if (amount) candidates.push({ priority, amount, currency });
+        if (amount) {
+            candidates.push({ priority, amount, currency, label: labelText || typeText });
+        }
     }
 
-    // Prefer strong total signals (TOTAL or TR grand-total labels), then choose largest.
-    const strong = candidates.filter((c) => c.priority <= 2);
-    const pool = strong.length ? strong : candidates;
-    pool.sort((a, b) => b.amount - a.amount || a.priority - b.priority);
-    const best = pool[0] || null;
+    console.log('[extractShoppingData] amount candidates: %j', candidates);
 
-    // ── Step 2: raw-text fallback if structured extraction found nothing ──
+    // Choose by priority first, then by largest amount within same priority level.
+    candidates.sort((a, b) => a.priority - b.priority || b.amount - a.amount);
+    const best = candidates[0] || null;
+
+    // ── Step 2: raw-text fallback if structured extraction found nothing ──────
     const totalAmount = best?.amount || extractTotalFromLines(lineArr) || null;
 
     const currency = best?.currency
@@ -307,6 +349,9 @@ function extractShoppingData(expenseDoc) {
         || 'TRY';
 
     const date = extractDate(summaryFields, rawText);
+
+    console.log('[extractShoppingData] selected amount=%s currency=%s source="%s"',
+        totalAmount, currency, best?.label || 'raw-text fallback');
 
     return { totalAmount, currency, date };
 }

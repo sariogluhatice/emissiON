@@ -27,8 +27,8 @@
 }
 
 .sidebar-brand {
-  padding: var(--spacing-xl) var(--spacing-lg);
-  font-size: 20px;
+  padding: 20px var(--spacing-lg) 18px;
+  font-size: 32px;
   font-weight: 800;
   color: var(--color-primary);
   letter-spacing: 1.5px;
@@ -60,7 +60,12 @@
 }
 
 .nav-item:hover {
-  background: rgba(128, 128, 128, 0.08); /* Çok daha yumuşak ve asil bir hover */
+  background: rgba(
+    128,
+    128,
+    128,
+    0.08
+  ); /* Çok daha yumuşak ve asil bir hover */
   color: var(--color-text); /* Göz yormadan hafif belirginleşme */
   transform: translateX(3px); /* Hafif ve şık bir kayma efekti */
 }

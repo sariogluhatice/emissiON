@@ -108,9 +108,38 @@ class AiService {
      * 2. OCR Fatura Veri Çıkarma
      */
     async extractUtilityBillData(ocrText) {
-        const prompt = `Extract utility bill data from OCR text. Return ONLY JSON.
-        Fields: category (electricity, water, natural_gas), activity_type, quantity (numeric), unit, date (YYYY-MM).
-        OCR TEXT: ${ocrText.slice(0, 8000)}`;
+        const prompt = `You are a utility bill parser. Extract structured data from OCR text.
+Return ONLY valid JSON. No markdown. No explanation.
+
+CATEGORY RULES — apply in this exact priority order:
+
+1. If you see "satış internet üzerinden", "mağaza adı", "sipariş", "kargo", "birim fiyat",
+   "ürün", "mal hizmet", "adet" → category: "shopping". Stop here.
+
+2. "elektronik", "e-fatura", "e-arşiv", "belge tipi elektronik", "elektronik olarak iletilmiştir"
+   describe the DOCUMENT FORMAT — they are NOT electricity signals. Never use them to decide
+   category: "electricity".
+
+3. Genuine electricity: kWh, aktif enerji, tesisat no, sayaç, dağıtım bedeli, enerji bedeli,
+   elektrik tüketimi, elektrik faturası → category: "electricity".
+
+4. Genuine water: su tüketimi, m³ (water), su faturası, water supply → category: "water".
+
+5. Genuine gas: doğalgaz, sm3, gaz faturası, natural gas → category: "natural_gas".
+
+6. Anything else (retail, e-commerce, services) → category: "shopping".
+
+Fields to extract:
+- category: "electricity" | "water" | "natural_gas" | "shopping"
+- activity_type: specific activity string matching category
+- quantity: numeric consumption value (kWh / m³ / litre). null for shopping.
+- unit: "kWh" | "m3" | "l" | null
+- date: YYYY-MM (billing period) or null
+
+Return exactly:
+{"category":null,"activity_type":null,"quantity":null,"unit":null,"date":null}
+
+OCR TEXT: ${ocrText.slice(0, 8000)}`;
 
         let response = await this.callGroq(prompt, true);
         if (!response) response = await this.callGemini(prompt, true);
@@ -121,11 +150,11 @@ class AiService {
         const parsed = JSON.parse(cleaned);
 
         return {
-            category: parsed.category || null,
+            category:      parsed.category      || null,
             activity_type: parsed.activity_type || null,
-            quantity: Number(parsed.quantity) || null,
-            unit: parsed.unit || null,
-            date: parsed.date || null
+            quantity:      Number(parsed.quantity) || null,
+            unit:          parsed.unit           || null,
+            date:          parsed.date           || null
         };
     }
 

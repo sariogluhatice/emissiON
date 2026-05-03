@@ -35,56 +35,42 @@
 /* ── Sağ panel (illüstrasyon) ── */
 .auth-right {
   flex: 1.2;
-  background-color: var(--color-surface); /* Gri yerine temiz beyaz */
+  background-color: var(--color-surface);
   position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: visible;
   border-left: 1px solid var(--color-border);
-}
-
-.auth-visual-img {
-  width: 80%;
-  height: auto;
-  max-height: 80%;
-  object-fit: contain;
-  z-index: 1;
-  opacity: 0.85; 
-  filter: drop-shadow(0 0 40px rgba(0, 255, 140, 0.15)) saturate(1.1);
-  transition: opacity 0.3s ease, filter 0.3s ease;
-}
-
-/* Üzerine gelindiğinde hafifçe canlansın ama yine de yormasın */
-.auth-right:hover .auth-visual-img {
-  opacity: 0.9;
-  filter: drop-shadow(0 0 30px rgba(0, 255, 140, 0.15)) saturate(1);
-}
-
-@keyframes float-sim {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-15px); }
+  padding: 40px 30px;
+  gap: 20px;
 }
 
 .auth-visual-content {
-  position: absolute;
-  bottom: 40px;
+  position: relative;
   text-align: center;
-  padding: 0 20px;
+  padding: 0 10px;
   z-index: 2;
+  width: 100%;
+  max-width: 280px;
 }
 
-.auth-visual-content h2, .ob-right-title {
-  color: var(--color-text); /* Başlıklar temaya göre renk değiştirsin */
-  font-size: 22px;
+.auth-visual-content h2,
+.ob-right-title {
+  color: var(--color-text);
+  font-size: 20px;
   font-weight: 700;
-  margin-bottom: 8px;
+  margin: 0 0 12px 0;
+  line-height: 1.3;
 }
 
-.auth-visual-content p, .ob-right-desc {
+.auth-visual-content p,
+.ob-right-desc {
   color: var(--color-text-muted);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
+  margin: 0;
 }
 
 .auth-right .illustration-text {
@@ -118,13 +104,101 @@
   margin: 12px 0 20px;
 }
 
-.auth-left .btn-primary {
-  margin-top: var(--spacing-sm);
-  margin-bottom: 20px;
+/* ──────────────────────────────────────────────
+   GLOBE WRAPPER — Circular floating Earth effect
+   ────────────────────────────────────────────── */
+
+.globe-wrapper {
+  position: relative;
+  width: 320px;
+  height: 320px;
+  margin: 0 auto 36px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.auth-left .btn-secondary {
-  margin-bottom: 20px;
+/* Orbit rings (decorative concentric circles) */
+.globe-wrapper::before,
+.globe-wrapper::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  background: transparent;
+  pointer-events: none;
+}
+
+.globe-wrapper::before {
+  width: 340px;
+  height: 340px;
+  border: 1px solid rgba(0, 255, 140, 0.08);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: orbit-spin 12s linear infinite;
+}
+
+.globe-wrapper::after {
+  width: 380px;
+  height: 380px;
+  border: 1px dashed rgba(0, 255, 140, 0.04);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: orbit-spin 18s linear infinite reverse;
+}
+
+@keyframes orbit-spin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* Circular glob container with soft glow */
+.globe-inner {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(0, 255, 140, 0.05),
+    transparent 60%
+  );
+  box-shadow:
+    inset 0 0 40px rgba(0, 255, 140, 0.08),
+    0 0 60px rgba(0, 255, 140, 0.12),
+    0 20px 50px rgba(2, 8, 6, 0.15);
+  border: 1px solid rgba(0, 255, 140, 0.1);
+  flex-shrink: 0;
+}
+
+/* Slightly push the form footer text down for breathing room */
+.auth-left .bottom-text {
+  margin-top: 14px;
+}
+
+.auth-visual-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+  opacity: 0.95;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+.globe-wrapper:hover .auth-visual-img {
+  opacity: 1;
+  transform: scale(1.02);
 }
 
 /* ── Onboarding Progress Bar (Sol Üst) ── */
@@ -133,14 +207,23 @@
 }
 .ob-progress-track {
   height: 6px;
-  background: rgba(0, 0, 0, 0.04); /* Çok daha hafif, kirli durmayan bir zemin */
+  background: rgba(
+    0,
+    0,
+    0,
+    0.04
+  ); /* Çok daha hafif, kirli durmayan bir zemin */
   border-radius: 10px;
   overflow: hidden;
   margin-bottom: 8px;
 }
 .ob-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #00b894, #00d2d3); /* Asil Zümrüt ve Turkuaz geçişi */
+  background: linear-gradient(
+    90deg,
+    #00b894,
+    #00d2d3
+  ); /* Asil Zümrüt ve Turkuaz geçişi */
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 0 10px rgba(0, 184, 148, 0.2);
 }
@@ -176,6 +259,49 @@
 .ob-dot.done {
   background: #00b894;
   opacity: 0.8;
+}
+
+/* -----------------------------
+   AUTH LAYOUT OVERRIDE
+   Make the left auth panel half-width and centered on auth pages
+   ----------------------------- */
+.auth-card {
+  justify-content: space-between;
+}
+
+.auth-left {
+  flex: 0 0 50%;
+  max-width: 560px;
+  margin: 0;
+  padding: 40px 36px;
+}
+
+.auth-right {
+  display: flex;
+  flex: 0 0 50%;
+}
+
+/* Center single-panel auth pages (forgot/reset/verify) */
+.auth-card:not(:has(.auth-right)) {
+  justify-content: center;
+}
+
+.auth-card:not(:has(.auth-right)) .auth-left {
+  margin: 0 auto;
+}
+
+@media (max-width: 800px) {
+  .auth-card {
+    flex-direction: column;
+    max-width: 520px;
+    padding: 0;
+  }
+  .auth-left {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: 100%;
+    padding: 32px;
+  }
 }
 
 /* ── Navigasyon Butonları ── */

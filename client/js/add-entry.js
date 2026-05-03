@@ -1,11 +1,10 @@
 import { emissionService } from './api/emissionService.js';
 import { TokenManager } from './api/tokenManager.js';
-import { getCurrentUser, renderTopbarUser, bindLogout, showToast } from './utils/uiUtils.js';
+import { renderLayout } from './layout.js';
+import { showToast } from './utils/uiUtils.js';
 
-const user = getCurrentUser();
-if (!user) window.location.href = 'login.html';
-renderTopbarUser(user);
-bindLogout();
+const user = renderLayout({ activeNav: 'nav-add', title: 'Yeni Kayıt Ekle' });
+if (!user) throw new Error('redirect');
 
 // ── Data model ────────────────────────────────────────────────────────────────
 // inputType: 'quantity' → quantity required, unit shown
@@ -78,6 +77,14 @@ const OCR_CATEGORY_MAP = {
     electricity: 'energy',
     water:       'water',
     natural_gas: 'gas',
+};
+
+// Maps Groq category values → ACTIVITY_MAP keys
+const GROQ_CATEGORY_MAP = {
+    electricity: 'energy',
+    water:       'water',
+    gas:         'gas',
+    shopping:    'other',
 };
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
@@ -308,65 +315,178 @@ async function scanUtilityBill(file) {
     updateDebug({ ocrResult: data });
 }
 
-// Generic image OCR → decide whether it's a utility bill or a shopping receipt
+// Generic image OCR → Groq parsing → decide utility or shopping path
 async function scanImageGeneric(file) {
     const base64 = await fileToBase64(file);
     const data   = await emissionService.extractOcrFromImage(base64);
     console.log('[add-entry] image OCR:', data);
     lastOcrData = { type: 'image', ...data };
 
-    const ocrText = String(data.ocrText || '') || '';
-    const detected = detectCategoryFromText(ocrText);
+    const ocrText = String(data.ocrText || '');
+    console.log('OCR raw text:', ocrText);
 
-    if (detected) {
-        // It's a utility-like document — populate fields using existing logic
-        if (!categoryEl.value || categoryEl.value !== detected) {
-            categoryEl.value = detected;
-            onCategoryChange();
+    // Send OCR text to Groq for structured extraction; fallback to regex if it fails
+    let groqResult = null;
+    if (ocrText.length >= 10) {
+        groqResult = await callGroqParser(ocrText);
+    }
+    console.log('Groq parsed data:', groqResult);
+
+    // Local regex always runs — it is the authoritative shopping-signal check.
+    const localCat = detectCategoryFromText(ocrText);
+    console.log('[scanImageGeneric] localCat=%s groqCategory=%s', localCat, groqResult?.category);
+
+    // Local regex overrides Groq for any non-null result (utility or shopping).
+    // This prevents AI fuzzy-matching (e.g. "elektronik" → electricity on retail invoices)
+    // and ensures genuine utility consumption signals always win.
+    let groqCat = groqResult ? GROQ_CATEGORY_MAP[groqResult.category] : null;
+    if (localCat !== null) {
+        if (localCat !== groqCat) {
+            console.log('[scanImageGeneric] Local override: localCat=%s overrides groqCat=%s', localCat, groqCat);
         }
+        groqCat = localCat;
+    }
+    const detected = groqCat || localCat;
+    console.log('[scanImageGeneric] detectedCategory=%s reason=%s',
+        detected, localCat !== null ? 'local-regex' : 'groq');
 
+    if (detected && detected !== 'other') {
+        // ── Utility bill path (electricity / water / gas) ──────────────────
+        categoryEl.value = detected;
+        onCategoryChange();
+
+        // Apply quantity/unit from Textract+AI extraction
         const ext = data.extracted;
         if (ext) {
-            const mappedCat = OCR_CATEGORY_MAP[ext.category] || ext.category || detected;
+            const mappedCat = OCR_CATEGORY_MAP[ext.category] || ext.category;
             if (mappedCat && ACTIVITY_MAP[mappedCat]) {
                 categoryEl.value = mappedCat;
                 onCategoryChange();
             }
-            if (ext.quantity) quantityEl.value = ext.quantity;
+            if (ext.quantity) {
+                quantityEl.value = String(parseFloat(ext.quantity));
+                quantityEl.dispatchEvent(new Event('input', { bubbles: true }));
+            }
             if (ext.unit) {
                 for (const opt of unitSelect.options) {
                     if (opt.value.toLowerCase() === ext.unit.toLowerCase()) { opt.selected = true; break; }
                 }
+                unitSelect.dispatchEvent(new Event('change', { bubbles: true }));
             }
-            if (ext.date) entryDateEl.value = ext.date.length === 7 ? `${ext.date}-01` : ext.date;
         }
 
-        scanStatus.textContent = 'Tarama tamamlandı — alanları doğrulayın, ardından hesaplayın.';
+        // Date: Groq takes priority over Textract extraction
+        const dateStr = groqResult?.purchaseDate || ext?.date;
+        if (dateStr) {
+            entryDateEl.value = dateStr.length === 7 ? `${dateStr}-01` : dateStr;
+            entryDateEl.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        scanStatus.textContent = groqResult
+            ? 'AI ile ayrıştırıldı — kaydetmeden önce kontrol edin.'
+            : 'Tarama tamamlandı — alanları doğrulayın, ardından hesaplayın.';
         showToast('Tarama Tamamlandı', 'Alanlar dolduruldu.', 'success');
-        updateDebug({ ocrResult: data, detectedCategory: detected });
+        updateDebug({ ocrResult: data, detectedCategory: detected, groqResult });
         return;
     }
 
-    // No utility keywords found — treat as shopping/receipt
-    if (!categoryEl.value) {
-        categoryEl.value = 'other';
-        onCategoryChange();
+    // ── Shopping / receipt path ─────────────────────────────────────────────
+    categoryEl.value = 'other';
+    onCategoryChange();                    // populates activityEl, auto-selects first option
+    activityEl.value = 'shopping_general'; // override to Genel Alışveriş
+    onActivityChange();                    // setFormMode('spend') → shows #amountRow
+
+    if (groqResult?.totalAmount) {
+        // Groq successfully extracted a monetary amount — fill fields directly.
+        const amountInput = totalAmountEl;
+        amountInput.value = String(parseFloat(groqResult.totalAmount));
+        amountInput.dispatchEvent(new Event('input',  { bubbles: true }));
+        amountInput.dispatchEvent(new Event('change', { bubbles: true }));
+        console.log('Amount input found:', amountInput);
+        console.log('Amount value set to:', amountInput.value);
+
+        if (groqResult.purchaseDate) {
+            const d = groqResult.purchaseDate;
+            entryDateEl.value = d.length === 7 ? `${d}-01` : d;
+            entryDateEl.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        scanStatus.textContent = 'AI ile ayrıştırıldı — kaydetmeden önce kontrol edin.';
+        showToast('AI ile Ayrıştırıldı', 'Tutarı ve tarihi doğrulayın.', 'success');
+        updateDebug({ ocrResult: data, groqResult });
+        return;
     }
-    // Delegate to receipt-specific OCR processing which may return co2e
+
+    // Fallback: delegate to receipt-specific OCR (Textract AnalyzeExpense)
     await scanShoppingReceipt(file);
 }
 
+// Calls the backend Groq endpoint and returns parsed data, or null on any failure
+async function callGroqParser(ocrText) {
+    try {
+        const res = await fetch('/api/emissions/parse-ocr-groq', {
+            method:  'POST',
+            headers: {
+                'Content-Type':  'application/json',
+                'Authorization': `Bearer ${TokenManager.get() || ''}`,
+            },
+            body: JSON.stringify({ ocrText }),
+        });
+        if (!res.ok) return null;
+        const json = await res.json();
+        return json.success ? json.data : null;
+    } catch {
+        return null;
+    }
+}
+
+// Returns the ACTIVITY_MAP category key, 'other' for shopping, or null if unclear.
+// Priority: shopping > electricity > water > gas > null
 function detectCategoryFromText(text) {
     if (!text || typeof text !== 'string') return null;
     const t = text.toLowerCase();
 
-    // Electricity / energy
-    if (/(\belektrik\b|\benerji\b|\belectricity\b)/i.test(t)) return 'energy';
-    // Water
-    if (/\bsu\b|\bwater\b/i.test(t)) return 'water';
-    // Gas / natural gas
-    if (/\bdo[gğ]algaz\b|\bdogalgaz\b|\bgaz\b|\bgas\b/i.test(t)) return 'gas';
+    // 1. Strong shopping / e-commerce signals — highest priority.
+    // "birim fiyat" excluded: utility bills also contain unit pricing.
+    const isShopping = /satış internet üzerinden|mağaza adı|sipariş no|kargo|kredi kartı|web adresi|mal hizmet|adet/i.test(t);
+    if (isShopping) {
+        console.log('[detectCategoryFromText] reason=shopping_signals');
+        return 'other';
+    }
 
+    // 2. Electricity — genuine consumption signals.
+    // e-fatura / e-arşiv / elektronik describe invoice FORMAT and must NEVER block this.
+    const hasElecConsumption = /\bkwh\b|aktif enerji|enerji bedeli|elektrik fatura[sı]|elektrik tüketimi|tesisat no|sayaç no|dağıtım bedeli|tek zamanlı|\bpuant\b|gündüz.*endeks|gece.*endeks/i.test(t);
+    if (hasElecConsumption) {
+        console.log('[detectCategoryFromText] reason=electricity_signals');
+        return 'energy';
+    }
+    if (/\belektrik\b/.test(t) && /\bkwh\b|tüketim|sayaç|abonelik|tesisat/.test(t)) {
+        console.log('[detectCategoryFromText] reason=electricity_word_signal');
+        return 'energy';
+    }
+
+    // 3. Water — expanded signal set; "su" alone is too generic.
+    const hasWater = /su fatura[sı]|su faturasi|su bedeli|atık su|atik su|toplam m[3³]|günlük m[3³]|su birim fiyat[ı]|su tüketimi/i.test(t);
+    if (hasWater) {
+        console.log('[detectCategoryFromText] reason=water_signals');
+        return 'water';
+    }
+    if (/\bsu\b/.test(t) && /ödenecek tutar/i.test(t)) {
+        console.log('[detectCategoryFromText] reason=water_payment_signal');
+        return 'water';
+    }
+
+    // 4. Natural gas
+    const hasGas = /do[gğ]algaz|do[gğ]al\s+gaz|gaz fatura[sı]|\bsm3\b|standart metreküp|tüketim düzeltme/i.test(t);
+    if (hasGas) {
+        console.log('[detectCategoryFromText] reason=gas_signals');
+        return 'gas';
+    }
+    if (/endeks/i.test(t) && /\bgaz\b/.test(t)) return 'gas';
+    if (/sayaç/i.test(t)  && /\bgaz\b/.test(t)) return 'gas';
+
+    console.log('[detectCategoryFromText] reason=no_match');
     return null;
 }
 

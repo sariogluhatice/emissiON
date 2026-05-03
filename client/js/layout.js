@@ -1,0 +1,93 @@
+import { getCurrentUser, logout } from './utils/uiUtils.js';
+
+const SVG = (body) =>
+    `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${body}</svg>`;
+
+const NAV_ITEMS = [
+    {
+        id:    'nav-dashboard',
+        href:  'dashboard.html',
+        label: 'Özet Panel',
+        icon:  SVG('<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>'),
+    },
+    {
+        id:    'nav-emissions',
+        href:  'emissions.html',
+        label: 'Emisyon Takibi',
+        icon:  SVG('<path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18"/>'),
+    },
+    {
+        id:    'nav-add',
+        href:  'add-entry.html',
+        label: 'Yeni Kayıt Ekle',
+        icon:  SVG('<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>'),
+    },
+    {
+        id:    'nav-insights',
+        href:  'smart-insights.html',
+        label: 'Karbon Zekası',
+        icon:  SVG('<path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>'),
+    },
+    {
+        id:    'nav-profile',
+        href:  'profile.html',
+        label: 'Profilim',
+        icon:  SVG('<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>'),
+    },
+    {
+        id:    'nav-settings',
+        href:  'settings.html',
+        label: 'Sistem Ayarları',
+        icon:  SVG('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'),
+    },
+];
+
+/**
+ * Renders the shared sidebar + topbar and enforces authentication.
+ *
+ * @param {{ activeNav: string, title: string }} config
+ *   activeNav — the id of the currently active nav item (e.g. 'nav-dashboard')
+ *   title     — topbar page title text
+ * @returns {object|null} the current user object, or null (redirect already triggered)
+ */
+export function renderLayout({ activeNav, title }) {
+    const user = getCurrentUser();
+    if (!user) {
+        window.location.href = 'login.html';
+        return null;
+    }
+
+    // ── Sidebar ───────────────────────────────────────────────────────────────
+    const sidebarEl = document.getElementById('sidebar');
+    if (sidebarEl) {
+        sidebarEl.innerHTML = `
+            <div class="sidebar-brand">emissiON</div>
+            <nav class="sidebar-nav">
+                ${NAV_ITEMS.map(({ id, href, label, icon }) => `
+                    <a href="${href}" class="nav-item${id === activeNav ? ' active' : ''}" id="${id}">
+                        ${icon}
+                        ${label}
+                    </a>`).join('')}
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn-logout" id="logoutBtn">Oturumu Kapat</button>
+            </div>`;
+
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+    }
+
+    // ── Topbar ────────────────────────────────────────────────────────────────
+    const topbarEl = document.getElementById('topbar');
+    if (topbarEl) {
+        const initials    = (user.name || user.email || '?').charAt(0).toUpperCase();
+        const displayName = user.name || user.email || '—';
+        topbarEl.innerHTML = `
+            <span class="topbar-title">${title}</span>
+            <div class="topbar-user">
+                <div class="user-avatar" id="userInitials">${initials}</div>
+                <span id="userName" class="userName">${displayName}</span>
+            </div>`;
+    }
+
+    return user;
+}

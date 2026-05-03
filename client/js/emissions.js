@@ -1,19 +1,9 @@
 import { emissionService } from './api/emissionService.js';
-import {
-  getCurrentUser,
-  renderTopbarUser,
-  bindLogout,
-  categoryEmoji,
-  formatDate,
-} from './utils/uiUtils.js';
+import { renderLayout } from './layout.js';
+import { categoryEmoji, formatDate } from './utils/uiUtils.js';
 
-// Koruma: Giriş Kontrolü
-const user = getCurrentUser();
-if (!user) {
-  window.location.href = 'login.html';
-}
-renderTopbarUser(user);
-bindLogout();
+const user = renderLayout({ activeNav: 'nav-emissions', title: 'Emisyon Kayıtları' });
+if (!user) throw new Error('redirect');
 
 // Veri Durumu (State)
 let allEmissions = [];

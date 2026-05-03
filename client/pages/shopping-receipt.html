@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Alışveriş Analizi – emissiON</title>
+    <style>
+      html,
+      body {
+        background: #07090b;
+        color: #ffffff;
+      }
+    </style>
     <link rel="stylesheet" href="../css/main.css" />
   </head>
   <body>
@@ -12,27 +19,87 @@
         <div class="sidebar-brand">emissiON</div>
         <nav class="sidebar-nav">
           <a href="dashboard.html" class="nav-item" id="nav-dashboard">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>
+            <svg
+              class="nav-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+            </svg>
             Panel
           </a>
           <a href="emissions.html" class="nav-item" id="nav-emissions">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"></path><path d="M3 9h18M3 15h18M9 3v18"></path></svg>
+            <svg
+              class="nav-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M3 3h18v18H3z"></path>
+              <path d="M3 9h18M3 15h18M9 3v18"></path>
+            </svg>
             Emisyonlarım
           </a>
           <a href="add-emission.html" class="nav-item active" id="nav-add">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></svg>
+            <svg
+              class="nav-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="16" />
+              <line x1="8" y1="12" x2="16" y2="12" />
+            </svg>
             Yeni Kayıt
           </a>
           <a href="smart-insights.html" class="nav-item" id="nav-insights">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            <svg
+              class="nav-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+              />
+            </svg>
             Akıllı İçgörüler
           </a>
           <a href="profile.html" class="nav-item" id="nav-profile">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path></svg>
+            <svg
+              class="nav-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="8" r="4"></circle>
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path>
+            </svg>
             Profil
           </a>
           <a href="settings.html" class="nav-item" id="nav-settings">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <svg
+              class="nav-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+              />
+            </svg>
             Ayarlar
           </a>
         </nav>
@@ -43,17 +110,18 @@
 
       <div class="main-content">
         <div class="bg-decorative-element">
-          <img src="../assets/login-visual.png" alt="Fiş Analizi" style="opacity: 0.1; filter: blur(30px);" />
+          <img
+            src="../assets/login-visual.png"
+            alt="Fiş Analizi"
+            style="opacity: 0.1; filter: blur(30px)"
+          />
         </div>
 
         <header class="topbar">
-          <div style="display: flex; align-items: center; gap: 20px;">
+          <div style="display: flex; align-items: center; gap: 20px">
             <span class="topbar-title">Alışveriş CO₂ Analizi</span>
           </div>
           <div class="topbar-user">
-            <button id="themeToggle" class="btn-icon-only" title="Temayı Değiştir">
-              <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-            </button>
             <div class="user-avatar" id="userInitials">?</div>
             <span id="userName" class="userName">Bağlanıyor…</span>
           </div>
@@ -62,7 +130,10 @@
         <main class="page-body">
           <div class="page-header">
             <h1>Alışveriş Fişi Analizi</h1>
-            <p>Fiş görselini yükleyin — toplam tutarı ve satın alma tarihini analiz ederek karbon ayak izinizi hesaplayalım.</p>
+            <p>
+              Fiş görselini yükleyin — toplam tutarı ve satın alma tarihini
+              analiz ederek karbon ayak izinizi hesaplayalım.
+            </p>
           </div>
 
           <div class="ocr-grid">
@@ -72,23 +143,68 @@
               </div>
 
               <div class="form-group">
-                <label class="label" for="receiptFile">Fiş Dosyası (PDF, JPG, PNG)</label>
-                <input class="input" type="file" id="receiptFile" accept="application/pdf,image/jpeg,image/png,image/webp" />
+                <label class="label" for="receiptFile"
+                  >Fiş Dosyası (PDF, JPG, PNG)</label
+                >
+                <input
+                  class="input"
+                  type="file"
+                  id="receiptFile"
+                  accept="application/pdf,image/jpeg,image/png,image/webp"
+                />
               </div>
 
               <div class="ocr-actions">
-                <button class="btn-primary" id="scanBtn" type="button">Tara & CO₂ Hesapla</button>
-                <span id="scanProgress" class="ocr-progress">Dosya bekleniyor…</span>
+                <button class="btn-primary" id="scanBtn" type="button">
+                  Tara & CO₂ Hesapla
+                </button>
+                <span id="scanProgress" class="ocr-progress"
+                  >Dosya bekleniyor…</span
+                >
               </div>
 
               <div class="form-group" style="margin-top: 8px">
                 <label class="label">Okunan Veriler (Yalnızca Okuma)</label>
-                <div id="extractedBox" style="display: none; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 13px; line-height: 1.8;">
-                  <div><span style="color: var(--color-text-muted)">Toplam tutar:</span> <strong id="extAmount">—</strong></div>
-                  <div><span style="color: var(--color-text-muted)">Para birimi:</span> <strong id="extCurrency">—</strong></div>
-                  <div><span style="color: var(--color-text-muted)">Satın alma tarihi:</span> <strong id="extDate">—</strong></div>
-                  <div><span style="color: var(--color-text-muted)">Kur:</span> <strong id="extRate">—</strong></div>
-                  <div><span style="color: var(--color-text-muted)">USD karşılığı:</span> <strong id="extUsd">—</strong></div>
+                <div
+                  id="extractedBox"
+                  style="
+                    display: none;
+                    padding: 12px;
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1px solid var(--color-border);
+                    border-radius: var(--radius-md);
+                    font-size: 13px;
+                    line-height: 1.8;
+                  "
+                >
+                  <div>
+                    <span style="color: var(--color-text-muted)"
+                      >Toplam tutar:</span
+                    >
+                    <strong id="extAmount">—</strong>
+                  </div>
+                  <div>
+                    <span style="color: var(--color-text-muted)"
+                      >Para birimi:</span
+                    >
+                    <strong id="extCurrency">—</strong>
+                  </div>
+                  <div>
+                    <span style="color: var(--color-text-muted)"
+                      >Satın alma tarihi:</span
+                    >
+                    <strong id="extDate">—</strong>
+                  </div>
+                  <div>
+                    <span style="color: var(--color-text-muted)">Kur:</span>
+                    <strong id="extRate">—</strong>
+                  </div>
+                  <div>
+                    <span style="color: var(--color-text-muted)"
+                      >USD karşılığı:</span
+                    >
+                    <strong id="extUsd">—</strong>
+                  </div>
                 </div>
               </div>
             </section>
@@ -101,14 +217,43 @@
               <form id="saveForm" novalidate>
                 <div class="form-group">
                   <label class="label" for="descInput">Açıklama</label>
-                  <input class="input" type="text" id="descInput" placeholder="örn. Migros market alışverişi" />
+                  <input
+                    class="input"
+                    type="text"
+                    id="descInput"
+                    placeholder="örn. Migros market alışverişi"
+                  />
                 </div>
 
                 <div class="form-group">
-                  <label class="label" for="co2Input" style="font-weight: 700; color: var(--color-primary)">Tahmini CO₂ (kg)</label>
+                  <label
+                    class="label"
+                    for="co2Input"
+                    style="font-weight: 700; color: var(--color-primary)"
+                    >Tahmini CO₂ (kg)</label
+                  >
                   <div style="position: relative">
-                    <input class="input" type="number" id="co2Input" step="any" min="0.001" placeholder="Tarama sonrası doldurulacak…" />
-                    <span style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: 700; color: var(--color-text-muted); pointer-events: none;">kg CO₂e</span>
+                    <input
+                      class="input"
+                      type="number"
+                      id="co2Input"
+                      step="any"
+                      min="0.001"
+                      placeholder="Tarama sonrası doldurulacak…"
+                    />
+                    <span
+                      style="
+                        position: absolute;
+                        right: 14px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        font-size: 11px;
+                        font-weight: 700;
+                        color: var(--color-text-muted);
+                        pointer-events: none;
+                      "
+                      >kg CO₂e</span
+                    >
                   </div>
                   <span class="error-msg" id="co2Error"></span>
                 </div>
@@ -119,10 +264,14 @@
                   <span class="error-msg" id="dateError"></span>
                 </div>
 
-                <div class="ocr-result-box" id="resultBox">Fişi tarayarak CO₂ dağılımını burada görebilirsiniz.</div>
+                <div class="ocr-result-box" id="resultBox">
+                  Fişi tarayarak CO₂ dağılımını burada görebilirsiniz.
+                </div>
 
                 <div class="ocr-actions">
-                  <button class="btn-primary" id="saveBtn" type="submit">Emisyon Kaydını Kaydet</button>
+                  <button class="btn-primary" id="saveBtn" type="submit">
+                    Emisyon Kaydını Kaydet
+                  </button>
                 </div>
               </form>
             </section>
@@ -132,10 +281,5 @@
     </div>
 
     <script type="module" src="../js/shopping-receipt.js"></script>
-    <script type="module">
-      import { ThemeManager } from '../js/utils/themeManager.js';
-      ThemeManager.init();
-      document.getElementById('themeToggle')?.addEventListener('click', () => ThemeManager.toggle());
-    </script>
   </body>
 </html>

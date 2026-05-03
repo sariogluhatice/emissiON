@@ -1,6 +1,6 @@
 const express    = require('express');
 const { authenticate } = require('../middleware/authMiddleware');
-const { getAll, create, update, remove, calculate, generateInsight, extractOcrBillData, extractOcrFromImage, getSmartInsights } = require('../controllers/emissionController');
+const { getAll, create, update, remove, calculate, generateInsight, extractOcrBillData, extractOcrFromImage, getSmartInsights, parseOcrWithGroq } = require('../controllers/emissionController');
 
 const router = express.Router();
 
@@ -13,6 +13,7 @@ router.post('/calculate', calculate); // POST /api/emissions/calculate
 router.post('/generate-insight', generateInsight); // POST /api/emissions/generate-insight
 router.post('/extract-ocr', extractOcrBillData); // POST /api/emissions/extract-ocr
 router.post('/extract-ocr-image', extractOcrFromImage); // POST /api/emissions/extract-ocr-image
+router.post('/parse-ocr-groq', parseOcrWithGroq);       // POST /api/emissions/parse-ocr-groq
 router.get('/smart-insights', getSmartInsights); // GET /api/emissions/smart-insights
 router.put('/:id',  update);    // PUT    /api/emissions/:id
 router.delete('/:id', remove);  // DELETE /api/emissions/:id

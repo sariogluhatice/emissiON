@@ -1,31 +1,44 @@
-
 /* ============================================================
    BASE / GLOBAL — body varsayılanları, linkler, temel tipografi
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap");
+
+/* Ensure dark background/color on first paint to prevent white flash */
+html,
+body {
+  background: #07090b !important;
+  color: #ffffff !important;
+}
 
 body {
-  font-family: 'Outfit', sans-serif;
+  font-family: "Outfit", sans-serif;
   font-size: 14px;
   color: var(--color-text);
   background-color: var(--color-bg);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
   overflow-x: hidden;
 }
 
 /* ── Dünya Simülasyonu Arka Plan Katmanı ── */
 .app-shell::before {
-  content: '';
+  content: "";
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at 70% 30%, rgba(0, 255, 140, 0.05), transparent 40%),
-              radial-gradient(circle at 20% 80%, rgba(0, 255, 140, 0.03), transparent 40%);
+  background:
+    radial-gradient(
+      circle at 70% 30%,
+      rgba(0, 255, 140, 0.05),
+      transparent 40%
+    ),
+    radial-gradient(circle at 20% 80%, rgba(0, 255, 140, 0.03), transparent 40%);
   pointer-events: none;
   z-index: -1;
 }
@@ -44,12 +57,17 @@ body {
   transition: opacity 0.5s ease;
 }
 
-[data-theme='dark'] .bg-decorative-element {
+[data-theme="dark"] .bg-decorative-element {
   opacity: 0.12;
 }
 
 /* ── Metin & Linkler ── */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   color: var(--color-text);
   font-weight: 800;
   letter-spacing: -0.5px;
@@ -79,8 +97,14 @@ a:hover {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(15px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ── Modal & Glass Effects ── */
@@ -96,4 +120,103 @@ a:hover {
   box-shadow: var(--card-shadow);
   border-radius: var(--radius-xl);
   color: var(--color-text);
+}
+
+/* ------------------------------------------------------------
+   Accessibility & Theme overrides
+   ------------------------------------------------------------ */
+
+/* Stronger placeholder color for readability */
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-placeholder);
+  opacity: 1;
+}
+
+/* Make link-like buttons look like clean links */
+.link-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-primary);
+  padding: 0;
+  font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Light-mode rules removed — dark is the only theme */
+
+/* Dark mode landing adjustments */
+[data-theme="dark"] .landing-nav {
+  background: var(--navbar-bg-dark);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="dark"] .landing-hero h1,
+[data-theme="dark"] .section-header h2,
+[data-theme="dark"] .feature-card h3 {
+  color: var(--color-text);
+}
+
+[data-theme="dark"] .landing-hero p,
+[data-theme="dark"] .feature-card p {
+  color: var(--color-text-muted);
+}
+
+/* Make visual/card images rounded with soft green glow */
+.visual-container,
+.auth-visual-img {
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+  background-clip: padding-box;
+}
+
+.visual-container img,
+.auth-visual-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+/* Hide any theme toggle UI project-wide */
+#themeToggle {
+  display: none !important;
+}
+
+/* Soft neon glow for image cards while keeping it subtle */
+.visual-container::after,
+.auth-visual-img::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: 0 18px 40px rgba(0, 255, 140, 0.06);
+  border-radius: 18px;
+}
+
+/* Feature / Card styles adjustable per theme */
+.feature-card {
+  padding: 28px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  color: var(--color-text);
+  transition: all 0.24s ease;
+  box-shadow: 0 10px 30px rgba(2, 6, 6, 0.06);
+}
+
+
+/* Ensure hero visual does not overflow and is nicely framed */
+.hero-visual .visual-container {
+  border-radius: 22px;
+  overflow: hidden;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.02),
+    rgba(255, 255, 255, 0.01)
+  );
 }

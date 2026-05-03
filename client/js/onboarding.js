@@ -1,7 +1,7 @@
 import { TokenManager }   from './api/tokenManager.js';
 import { ApiClient }      from './api/apiClient.js';
 import { getCurrentUser } from './utils/uiUtils.js';
-import { ThemeManager } from './utils/themeManager.js';
+// ThemeManager removed — dark-only UI by default
 
 // ── Auth guard ──────────────────────────────────────────────────────────────
 if (!TokenManager.exists()) window.location.replace('login.html');
@@ -531,9 +531,7 @@ async function submitOnboarding() {
   }
 }
 
-// ── Tema Kontrolü ─────────────────────────────────────────────────────────────
-ThemeManager.init();
-document.getElementById('themeToggle')?.addEventListener('click', () => ThemeManager.toggle());
+// Dark mode enforced by CSS; theme toggle removed
 
 // ── Başlat ────────────────────────────────────────────────────────────────────
 renderStep();

@@ -59,7 +59,7 @@
 
 /* ── Ghost / Icon Buttons ── */
 .btn-icon-only {
-  background: rgba(128, 128, 128, 0.1);
+  background: transparent;
   color: var(--color-text);
   border: none;
   border-radius: 50%;
@@ -79,7 +79,12 @@
 }
 
 .btn-icon-only:hover {
-  background: rgba(0, 255, 140, 0.2);
+  background: rgba(0, 255, 140, 0.08);
   color: var(--color-primary);
-  transform: rotate(15deg);
+  transform: rotate(15deg) scale(1.03);
+}
+
+/* Ensure icon-only has subtle backdrop in dark mode */
+[data-theme="dark"] .btn-icon-only {
+  background: rgba(255, 255, 255, 0.02);
 }

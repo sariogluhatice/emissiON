@@ -1,16 +1,10 @@
 import { profileService } from './api/profileService.js';
 import { TokenManager }   from './api/tokenManager.js';
-import {
-  getCurrentUser,
-  renderTopbarUser,
-  bindLogout,
-  showToast,
-} from './utils/uiUtils.js';
+import { getCurrentUser, renderTopbarUser, showToast } from './utils/uiUtils.js';
+import { renderLayout } from './layout.js';
 
-const user = getCurrentUser();
-if (!user) window.location.replace('login.html');
-renderTopbarUser(user);
-bindLogout();
+const user = renderLayout({ activeNav: 'nav-settings', title: 'Sistem Ayarları' });
+if (!user) throw new Error('redirect');
 document.getElementById('settingsLogoutBtn')?.addEventListener('click', forceLogout);
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

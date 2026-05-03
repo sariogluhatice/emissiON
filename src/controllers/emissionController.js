@@ -136,6 +136,136 @@ const extractOcrFromImage = async (req, res) => {
     }
 };
 
+// --- GROQ OCR PARSING ---
+// POST /api/emissions/parse-ocr-groq
+// Body: { ocrText }
+const parseOcrWithGroq = async (req, res) => {
+    const { ocrText } = req.body;
+
+    if (!ocrText || String(ocrText).trim().length < 10) {
+        return res.status(400).json({ message: 'OCR metni geçersiz veya çok kısa.' });
+    }
+
+    const GROQ_API_KEY = process.env.GROQ_API_KEY;
+    if (!GROQ_API_KEY) {
+        return res.status(500).json({ message: 'GROQ_API_KEY yapılandırılmamış.' });
+    }
+
+    const prompt = `You are an invoice parser for a carbon footprint web application.
+Extract only the requested fields from the OCR text.
+Return valid JSON only. No markdown. No explanation.
+
+CATEGORY RULES — read carefully, apply in this exact priority order:
+
+STEP 1 — Shopping detection (highest priority):
+If ANY of these phrases appear in the OCR text, category MUST be "shopping":
+  "satış internet üzerinden", "mağaza adı", "sipariş", "kargo", "kredi kartı",
+  "birim fiyat", "web adresi", "ürün", "mal hizmet", "adet"
+SHOPPING WINS even if "elektronik" or "e-fatura" also appears.
+
+STEP 2 — E-invoice document markers (NOT electricity signals):
+The following words indicate the document FORMAT is digital — they are NOT electricity signals.
+NEVER classify as electricity based on these alone:
+  "elektronik", "e-fatura", "e-arşiv", "efatura", "earsiv", "belge tipi elektronik",
+  "elektronik olarak iletilmiştir", "e-archive", "e-invoice", "ELEKTRONIK"
+
+STEP 3 — Genuine utility signals only:
+- category "electricity": ONLY if you see kWh, aktif enerji, tesisat no, sayaç, dağıtım bedeli,
+  enerji bedeli, elektrik tüketimi, elektrik faturası, electric supply.
+  "elektronik" alone is NEVER an electricity signal.
+- category "water": ONLY if you see su tüketimi, m³ (for water), water supply, su faturası.
+- category "gas": ONLY if you see doğalgaz, sm3, gaz faturası, natural gas.
+- Otherwise → category: "shopping".
+
+AMOUNT RULES:
+- totalAmount must be a number or null.
+- Use this priority order for amount labels:
+  1) Ödenecek Tutar  2) Vergiler Dahil Toplam Tutar  3) Genel Toplam  4) Toplam Tutar
+- NEVER extract as totalAmount: KDV Matrahı, Vergi Hariç Tutar, Mal Hizmet Toplam Tutarı,
+  invoice number, tax number, subscriber number, kWh value, m³ value, VAT amount, unit price.
+- Turkish number format: "1.392,30 TL" → 1392.30 (dot=thousands, comma=decimal).
+- For Turkish invoices, TL means TRY.
+
+OTHER RULES:
+- Do not guess missing values; use null when not clearly present.
+- currency must be TRY, USD, EUR, or null.
+- purchaseDate must be YYYY-MM-DD, YYYY-MM, or null.
+- confidence: 0.0–1.0 reflecting how certain you are.
+- reason: one sentence explaining your category decision.
+
+Return exactly this JSON structure:
+{
+  "totalAmount": null,
+  "currency": null,
+  "purchaseDate": null,
+  "category": "shopping",
+  "confidence": 0,
+  "reason": ""
+}
+
+OCR_TEXT:
+${String(ocrText).slice(0, 4000)}`;
+
+    try {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${GROQ_API_KEY}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                model: 'llama-3.1-8b-instant',
+                messages: [{ role: 'user', content: prompt }],
+                temperature: 0,
+                response_format: { type: 'json_object' },
+            }),
+        });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            console.error('[parseOcrWithGroq] Groq API error:', response.status, errText);
+            return res.status(502).json({ message: 'Groq API hatası.' });
+        }
+
+        const groqData = await response.json();
+        const rawContent = groqData.choices?.[0]?.message?.content || '{}';
+
+        let parsed;
+        try {
+            parsed = JSON.parse(rawContent);
+        } catch {
+            console.error('[parseOcrWithGroq] JSON parse error:', rawContent);
+            return res.status(502).json({ message: 'Groq geçersiz JSON döndürdü.' });
+        }
+
+        const allowedCategories = ['electricity', 'water', 'gas', 'shopping'];
+        const category = allowedCategories.includes(parsed.category) ? parsed.category : 'shopping';
+
+        const rawAmount = parsed.totalAmount;
+        const totalAmount = typeof rawAmount === 'number' && Number.isFinite(rawAmount) && rawAmount > 0
+            ? rawAmount
+            : null;
+
+        const allowedCurrencies = ['TRY', 'USD', 'EUR'];
+        const currency = allowedCurrencies.includes(parsed.currency) ? parsed.currency : null;
+
+        const dateStr = String(parsed.purchaseDate || '');
+        const purchaseDate = /^\d{4}-\d{2}(-\d{2})?$/.test(dateStr) ? dateStr : null;
+
+        const confidence = typeof parsed.confidence === 'number'
+            ? Math.min(1, Math.max(0, parsed.confidence))
+            : 0;
+
+        return res.status(200).json({
+            success: true,
+            data: { totalAmount, currency, purchaseDate, category, confidence, reason: String(parsed.reason || '') },
+        });
+    } catch (err) {
+        console.error('[parseOcrWithGroq]', err.message);
+        return res.status(500).json({ message: err.message || 'Groq OCR ayrıştırma başarısız oldu.' });
+    }
+};
+
 // --- TÜMÜNÜ GETİR (GET ALL) ---
 // GET /api/emissions
 // Giriş yapmış kullanıcının tüm emisyon kayıtlarını döndürür (en yeni en başta).
@@ -308,4 +438,4 @@ const getSmartInsights = async (req, res) => {
     }
 };
 
-module.exports = { getAll, create, update, remove, calculate, generateInsight, extractOcrBillData, extractOcrFromImage, getSmartInsights };
+module.exports = { getAll, create, update, remove, calculate, generateInsight, extractOcrBillData, extractOcrFromImage, getSmartInsights, parseOcrWithGroq };
