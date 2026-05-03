@@ -12,4 +12,8 @@ export const profileService = {
     verifyPasswordChange:  (data) => api.post('/profile/password-change/verify', data),
     getSettings:           ()     => api.get('/settings'),
     updateSettings:        (data) => api.put('/settings', data),
+    getCarbonProfile:         ()     => api.get('/carbon-profile'),
+    updateCarbonProfile:      (data) => api.put('/carbon-profile', data),
+    getIndividualComparison:  ()     => api.get('/individual-comparison'),
+    simulateWhatIf:           (data) => api.post('/what-if-simulation', data),
 };

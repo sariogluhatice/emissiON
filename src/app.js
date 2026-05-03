@@ -6,8 +6,11 @@ const authRoutes       = require('./routes/authRoutes');
 const emissionRoutes   = require('./routes/emissionRoutes');
 const ocrRoutes        = require('./routes/ocrRoutes');
 const onboardingRoutes = require('./routes/onboardingRoutes');
-const profileRoutes    = require('./routes/profileRoutes');
-const settingsRoutes   = require('./routes/settingsRoutes');
+const profileRoutes        = require('./routes/profileRoutes');
+const carbonProfileRoutes        = require('./routes/carbonProfileRoutes');
+const individualComparisonRoutes = require('./routes/individualComparisonRoutes');
+const whatIfSimulationRoutes     = require('./routes/whatIfSimulationRoutes');
+const settingsRoutes             = require('./routes/settingsRoutes');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -25,8 +28,11 @@ app.use('/api/auth',     authRoutes);
 app.use('/api/emissions',  emissionRoutes);
 app.use('/api/ocr',        ocrRoutes);
 app.use('/api/onboarding', onboardingRoutes);
-app.use('/api/profile',   profileRoutes);
-app.use('/api/settings',  settingsRoutes);
+app.use('/api/profile',         profileRoutes);
+app.use('/api/carbon-profile',         carbonProfileRoutes);
+app.use('/api/individual-comparison',  individualComparisonRoutes);
+app.use('/api/what-if-simulation',    whatIfSimulationRoutes);
+app.use('/api/settings',              settingsRoutes);
 
 // Sağlık kontrolü (Health check) — sunucunun çalıştığını teyit etmek için yararlıdır
 app.get('/health', (req, res) => {

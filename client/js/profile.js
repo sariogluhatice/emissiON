@@ -376,7 +376,7 @@ async function loadProfile() {
     // Section heading
     const heading = document.createElement('div');
     heading.className = 'profile-carbon-heading';
-    heading.innerHTML = '<span>Carbon Profile</span><a href="settings.html#carbon-profile" class="profile-retake-link">Update profile →</a>';
+    heading.innerHTML = '<span>Carbon Profile</span><a href="carbon-profile.html" class="profile-retake-link">Profili Düzenle →</a>';
     container.appendChild(heading);
 
     PROFILE_SECTIONS

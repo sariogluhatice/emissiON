@@ -1,4 +1,5 @@
 import { emissionService } from './api/emissionService.js';
+import { profileService }  from './api/profileService.js';
 import { renderLayout } from './layout.js';
 import {
   calculateStats,
@@ -157,3 +158,77 @@ function initChart(data) {
 }
 
 initDashboard();
+
+// Yalnızca bireysel kullanıcılar için karşılaştırma kartını yükle
+if (user.role === 'individual') {
+  loadIndividualComparison();
+}
+
+// ── Bireysel Karşılaştırma ────────────────────────────────────────────────────
+
+const BADGE_STYLES = {
+  'Çok iyi':          { color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
+  'İyi':              { color: '#00d27f', bg: 'rgba(0,210,127,0.12)'  },
+  'Geliştirilebilir': { color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
+};
+
+async function loadIndividualComparison() {
+  const card = document.getElementById('individualComparisonCard');
+  if (!card) return;
+  card.style.display = '';
+
+  try {
+    const data = await profileService.getIndividualComparison();
+    renderComparison(data);
+  } catch (err) {
+    console.error('[dashboard] karşılaştırma yüklenemedi:', err.message);
+    card.style.display = 'none';
+  }
+}
+
+function renderComparison(data) {
+  const card    = document.getElementById('individualComparisonCard');
+  const badgeEl = document.getElementById('comparisonBadge');
+  const content = document.getElementById('comparisonContent');
+  if (!card || !content) return;
+
+  if (!data.comparisonAvailable) {
+    // Yeterli veri yok — sade bilgilendirme, hata görünümü değil
+    if (badgeEl) badgeEl.style.display = 'none';
+    content.innerHTML = `
+      <p style="font-size:14px; color:var(--color-text-muted); margin:0">
+        ${data.message}
+      </p>
+    `;
+    return;
+  }
+
+  // Rozet stilini uygula
+  const style = BADGE_STYLES[data.badge] ?? BADGE_STYLES['İyi'];
+  if (badgeEl) {
+    badgeEl.textContent            = data.badge;
+    badgeEl.style.color            = style.color;
+    badgeEl.style.backgroundColor  = style.bg;
+    badgeEl.style.borderColor      = style.color;
+  }
+
+  content.innerHTML = `
+    <p style="font-size:14px; margin:0 0 12px; opacity:0.9">${data.message}</p>
+    <p style="font-size:13px; color:var(--color-text-muted); margin:0 0 14px">${data.badgeDescription}</p>
+
+    <div style="background:var(--color-bg-alt,#151a1f);border-radius:8px;height:8px;overflow:hidden;margin-bottom:10px">
+      <div style="
+        width:${data.percentile}%;
+        height:100%;
+        background:${style.color};
+        border-radius:8px;
+        transition:width 0.8s ease;
+      "></div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--color-text-muted)">
+      <span>%${data.percentile} daha iyi</span>
+      <span>${data.userTotalEmission.toFixed(1)} kg CO₂e &nbsp;·&nbsp; ${data.totalIndividualUsers} bireysel kullanıcı</span>
+    </div>
+  `;
+}

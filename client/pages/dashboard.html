@@ -87,6 +87,37 @@
             </div>
           </div>
 
+          <!-- Bireysel Karşılaştırma (yalnızca individual kullanıcılar için, JS tarafından gösterilir) -->
+          <div
+            id="individualComparisonCard"
+            class="content-card glass-card"
+            style="margin-bottom: 24px; display: none; border-left: 4px solid var(--color-primary)"
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                padding: 20px 24px 0;
+              "
+            >
+              <h3 style="margin: 0; font-size: 16px; color: var(--color-brand-text)">
+                👥 Bireysel Karşılaştırma
+              </h3>
+              <span
+                id="comparisonBadge"
+                style="
+                  font-size: 12px;
+                  font-weight: 700;
+                  padding: 4px 10px;
+                  border-radius: 20px;
+                  border: 1px solid;
+                "
+              ></span>
+            </div>
+            <div id="comparisonContent" style="padding: 12px 24px 20px"></div>
+          </div>
+
           <!-- İstatistikler -->
           <div class="card-grid" style="margin-bottom: 32px">
             <div class="stat-card glass-card">
