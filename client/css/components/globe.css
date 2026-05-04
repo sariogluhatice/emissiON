@@ -1,0 +1,77 @@
+.globe-widget {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+  user-select: none;
+}
+
+/* ── Sağlık Durumu Etiketleri ── */
+.globe-status-label {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid;
+  text-align: center;
+  letter-spacing: 0.04em;
+  transition: color 0.5s ease, background 0.5s ease, border-color 0.5s ease;
+}
+
+.globe-emission-text {
+  font-size: 12px;
+  color: var(--color-text-muted, #6b7280);
+  text-align: center;
+}
+
+/* ── Tooltip (Hover Karşılaştırma) ── */
+.globe-tooltip {
+  position: absolute;
+  background: rgba(10, 15, 20, 0.98);
+  border: 1px solid rgba(255,255,255,0.15);
+  backdrop-filter: blur(16px);
+  border-radius: 12px;
+  padding: 16px 20px;
+  font-size: 12px;
+  line-height: 1.7;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 9999; /* Kartların üzerinde kalması için çok yüksek tutuyoruz */
+  min-width: 220px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+#globeCanvasContainer:hover .globe-tooltip {
+  opacity: 1;
+}
+
+/* Three.js Canvas Fix */
+#globeCanvasContainer canvas {
+  outline: none;
+  border-radius: 50%; /* Görsel olarak yuvarlaklık hissini pekiştirir */
+}
+
+.globe-tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 2px 0;
+}
+
+.globe-tooltip-label {
+  color: var(--color-text-muted, #6b7280);
+}
+
+.globe-tooltip-val {
+  font-weight: 700;
+}
+
+.globe-tooltip-divider {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  margin: 8px 0;
+}

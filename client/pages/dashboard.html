@@ -13,6 +13,10 @@
     </style>
     <link rel="stylesheet" href="../css/main.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Raporlama ve 3D için kütüphaneler -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
   </head>
   <body>
     <div class="app-shell">
@@ -38,157 +42,138 @@
         <header class="topbar" id="topbar"></header>
 
         <main class="page-body">
-          <div class="page-header">
-            <h1>Tekrar hoş geldin, <span id="welcomeName">Kullanıcı</span>!</h1>
-            <p>
-              Karbon ayak izindeki son değişimleri ve analizlerini buradan takip
-              edebilirsin.
-            </p>
+          <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <h1>Tekrar hoş geldin, <span id="welcomeName">Kullanıcı</span>!</h1>
+              <p>
+                Karbon ayak izindeki son değişimleri ve analizlerini buradan takip
+                edebilirsin.
+              </p>
+            </div>
+            <button id="downloadReportBtn" class="btn-primary" style="display:none; background: #3b82f6; border: none; gap: 8px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Kurumsal Raporu İndir (PDF)
+            </button>
           </div>
 
-          <!-- Yapay Zeka Özeti -->
-          <div
-            class="content-card glass-card ai-spotlight"
-            style="
-              margin-bottom: 24px;
-              border-left: 4px solid var(--color-primary);
-            "
-          >
-            <div
-              style="
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-              "
-            >
-              <div>
-                <h3
-                  style="
-                    margin: 0;
-                    font-size: 16px;
-                    color: var(--color-brand-text);
-                  "
-                >
-                  ✨ Akıllı Karbon Özeti
-                </h3>
-                <p
-                  id="aiSpotlightText"
-                  style="margin: 8px 0 0; font-size: 14px; opacity: 0.8"
-                >
-                  Verilerin analiz ediliyor, lütfen bekle...
-                </p>
-              </div>
-              <a
-                href="smart-insights.html"
-                class="btn-primary"
-                style="padding: 8px 16px; font-size: 12px"
-                >Detaylı Analiz</a
-              >
+        <main class="page-body">
+          <!-- Hero Section: Central Globe and Stats -->
+          <div class="hero-dashboard-section" style="position: relative; margin-bottom: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 450px;">
+            
+            <!-- Background Glow -->
+            <div style="position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%); z-index: 0; pointer-events: none;"></div>
+
+            <!-- Central Globe -->
+            <div id="globeCanvasContainer" style="width: 380px; height: 380px; position: relative; z-index: 2; cursor: pointer; filter: drop-shadow(0 0 50px rgba(16,185,129,0.2));">
+                <!-- Hover Tooltip (Now Top-Centered) -->
+                <div class="globe-tooltip" id="globeTooltip" style="top: -20px; left: 50%; transform: translateX(-50%) translateY(-100%);">
+                  <div style="font-size: 11px; font-weight: 700; color: var(--color-brand-text); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.06em;">🌍 Karbon Durum Özeti</div>
+                  <hr class="globe-tooltip-divider">
+                  <div class="globe-tooltip-row">
+                    <span class="globe-tooltip-label">Bu Ay</span>
+                    <span class="globe-tooltip-val" id="tooltipCurrentMonth">—</span>
+                  </div>
+                  <div class="globe-tooltip-row">
+                    <span class="globe-tooltip-label">Geçen Ay</span>
+                    <span class="globe-tooltip-val" id="tooltipLastMonth">—</span>
+                  </div>
+                  <div class="globe-tooltip-row">
+                    <span class="globe-tooltip-label">Değişim</span>
+                    <span class="globe-tooltip-val" id="tooltipChange" style="color: #10b981;">—</span>
+                  </div>
+                  <hr class="globe-tooltip-divider">
+                  <div class="globe-tooltip-row">
+                    <span class="globe-tooltip-label">Toplam Karbon İzi</span>
+                    <span class="globe-tooltip-val" id="tooltipTotal">—</span>
+                  </div>
+                </div>
+            </div>
+
+            <!-- Floating Status Badge -->
+            <div style="z-index: 3; margin-top: -20px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+              <span class="globe-status-label" id="globeStatusLabel" style="font-size: 16px; padding: 8px 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);">Dünya Sağlıklı</span>
+              <span class="globe-emission-text" id="globeEmissionText" style="font-size: 14px; opacity: 0.7;">Analiz ediliyor...</span>
+            </div>
+
+            <!-- Left/Right Floating Stats (Visual only for layout, JS will update) -->
+            <div style="position: absolute; left: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 24px; z-index: 2;">
+                <div class="stat-card glass-card" style="width: 180px; margin: 0;">
+                    <span class="stat-label">Toplam Karbon</span>
+                    <span class="stat-value" id="statTotal" style="font-size: 24px;">—</span>
+                    <span class="stat-unit">kg CO₂e</span>
+                </div>
+                <div class="stat-card glass-card" style="width: 180px; margin: 0; border-left: 3px solid var(--color-error);">
+                    <span class="stat-label">Karbonun Maliyeti</span>
+                    <span class="stat-value" id="statSavings" style="font-size: 24px; color: var(--color-error);">—</span>
+                    <span class="stat-unit">TL Tahmini Gider</span>
+                </div>
+            </div>
+
+            <div style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 24px; z-index: 2;">
+                <div class="stat-card glass-card" style="width: 180px; margin: 0;">
+                    <span class="stat-label">Aktif Kayıtlar</span>
+                    <span class="stat-value" id="statEntries" style="font-size: 24px;">—</span>
+                    <span class="stat-unit">adet veri</span>
+                </div>
+                <div class="stat-card glass-card" style="width: 180px; margin: 0; border-left: 3px solid var(--color-error);">
+                    <span class="stat-label">Kritik Kaynak</span>
+                    <span class="stat-value" id="statTopCat" style="font-size: 16px; color: var(--color-error); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">—</span>
+                    <span class="stat-unit">en yüksek emisyon</span>
+                </div>
             </div>
           </div>
 
-          <!-- Bireysel Karşılaştırma (yalnızca individual kullanıcılar için, JS tarafından gösterilir) -->
+          <!-- AI Spotlight (Now as a sleek wide banner) -->
+          <div class="content-card glass-card ai-spotlight" style="margin-bottom: 24px; border-left: 4px solid var(--color-primary);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 16px;">
+              <div style="flex: 1;">
+                <h3 style="margin: 0; font-size: 15px; color: var(--color-brand-text);">✨ Karbon İkizi Öngörüsü</h3>
+                <p id="aiSpotlightText" style="margin: 6px 0 0; font-size: 14px; opacity: 0.8; line-height: 1.5;">Analiz notun hazırlanıyor...</p>
+              </div>
+              <a href="smart-insights.html" class="btn-primary" style="padding: 8px 20px; font-size: 12px; margin-left: 24px; white-space: nowrap;">Tüm Analizler</a>
+            </div>
+          </div>
+
+          <!-- Bireysel Karşılaştırma (Arkadaşlarından gelen özellik - Geri yüklendi ve işlevsel) -->
           <div
             id="individualComparisonCard"
             class="content-card glass-card"
-            style="margin-bottom: 24px; display: none; border-left: 4px solid var(--color-primary)"
+            style="margin-bottom: 32px; border-left: 4px solid #10b981; display: none;"
           >
-            <div
-              style="
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-start;
-                padding: 20px 24px 0;
-              "
-            >
-              <h3 style="margin: 0; font-size: 16px; color: var(--color-brand-text)">
-                👥 Bireysel Karşılaştırma
-              </h3>
-              <span
-                id="comparisonBadge"
-                style="
-                  font-size: 12px;
-                  font-weight: 700;
-                  padding: 4px 10px;
-                  border-radius: 20px;
-                  border: 1px solid;
-                "
-              ></span>
-            </div>
-            <div id="comparisonContent" style="padding: 12px 24px 20px"></div>
-          </div>
-
-          <!-- İstatistikler -->
-          <div class="card-grid" style="margin-bottom: 32px">
-            <div class="stat-card glass-card">
-              <span class="stat-label">Toplam Karbon İzi</span>
-              <span class="stat-value" id="statTotal">—</span>
-              <span class="stat-unit">kg CO₂e</span>
-            </div>
-            <div class="stat-card glass-card">
-              <span class="stat-label">Bu Ayın Karnesi</span>
-              <span
-                class="stat-value"
-                id="statMonth"
-                style="color: var(--color-primary)"
-                >—</span
-              >
-              <span class="stat-unit">kg CO₂e</span>
-            </div>
-            <div class="stat-card glass-card">
-              <span class="stat-label">Aktif Kayıtlar</span>
-              <span class="stat-value" id="statEntries">—</span>
-              <span class="stat-unit">adet veri</span>
-            </div>
-            <div class="stat-card glass-card">
-              <span class="stat-label">Kritik Kaynak</span>
-              <span
-                class="stat-value"
-                id="statTopCat"
-                style="font-size: 18px; color: var(--color-error)"
-                >—</span
-              >
-              <span class="stat-unit">emisyon türü</span>
-            </div>
-          </div>
-
-          <!-- Grafik -->
-          <div class="content-card glass-card" style="margin-bottom: 24px">
             <div class="content-card-header">
-              <span class="content-card-title">Emisyon Dağılım Grafiği</span>
+              <span class="content-card-title">🏆 Topluluk Karşılaştırması</span>
+              <span id="comparisonBadge" style="font-size:12px;padding:3px 10px;border-radius:20px;border:1px solid;font-weight:700; margin-left: auto;">...</span>
             </div>
-            <div
-              style="
-                height: 300px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-              "
-            >
-              <canvas id="emissionChart"></canvas>
+            <div id="comparisonContent" style="padding: 0 24px 20px;">
+              <p style="font-size:14px; color:var(--color-text-muted); margin:0">Veriler analiz ediliyor...</p>
             </div>
           </div>
 
-          <!-- Son Hareketler -->
-          <div class="content-card glass-card" style="margin-bottom: 24px">
-            <div class="content-card-header">
-              <span class="content-card-title">Son Hareketler</span>
+
+          <!-- Alt Grid: Grafik ve Hareketler -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+            <!-- Grafik -->
+            <div class="content-card glass-card" style="margin: 0;">
+              <div class="content-card-header">
+                <span class="content-card-title">Emisyon Dağılımı</span>
+              </div>
+              <div style="height: 300px; padding: 12px;">
+                <canvas id="emissionChart"></canvas>
+              </div>
             </div>
-            <div id="recordList" class="record-list">
-              <!-- JS ile yüklenecek -->
+
+            <!-- Son Hareketler -->
+            <div class="content-card glass-card" style="margin: 0;">
+              <div class="content-card-header">
+                <span class="content-card-title">Son Hareketler</span>
+              </div>
+              <div id="recordList" class="record-list" style="max-height: 300px; overflow-y: auto;">
+                <!-- JS ile yüklenecek -->
+              </div>
+              <p class="empty-state" id="emptyState" style="display: none; padding: 40px; text-align: center; opacity: 0.6;">
+                Henüz bir kayıt girmedin.
+              </p>
             </div>
-            <p
-              class="empty-state"
-              id="emptyState"
-              style="
-                display: none;
-                padding: 40px;
-                text-align: center;
-                opacity: 0.6;
-              "
-            >
-              Henüz bir karbon kaydı girmedin.
-            </p>
           </div>
         </main>
       </div>

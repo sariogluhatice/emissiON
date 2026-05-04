@@ -162,40 +162,59 @@ OCR TEXT: ${ocrText.slice(0, 8000)}`;
      * 3. Akıllı İçgörüler (Dashboard Analysis)
      */
     async getSmartInsights(history, profile, categories = []) {
-        const historyText = history.map(h => `${h.month}: ${h.total_amount}kg`).join(', ');
-        const categoriesText = categories.map(c => `${c.category}: ${c.total}kg`).join(', ');
-        
         const hasData = history && history.length > 0;
+        let prompt;
+
+        if (hasData) {
+            const historyText = history.map(h => `${h.month}: ${h.total_amount}kg`).join(', ');
+            const categoriesText = categories.map(c => `${c.category}: ${c.total}kg`).join(', ');
+            
+            prompt = `Sen kullanıcının kişisel 'Dijital Karbon İkizi' ve veri analisti uzmanısın.
         
-        const prompt = `Sen kullanıcının kişisel 'Dijital Karbon İkizi' ve veri analisti uzmanısın.
-        
-        VERİLER:
-        - Geçmiş Veriler: ${historyText || 'KESİNLİKLE VERİ YOK'}
-        - Kategorik Dağılım: ${categoriesText || 'KESİNLİKLE VERİ YOK'}
-        - Kullanıcı Profili: ${JSON.stringify(profile)}
-        
-        ZORUNLU ANALİZ KURALLARI:
-        ${hasData ? `
-        1. ASLA GENEL TAVSİYE VERME.
-        2. Geçmiş aylardaki ${historyText} verilerine bakarak matematiksel bir ARTALIM/AZALIM trendi hesapla.
-        3. Gelecek ay öngörüsünü bu trende dayandır.
-        ` : `
-        1. VERİ YOK: Kullanıcının henüz HİÇBİR emisyon kaydı yok. 
-        2. YASAKLAR: 'Geçmişe göre', 'En yüksek kategori', 'Plastik', 'Ambalaj' veya herhangi bir spesifik kategoriden BAHSETME. Olmayan veriyi uydurma.
-        3. GÖREVİN: Kullanıcıyı karşıla. Henüz veri girmediği için analiz yapılamadığını kibarca belirt. 
-        4. EYLEM: Onboarding'de seçtiği '${profile?.priority_area || 'çevre'}' hedefine odaklanarak ilk kaydını (fatura yükleme veya manuel giriş) yapması için bir cümlelik motivasyon ver.
-        `}
-        
-        ZORUNLU JSON FORMATI (SADECE JSON DÖN):
-        {
-          "prediction": "Veri yoksa 'Analiz için veri bekleniyor' mesajı, varsa tahmin (Maks 2 cümle)",
-          "trend_summary": "Veri yoksa 'Hoş geldin' mesajı, varsa gidişat (Maks 2 cümle)",
-          "recommendations": [
-            "İlk veriyi girmek için bir ipucu",
-            "Profiline özel bir sürdürülebilirlik tavsiyesi",
-            "Sistemin nasıl çalıştığına dair küçük bir not"
-          ]
-        }`;
+VERİLER:
+- Geçmiş Emisyon Kayıtları: ${historyText}
+- Kategorik Dağılım: ${categoriesText}
+- Kullanıcı Profil Bilgileri (Onboarding): ${JSON.stringify(profile)}
+
+ZORUNLU ANALİZ KURALLARI:
+1. GERÇEKÇİLİK: Sadece yukarıdaki emisyon kayıtlarına ve kullanıcının profil bilgilerine dayanarak konuş. Veride olmayan bir aktiviteyi varmış gibi gösterme.
+2. PROFİL UYUMU: Kullanıcının onboarding sorularına verdiği cevapları (konut tipi, araç sahibi olup olmaması, beslenme tarzı vb.) analizine dahil et. Örn: "Dizel araç kullandığınızı belirtmişsiniz, bu ayki ulaşım emisyonunuz..." gibi.
+3. MATEMATİKSEL TREND: Geçmiş aylardaki veriler arasındaki değişimi (artış/azalış yüzdesi) hesapla ve gidişatı buna göre açıkla.
+4. ÖNERİLER: Kullanıcının en çok emisyon ürettiği kategoriye ve profilindeki "öncelikli alan" (priority_area) hedefine odaklanan, uygulanabilir, teknik ve spesifik 3 öneri sun.
+5. ASLA GENEL TAVSİYE VERME: "Ağaç dikin" veya "Geri dönüşüm yapın" gibi klişeler yerine, kullanıcının verisindeki spesifik bir yüksekliği düşürmeye yönelik konuş.
+
+ZORUNLU JSON FORMATI (SADECE JSON):
+{
+  "prediction": "Gelecek ay için veriye dayalı öngörü (Maks 2 cümle)",
+  "trend_summary": "Verilerdeki gerçek gidişat ve profil uyumu özeti (Maks 2 cümle)",
+  "recommendations": [
+    "Profil ve veriye dayalı 1. spesifik öneri",
+    "Profil ve veriye dayalı 2. spesifik öneri",
+    "Profil ve veriye dayalı 3. spesifik öneri"
+  ]
+}`;
+        } else {
+            prompt = `Sen bir sürdürülebilirlik asistanısın. Kullanıcı sisteme yeni katıldı ve henüz HİÇBİR verisi yok.
+            
+Kullanıcı Profili: ${JSON.stringify(profile)}
+
+GÖREVİN:
+1. Kullanıcıyı karşıla ve sisteme hoş geldin de.
+2. Henüz veri girmediği için analiz yapılamadığını, ilk verisini (fatura veya manuel giriş) beklediğini söyle.
+3. KESİN YASAK: 'Geçen ay', 'son 3 ay', '%...', 'artış', 'azalış' veya herhangi bir emisyon kategorisinden (elektrik, ulaşım vb.) KESİNLİKLE BAHSETME. Olmayan veriyi uydurma.
+4. Hedefi olan '${profile?.priority_area || 'çevre'}' konusuna değinerek motivasyon ver.
+
+ZORUNLU JSON FORMATI:
+{
+  "prediction": "Analiz için ilk verilerini bekliyorum.",
+  "trend_summary": "Sisteme hoş geldin! Senin için analiz yapabilmem için veri girişine ihtiyacım var.",
+  "recommendations": [
+    "İlk verini eklemek için 'Kayıt Ekle' butonunu kullanabilirsin.",
+    "Faturan varsa fotoğrafını çekip hızlıca yükleyebilirsin.",
+    "Profilindeki hedeflerine ulaşman için sabırsızlanıyorum!"
+  ]
+}`;
+        }
 
         let response = await this.callGroq(prompt, true);
         if (!response) response = await this.callGemini(prompt, true);
@@ -208,14 +227,21 @@ OCR TEXT: ${ocrText.slice(0, 8000)}`;
             };
         }
 
-        const cleaned = response.replace(/```json|```/gi, '').trim();
-        const parsed = JSON.parse(cleaned);
-
-        return {
-            prediction: parsed.prediction || "Tahmin yapılamadı.",
-            trend_summary: parsed.trend_summary || "Özet çıkarılamadı.",
-            recommendations: parsed.recommendations || ["Veri eklemeye devam edin."]
-        };
+        try {
+            const cleaned = response.replace(/```json|```/gi, '').trim();
+            const parsed = JSON.parse(cleaned);
+            return {
+                prediction: parsed.prediction || "Tahmin yapılamadı.",
+                trend_summary: parsed.trend_summary || "Özet çıkarılamadı.",
+                recommendations: parsed.recommendations || ["Veri eklemeye devam edin."]
+            };
+        } catch (e) {
+            return {
+                prediction: "Veri bekleniyor...",
+                trend_summary: "Hoş geldiniz! Veri girişi yaparak analizi başlatabilirsiniz.",
+                recommendations: ["İlk kaydınızı ekleyin."]
+            };
+        }
     }
 }
 

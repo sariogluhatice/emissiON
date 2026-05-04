@@ -1,6 +1,7 @@
 import { renderLayout } from './layout.js';
 import { showToast }    from './utils/uiUtils.js';
 import { ApiClient }    from './api/apiClient.js';
+import { updateGlobe, buildGlobeStats } from './utils/globe.js';
 
 const user = renderLayout({ activeNav: 'nav-whatif', title: 'What-if Simülasyon' });
 if (!user) throw new Error('redirect');
@@ -18,6 +19,27 @@ const simResultBody = document.getElementById('simResultBody');
 const simBadge      = document.getElementById('simBadge');
 const simNoDataCard = document.getElementById('simNoDataCard');
 const simNoDataMsg  = document.getElementById('simNoDataMsg');
+
+// ── Sayfa yüklenince: Mevcut durumu gösteren globu doldur ─────────────────────
+let _allTimeTotal = 0; // Toplam veriyi saklarız
+
+(async () => {
+  try {
+    const { records } = await api.get('/emissions');
+    const gs = buildGlobeStats(records);
+    _allTimeTotal = gs.total;
+
+    // 🌍 Dashboard ile aynı: "Şu Anki Durum" dünyası "Bu Ayki" veriyi göstermeli
+    updateGlobe(gs.currentMonth, {
+      containerId: 'globeCurrentContainer',
+      labelId:     'globeCurrentLabel',
+      textId:      'globeCurrentText',
+    });
+  } catch (e) {
+    console.warn('[what-if] globe init error:', e.message);
+  }
+})();
+
 
 // ── Hata mesajı göster / gizle ────────────────────────────────────────────────
 function showError(msg) {
@@ -107,7 +129,27 @@ function renderResult(data) {
 
         <div class="sim-message">${data.message}</div>
     `;
+
+    // 🌍 Simülasyon globunu güncelle
+    // Dünyayı artık "Tüm Zamanlar" yerine "Simülasyon Yapılan Dönem" (Ay/Yıl) bazlı gösteriyoruz
+    // Böylece yaptığın tasarrufun etkisi dünyada devasa görünür.
+    
+    // Sol taraftaki "Mevcut Durum" globunu o dönemki ham veriye göre güncelle
+    updateGlobe(data.currentEmission, {
+      containerId: 'globeCurrentContainer',
+      labelId:     'globeCurrentLabel',
+      textId:      'globeCurrentText',
+    });
+
+    // Sağ taraftaki "Simülasyon" globunu azaltılmış veriye göre güncelle
+    updateGlobe(data.simulatedEmission, {
+      containerId: 'globeSimContainer',
+      labelId:     'globeSimLabel',
+      textId:      'globeSimText',
+    });
 }
+
+
 
 // ── Simülasyon gönder ─────────────────────────────────────────────────────────
 async function runSimulation() {
@@ -149,3 +191,4 @@ simBtn.addEventListener('click', runSimulation);
 simReduction.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') runSimulation();
 });
+

@@ -1,38 +1,38 @@
 const pool = require('../config/db');
 
-// Kategori → veritabanı source değerleri eşlemesi
+// Kategori → veritabanı source değerleri eşlemesi (Türkçe ve İngilizce varyasyonlar eklendi)
 const CATEGORY_MAP = {
     electricity: {
         label:   'Elektrik',
-        sources: ['electricity'],
+        sources: ['electricity', 'elektrik', 'enerji', 'energy'],
     },
     natural_gas: {
         label:   'Doğalgaz',
-        sources: ['natural_gas'],
+        sources: ['natural_gas', 'doğalgaz', 'gaz', 'gas'],
     },
     transport: {
         label:   'Ulaşım (Kara)',
-        sources: ['car_petrol', 'car_diesel', 'bus', 'train'],
+        sources: ['car_petrol', 'car_diesel', 'bus', 'train', 'ulaşım', 'transport', 'benzin', 'dizel', 'araç', 'araba'],
     },
     flight: {
         label:   'Uçuş',
-        sources: ['flight_short', 'flight_long'],
+        sources: ['flight_short', 'flight_long', 'uçuş', 'uçak', 'flight'],
     },
     water: {
         label:   'Su',
-        sources: ['water_usage'],
+        sources: ['water_usage', 'su', 'water'],
     },
     food: {
         label:   'Gıda',
-        sources: ['food_general', 'meat'],
+        sources: ['food_general', 'meat', 'gıda', 'yemek', 'beslenme'],
     },
     shopping: {
         label:   'Alışveriş',
-        sources: ['office_supplies', 'electronics', 'shopping_general', 'shopping'],
+        sources: ['office_supplies', 'electronics', 'shopping_general', 'shopping', 'alışveriş', 'market'],
     },
     waste: {
         label:   'Atık & Malzeme',
-        sources: ['waste_general', 'recycling', 'plastic', 'paper'],
+        sources: ['waste_general', 'recycling', 'plastic', 'paper', 'atık', 'çöp', 'geri dönüşüm'],
     },
     all: {
         label:   'Tüm Kategoriler',
