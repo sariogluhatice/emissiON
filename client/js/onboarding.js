@@ -213,14 +213,35 @@ const ALL_STEPS = [
     rightDesc: 'Size en uygun tasarruf önerilerini sunmak için önceliklerinizi anlıyoruz. Birlikte daha yeşil bir gelecek inşa edeceğiz.',
     icon: '🎯', roles: 'all',
     fields: [
+      // ── Bireysel Hedefler (Individual) ──
       rad('motivation', 'Emisyon takibi yapmaktaki ana motivasyonunuz nedir?',
-        [['save_money','Para tasarrufu'],['reduce_carbon','Karbon ayak izimi azaltmak'],
-         ['company_reporting','Şirket raporlaması / uyumluluk'],
-         ['environmental','Çevresel farkındalık'],['academic','Akademik / Proje kullanımı']]),
+        [['save_money','Kişisel bütçede para tasarrufu'],['reduce_carbon','Kişisel karbon ayak izimi azaltmak'],
+         ['environmental','Çevresel farkındalık edinmek'],['personal_growth','Sürdürülebilir alışkanlıklar kazanmak']],
+        true, ['individual']),
       rad('priority_area', 'İlk olarak hangi alanı iyileştirmek istersiniz?',
-        [['transport','Ulaşım'],['energy','Ev enerjisi'],['flights','Uçuş ve seyahat'],
-         ['food','Gıda ve beslenme'],['shopping','Alışveriş'],['waste','Atık ve geri dönüşüm'],
-         ['supply_chain','Tedarik zinciri']]),
+        [['energy','Ev enerjisi kullanımı'],['transport','Günlük ulaşım alışkanlıkları'],
+         ['food','Beslenme tarzı'],['shopping','Alışveriş tercihleri'],['waste','Atık yönetimi ve geri dönüşüm']],
+        true, ['individual']),
+
+      // ── Hane Halkı Hedefler (Household) ──
+      rad('motivation', 'Hane halkı olarak emisyon takibi yapmaktaki ana motivasyonunuz nedir?',
+        [['save_money','Aile bütçesinde tasarruf sağlamak'],['reduce_carbon','Hane halkı karbon salımını düşürmek'],
+         ['environmental','Çocuklarımıza daha temiz bir gelecek bırakmak']],
+        true, ['household']),
+      rad('priority_area', 'Hane olarak ilk olarak hangi alanı iyileştirmek istersiniz?',
+        [['energy','Ev ve ısıtma enerjisi verimliliği'],['waste','Hane çöpleri ve geri dönüşüm'],
+         ['transport','Aile araç kullanımı ve ulaşım'],['food','Mutfak harcamaları ve gıda tasarrufu']],
+        true, ['household']),
+
+      // ── Kurumsal Hedefler (Company) ──
+      rad('motivation', 'Şirketiniz için emisyon takibi yapmaktaki ana motivasyonunuz nedir?',
+        [['company_reporting','Kurumsal raporlama ve ESG uyumluluğu'],['save_money','Operasyonel maliyetleri düşürmek'],
+         ['brand_reputation','Yeşil marka imajı ve sürdürülebilirlik'],['carbon_neutral','Net-Sıfır karbon hedeflerine ulaşmak']],
+        true, ['company']),
+      rad('priority_area', 'Şirketiniz için ilk olarak hangi alanı iyileştirmek istersiniz?',
+        [['supply_chain','Tedarik zinciri emisyonları'],['energy','Ofis enerji verimliliği'],
+         ['transport','Şirket araç filosu operasyonları'],['waste','Kurumsal atık yönetimi ve geri dönüşüm']],
+        true, ['company']),
     ],
   },
 ];

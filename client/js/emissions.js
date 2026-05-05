@@ -8,14 +8,14 @@ if (!user) throw new Error('redirect');
 // --- Merkezi Label Mapping ---
 
 const CATEGORY_LABELS = {
-  energy:    '⚡ Enerji',
-  water:     '💧 Su',
-  gas:       '🔥 Doğalgaz',
-  transport: '🚗 Ulaşım',
-  materials: '📦 Malzeme',
-  waste:     '🗑️ Atık',
-  food:      '🍽️ Gıda',
-  other:     '🔘 Diğer / Alışveriş',
+  energy:    'Enerji',
+  water:     'Su',
+  gas:       'Doğalgaz',
+  transport: 'Ulaşım',
+  materials: 'Malzeme',
+  waste:     'Atık',
+  food:      'Gıda',
+  other:     'Diğer / Alışveriş',
 };
 
 const ACTIVITY_TYPE_LABELS = {

@@ -32,42 +32,8 @@ export function updateGlobe(totalKg, {
   if (!renderers.has(containerId)) {
     initThreeJSGlobe(container, containerId, level, totalKg);
   } else {
-    const { mesh, cloudsMesh, sunLight, glowMesh, ambientLight } = renderers.get(containerId);
-    
-    // 🌍 ÖLEN DÜNYA MANTIĞI: Türkiye Ortalaması (450kg) baz alınarak renkler solar
-    // 450kg civarında dünya yavaş yavaş "ölmeye" başlar.
-    const factor = Math.max(0, 1 - (totalKg / 900)); // 900kg'da dünya tamamen "gri" olur
-    const r = 0.5 + 0.5 * factor;
-    const g = 0.3 + 0.7 * factor;
-    const b = 0.2 + 0.8 * factor;
-    mesh.material.color.setRGB(r, g, b);
-    
-    // ☀️ IŞIK: Aylık limit aşıldıkça ışık söner
-    sunLight.intensity = 0.5 + 0.8 * factor;
-    ambientLight.intensity = 0.4 + 0.6 * factor;
-
-    // 🎇 BOĞUCU ATMOSFER: İnce çizgi yerine kalın, dumanlı bir duman tabakası
-    if (glowMesh) {
-      if (totalKg > 600) {
-        glowMesh.scale.set(1.05, 1.05, 1.05); // Atmosfer şişer (sera etkisi)
-        glowMesh.material.color.setHex(0x554433); // Kirli kahverengi/is rengi
-        glowMesh.material.opacity = 0.4;
-      } else {
-        glowMesh.scale.set(1.01, 1.01, 1.01);
-        glowMesh.material.color.setHex(0x4488ff);
-        glowMesh.material.opacity = 0.15;
-      }
-    }
-
-
-    // ☁️ BULUTLAR: Kirliyse daha yoğun ve kirli gri
-    if (cloudsMesh) {
-      const cloudTone = totalKg > 600 ? 0.45 : (totalKg > 200 ? 0.7 : 1.0);
-      cloudsMesh.material.color.setRGB(cloudTone, cloudTone, cloudTone);
-      cloudsMesh.material.opacity = totalKg > 600 ? 0.6 : 0.4;
-    }
-
-    // 🔄 CANLI VERİ GÜNCELLEME: Animasyon döngüsü için veriyi tazele
+    // 🔄 CANLI VERİ GÜNCELLEME: Animasyon döngüsü (animate) artık tüm görsel 
+    // değişimleri (renk, ışık, atmosfer) bu değere göre otomatik yapıyor.
     renderers.get(containerId).currentKg = totalKg;
   }
 
@@ -162,24 +128,45 @@ function initThreeJSGlobe(container, id, level, totalKg) {
   const animate = () => {
     requestAnimationFrame(animate);
     
-    // Renderer nesnesinden en güncel veriyi çek
     const state = renderers.get(id);
     if (!state) return;
 
     mesh.rotation.y += 0.001;
     cloudsMesh.rotation.y += 0.0014; 
 
-    // 🎇 AKILLI NABIZ SİSTEMİ: Güncel state.totalKg üzerinden hesapla
+    // 🌍 CANLI GÖRSEL GÜNCELLEME (Renk ve Sağlık Durumu)
     const currentKg = state.currentKg || 0;
+    
+    // Dünyanın "ölme" faktörü
+    const factor = Math.max(0, 1 - (currentKg / 900));
+    const r = 0.5 + 0.5 * factor;
+    const g = 0.3 + 0.7 * factor;
+    const b = 0.2 + 0.8 * factor;
+    mesh.material.color.setRGB(r, g, b);
+
+    // Işık şiddeti
+    sunLight.intensity = 0.5 + 0.8 * factor;
+    ambientLight.intensity = 0.4 + 0.6 * factor;
+
+    // Atmosfer ve Bulutlar (Sera etkisi simülasyonu)
     if (glowMesh) {
-      if (currentKg > 750) {
-        glowMesh.material.opacity = 0.25 + Math.sin(Date.now() * 0.005) * 0.15;
-      } else if (currentKg > 450) {
-        glowMesh.material.opacity = 0.15 + Math.sin(Date.now() * 0.002) * 0.08;
-      } else {
-        glowMesh.material.opacity = 0.15;
-      }
+      const activeLevel = GLOBE_HEALTH_LEVELS.find(l => currentKg <= l.max) || GLOBE_HEALTH_LEVELS.at(-1);
+      glowMesh.material.color.setHex(activeLevel.color);
+      
+      // Kirlilik arttıkça sera gazı katmanı kalınlaşır (scale) ve yoğunlaşır (opacity)
+      const scaleFactor = 1.01 + 0.04 * Math.min(1, currentKg / 1000);
+      glowMesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
+      
+      const baseOpacity = 0.12 + 0.18 * Math.min(1, currentKg / 1000);
+      glowMesh.material.opacity = baseOpacity + Math.sin(Date.now() * 0.003) * 0.05;
     }
+
+    if (cloudsMesh) {
+      // Kirlilik arttıkça bulutlar grileşir ve kararır
+      const cloudTone = Math.max(0.35, 1.0 - (currentKg / 1200) * 0.65);
+      cloudsMesh.material.color.setRGB(cloudTone, cloudTone, cloudTone);
+    }
+
 
     renderer.render(scene, camera);
   };

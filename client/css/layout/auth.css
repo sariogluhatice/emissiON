@@ -323,3 +323,20 @@
     flex-direction: column;
   }
 }
+
+/* ── Kimlik Doğrulama Butonları Tutarlılık Düzenlemesi ── */
+.auth-left form .btn-primary,
+.auth-left form .btn-secondary {
+  width: 100% !important;
+  padding: 14px 28px !important;
+  border-radius: 12px !important;
+  font-size: 15px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-bottom: 12px !important;
+}
+
+.auth-left form .btn-secondary {
+  margin-bottom: 16px !important;
+}

@@ -16,6 +16,70 @@ if (welcomeEl) welcomeEl.textContent = user?.name ? user.name.split(' ')[0] : 'M
 
 const recordList = document.getElementById('recordList');
 
+let inflationFactor = 1.0;
+let liveFuelMultiplier = null;
+let recordsGlobal = [];
+
+// Güncel Enflasyon ve Canlı Akaryakıt Fiyatlarını Çek
+(async () => {
+  // 1. Canlı Döviz Kuru Sorgula (Enflasyon Çarpanı İçerir)
+  try {
+    const res = await fetch('https://open.er-api.com/v6/latest/USD');
+    if (res.ok) {
+      const data = await res.json();
+      const tryRate = data.rates?.TRY || 32.5;
+      inflationFactor = tryRate / 32.5;
+      console.log(`[inflation] Live USD/TRY rate: ${tryRate}, multiplier factor: ${inflationFactor.toFixed(3)}`);
+    }
+  } catch (err) {
+    console.warn('[inflation] Could not fetch live rate, falling back to baseline prices:', err);
+  }
+
+  // 2. İstanbul Güncel Akaryakıt (Benzin/Motorin) Fiyatını Canlı Çek (ÜCRETSİZ API)
+  try {
+    const res = await fetch('https://hasanadiguzel.com.tr/api/akaryakit/sehir=istanbul');
+    if (res.ok) {
+      const data = await res.json();
+      const districts = Object.keys(data.data || {});
+      if (districts.length > 0) {
+        const firstDistrict = data.data[districts[0]];
+        let priceStr = '';
+        for (const key in firstDistrict) {
+          if (key.includes('Kursunsuz') || key.includes('95')) {
+            priceStr = firstDistrict[key];
+            break;
+          }
+        }
+        if (!priceStr) {
+          for (const key in firstDistrict) {
+            if (key.includes('Motorin')) {
+              priceStr = firstDistrict[key];
+              break;
+            }
+          }
+        }
+        const fuelPrice = parseFloat(priceStr.replace(',', '.'));
+        if (fuelPrice && fuelPrice > 20) {
+          // 1 kg CO2 üretmek için gereken harcanan ortalama yakıt maliyet payı (1 kg CO2 ~ 0.43 L)
+          liveFuelMultiplier = fuelPrice * 0.43;
+          console.log(`[fuel-api] Live fuel price: ${fuelPrice} TL. Calculated transport multiplier: ${liveFuelMultiplier.toFixed(2)}`);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[fuel-api] Could not fetch live fuel prices, falling back to baseline multipliers:', err);
+  }
+
+  // 3. Çarpanlar yüklendikten sonra eğer veriler de hazırsa maliyetleri canlı güncelle
+  if (recordsGlobal.length > 0) {
+     const carbonCost = calculateCarbonCost(recordsGlobal, user.role);
+     const statSavings = document.getElementById('statSavings');
+     if (statSavings) {
+       statSavings.textContent = Math.round(carbonCost).toLocaleString('tr-TR');
+     }
+  }
+})();
+
 // CRUD Kartı Oluşturma
 function createCard(record) {
   const card = document.createElement('div');
@@ -95,6 +159,12 @@ async function initDashboard() {
       renderBadges(records);
     }
 
+    // 7. Hane İçi Görevleri Göster (Yalnızca Household)
+    if (user.role === 'household') {
+      const hhCard = document.getElementById('householdTasksCard');
+      if (hhCard) hhCard.style.display = 'block';
+    }
+
   } catch (err) {
     console.error('Panel verileri yüklenemedi:', err);
   }
@@ -103,24 +173,30 @@ async function initDashboard() {
 // ── Karbon Maliyeti Hesaplama (Gerçekçi Yaklaşım) ─────────────────────────────
 function calculateCarbonCost(records, role) {
   // Karbon emisyonu üretmek için harcanan enerjinin (yakıt, elektrik vb.) finansal maliyeti.
-  // Katsayılar: 1 kg CO2 üretmek için gereken birim enerji maliyeti (2024 TR Tahmini)
+  // Katsayılar: 1 kg CO2 üretmek için gereken birim harcama maliyeti (2024-2026 TR Güncel Ortalama)
   let totalCost = 0;
   
   const multipliers = {
-    'electricity': 7.2,   // 1 kg CO2 ~ 2.3 kWh electricity (mesken/ticarethane ort.)
-    'natural_gas': 5.8,   // 1 kg CO2 ~ 0.5 m3 doğalgaz
-    'water':       2.5,   // Pompalama ve arıtma maliyeti
-    'petrol':      17.5,  // 1 kg CO2 ~ 0.43 L Benzin (40 TL/L)
-    'diesel':      16.8,  // 1 kg CO2 ~ 0.40 L Motorin (42 TL/L)
-    'flight':      4.5,   // Havayolu birim yakıt maliyeti (yolcu başı ort.)
-    'shopping':    3.5    // Üretim ve lojistik maliyet payı
+    'energy':      7.2,   // ⚡ Elektrik/Enerji (kWh tarifesi mesken/ticarethane ort.)
+    'electricity': 7.2,   // Geriye dönük uyumluluk
+    'gas':         5.8,   // 🔥 Doğalgaz (m³ ortalama fatura maliyeti)
+    'natural_gas': 5.8,   // Geriye dönük uyumluluk
+    'water':       12.5,  // 💧 Su (m³ arıtma, dağıtım ve belediye tarifesi)
+    'transport':   liveFuelMultiplier || 17.5,  // 🚗 Ulaşım (Canlı çekilen akaryakıt / toplu taşıma bilet maliyetleri)
+    'petrol':      liveFuelMultiplier || 17.5,  // Geriye dönük uyumluluk
+    'diesel':      liveFuelMultiplier || 16.8,  // Geriye dönük uyumluluk
+    'flight':      12.0,  // Geriye dönük uyumluluk
+    'materials':   8.5,   // 📦 Malzeme / Hammadde (Plastik/kağıt/metal ortalama hammadde maliyeti)
+    'waste':       4.0,   // 🗑️ Atık bertaraf ve belediye geri dönüşüm vergi payı
+    'food':        15.0,  // 🍽️ Gıda tüketimi (Gıda üretimi ve karbon maliyet payı)
+    'shopping':    12.0   // 🛍️ Alışveriş (Tedarik zinciri, lojistik ve mağaza perakende payı)
   };
 
   records.forEach(r => {
     const amount = parseFloat(r.amount) || 0;
     const cat    = (r.source || '').toLowerCase();
     
-    let m = 3.0; // default (other)
+    let m = 5.0; // Varsayılan genel katsayı (other)
     for (const key in multipliers) {
       if (cat.includes(key)) {
         m = multipliers[key];
@@ -128,9 +204,13 @@ function calculateCarbonCost(records, role) {
       }
     }
     
-    // Girdiğimiz miktar (amount) kg CO2 olduğu için direkt katsayıyla çarpıyoruz.
-    // Bu bize o kg CO2'yi oluşturmak için harcanan tahmini parayı verir.
-    totalCost += amount * m; 
+    // Eğer bu bir akaryakıt/ulaşım kaydıysa ve canlı akaryakıt fiyatı başarılı çekildiyse, 
+    // canlı fiyat zaten nihai fiyattır, tekrar enflasyon çarpanıyla çarpmıyoruz (çift enflasyon olmaması için).
+    // Diğer tüm kategoriler (elektrik, gaz, su, gıda, alışveriş, malzeme, atık) ise canlı enflasyon çarpanı ile ölçeklenir.
+    const isLiveFuel = (cat.includes('transport') || cat.includes('petrol') || cat.includes('diesel')) && liveFuelMultiplier;
+    const finalMultiplier = isLiveFuel ? m : m * (inflationFactor || 1.0);
+    
+    totalCost += amount * finalMultiplier; 
   });
 
   if (role === 'company') totalCost *= 1.2; // Kurumsal genel gider payı
@@ -343,9 +423,42 @@ function generateCorporateReport(records, user) {
     styles: { font: "helvetica", fontSize: 9 }
   });
 
+  let lastY = doc.lastAutoTable.finalY;
+
+  // ── AB Sınırda Karbon Düzenleme Mekanizması (CBAM) Vergi Projeksiyonu (Yalnızca Şirketler) ──
+  if (user.role === 'company') {
+    doc.setFontSize(11);
+    doc.setTextColor(16, 185, 129);
+    doc.setFont("helvetica", "bold");
+    doc.text('AB Sinirda Karbon Duzenleme Mekanizmasi (CBAM) Vergi Projeksiyonu', 14, lastY + 12);
+    
+    const co2Tons = stats.total / 1000;
+    const cbamRateEur = 85; // 85 EUR per ton of CO2
+    const cbamTaxEur = co2Tons * cbamRateEur;
+    const cbamTaxTry = cbamTaxEur * 35.5; // realistic EUR to TRY rate
+
+    doc.autoTable({
+      startY: lastY + 16,
+      head: [['CBAM Metrisi', 'Hesaplama Orani', 'Ongorulen Tutar']],
+      body: [
+        ['Toplam Karbon Tonu', 'Toplam kg CO2e / 1.000', `${co2Tons.toFixed(3)} Ton`],
+        ['AB ETS Karbon Referans Bedeli', 'AB Komisyonu Sabit Birim Bedel', '85.00 EUR / Ton'],
+        ['Ongorulan Yillik Karbon Vergisi (EUR)', 'Toplam Ton x 85.00 EUR', `${cbamTaxEur.toFixed(2).toLocaleString('tr-TR')} EUR`],
+        ['Tahmini SKDM Yukumlulugu (TL)', 'EUR Tutar x 35.50 TRY/EUR', `${Math.round(cbamTaxTry).toLocaleString('tr-TR')} TL`]
+      ],
+      theme: 'striped',
+      headStyles: { fillColor: [59, 130, 246] }, // Blue for compliance
+      styles: { font: "helvetica", fontSize: 8 }
+    });
+    
+    lastY = doc.lastAutoTable.finalY;
+  }
+
   // Detailed Records List
-  doc.setFontSize(12);
-  doc.text('Detayli Faaliyet Dokumu', 14, doc.lastAutoTable.finalY + 15);
+  doc.setFontSize(11);
+  doc.setTextColor(0);
+  doc.setFont("helvetica", "bold");
+  doc.text('Detayli Faaliyet Dokumu', 14, lastY + 15);
 
   const tableData = records.sort((a,b) => new Date(b.date) - new Date(a.date)).map(r => [
     new Date(r.date).toLocaleDateString('tr-TR'),
@@ -355,7 +468,7 @@ function generateCorporateReport(records, user) {
   ]);
 
   doc.autoTable({
-    startY: doc.lastAutoTable.finalY + 20,
+    startY: lastY + 20,
     head: [['Tarih', 'Kategori', 'Aciklama', 'Miktar']],
     body: tableData,
     theme: 'grid',

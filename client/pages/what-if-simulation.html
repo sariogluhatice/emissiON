@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>What-If Simülasyonu | emissiON</title>
+    <title>Gelecek Ay Planlayıcısı | emissiON</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -14,50 +14,201 @@
     <link rel="stylesheet" href="../css/components/globe.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
+      :root {
+        --slider-track: rgba(255, 255, 255, 0.1);
+        --slider-thumb: var(--color-primary);
+      }
+
       .sim-layout {
         display: grid;
-        grid-template-columns: 440px 1fr;
-        gap: 40px;
+        grid-template-columns: 480px 1fr;
+        gap: 32px;
         align-items: start;
-        margin-top: 20px;
+        margin-top: 10px;
       }
-      .globe-comparison-section {
+
+      /* Planlayıcı Kartı */
+      .planner-card {
+        padding: 0 !important;
+        overflow: hidden;
+      }
+
+      .planner-header {
+        padding: 24px;
+        background: linear-gradient(to right, rgba(16, 185, 129, 0.1), transparent);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .planner-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 20px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .planner-body {
+        padding: 24px;
         display: flex;
         flex-direction: column;
+        gap: 24px;
+      }
+
+      /* Kategori Sürgü Kartları */
+      .cat-slider-item {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .cat-label-row {
+        display: flex;
+        justify-content: space-between;
         align-items: center;
-        justify-content: center;
-        gap: 0;
-        min-height: 650px;
-        position: relative;
       }
-      .floating-globe-container {
-        text-align: center;
-        position: relative;
-        z-index: 2;
-        transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      }
-      .floating-globe-container:hover {
-        transform: scale(1.05);
-      }
-      .sim-arrow {
-        font-size: 32px;
-        opacity: 0.15;
-        margin: 10px 0;
-        z-index: 1;
+
+      .cat-name {
+        font-size: 14px;
+        font-weight: 600;
         color: var(--color-text);
+        display: flex;
+        align-items: center;
+        gap: 8px;
       }
-      .globe-tag {
+
+      .custom-range {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 6px;
+        background: var(--slider-track);
+        border-radius: 10px;
+        outline: none;
+      }
+
+      .custom-range::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        background: var(--color-primary);
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+        transition: transform 0.2s;
+      }
+
+      .custom-range::-webkit-slider-thumb:hover {
+        transform: scale(1.2);
+      }
+
+
+
+
+      /* Sonuç Paneli */
+      .summary-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 8px;
+      }
+
+      .summary-stat {
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .summary-stat-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-text-muted);
+        margin-bottom: 4px;
+        display: block;
+      }
+
+      .summary-stat-value {
+        font-size: 22px;
+        font-weight: 800;
+        font-family: 'Outfit', sans-serif;
+      }
+
+      .summary-stat-unit {
+        font-size: 12px;
+        color: var(--color-text-muted);
+        margin-left: 4px;
+      }
+
+      /* Globe Visualization */
+      .visualization-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        height: 100%;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+      }
+
+      .globe-pair {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        position: relative;
+      }
+
+      .globe-box {
+        text-align: center;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .globe-box.current {
+        opacity: 0.6;
+        transform: scale(0.8);
+      }
+
+      .globe-box.future {
+        z-index: 10;
+      }
+
+      .impact-badge {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        border-radius: 16px;
+        backdrop-filter: blur(10px);
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+      }
+
+      .impact-title {
         font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.12em;
-        margin-bottom: 12px;
-        display: block;
+        color: var(--color-primary);
+        letter-spacing: 0.1em;
+      }
+
+      .impact-value {
+        font-size: 28px;
+        font-weight: 800;
+        font-family: 'Outfit', sans-serif;
+        color: white;
+      }
+
+      @media (max-width: 1024px) {
+        .sim-layout { grid-template-columns: 1fr; }
       }
     </style>
   </head>
   <body>
-    <div id="app" class="app-layout">
+    <div class="app-shell">
       <!-- Sidebar Sidebar JS ile dolacak -->
       <aside id="sidebar" class="sidebar"></aside>
 
@@ -67,292 +218,81 @@
 
         <main class="page-body">
           <div class="sim-layout">
-            <!-- SOL: Giriş ve Sonuçlar -->
-            <div style="display: flex; flex-direction: column; gap: 24px">
-              <div class="content-card glass-card" style="margin: 0">
-                <div class="content-card-header">
-                  <span class="content-card-title"
-                    >📉 Simülasyon Parametreleri</span
-                  >
-                </div>
-                <div style="padding: 24px">
-                  <div class="sim-field" style="margin-bottom: 20px">
-                    <label
-                      style="
-                        display: block;
-                        font-size: 13px;
-                        font-weight: 600;
-                        margin-bottom: 8px;
-                        color: var(--color-text-muted);
-                      "
-                      >Kategori</label
-                    >
-                    <select
-                      id="simCategory"
-                      class="input"
-                      style="
-                        width: 100%;
-                        padding: 12px;
-                        background: rgba(255, 255, 255, 0.05);
-                        border: 1px solid rgba(255, 255, 255, 0.1);
-                        border-radius: 8px;
-                        color: white;
-                      "
-                    >
-                      <option value="all">Tüm Kategoriler</option>
-                      <option value="electricity">Elektrik</option>
-                      <option value="natural_gas">Doğalgaz</option>
-                      <option value="transport">Ulaşım (Kara)</option>
-                      <option value="flight">Uçuş</option>
-                      <option value="water">Su</option>
-                      <option value="food">Gıda</option>
-                      <option value="shopping">Alışveriş</option>
-                      <option value="waste">Atık & Malzeme</option>
-                    </select>
+            <!-- SOL: Giriş ve Parametreler -->
+            <div class="planner-column">
+              <div class="content-card glass-card planner-card">
+                <div class="planner-header">
+                  <div class="planner-title">
+                    <span>Gelecek Ay Planlayıcısı</span>
                   </div>
-
-                  <div class="sim-field" style="margin-bottom: 20px">
-                    <label
-                      style="
-                        display: block;
-                        font-size: 13px;
-                        font-weight: 600;
-                        margin-bottom: 8px;
-                        color: var(--color-text-muted);
-                      "
-                      >Azaltma Oranı (%)</label
-                    >
-                    <input
-                      id="simReduction"
-                      class="input"
-                      type="number"
-                      min="1"
-                      max="100"
-                      placeholder="Örn: 20"
-                      style="
-                        width: 100%;
-                        padding: 12px;
-                        background: rgba(255, 255, 255, 0.05);
-                        border: 1px solid rgba(255, 255, 255, 0.1);
-                        border-radius: 8px;
-                        color: white;
-                      "
-                    />
-                  </div>
-
-                  <div class="sim-field" style="margin-bottom: 24px">
-                    <label
-                      style="
-                        display: block;
-                        font-size: 13px;
-                        font-weight: 600;
-                        margin-bottom: 8px;
-                        color: var(--color-text-muted);
-                      "
-                      >Dönem</label
-                    >
-                    <select
-                      id="simPeriod"
-                      class="input"
-                      style="
-                        width: 100%;
-                        padding: 12px;
-                        background: rgba(255, 255, 255, 0.05);
-                        border: 1px solid rgba(255, 255, 255, 0.1);
-                        border-radius: 8px;
-                        color: white;
-                      "
-                    >
-                      <option value="monthly">Bu Ay</option>
-                      <option value="yearly">Bu Yıl</option>
-                      <option value="all_time">Tüm Zamanlar</option>
-                    </select>
-                  </div>
-
-                  <p
-                    id="simError"
-                    style="
-                      color: var(--color-error, #ef4444);
-                      font-size: 13px;
-                      margin: 0 0 12px;
-                      display: none;
-                    "
-                  ></p>
-
-                  <button
-                    id="simBtn"
-                    class="btn-primary"
-                    style="
-                      width: 100%;
-                      padding: 16px;
-                      font-weight: 700;
-                      text-transform: uppercase;
-                      letter-spacing: 0.05em;
-                    "
-                  >
-                    Simülasyonu Hesapla
-                  </button>
-                </div>
-              </div>
-
-              <!-- Sonuç Kartı -->
-              <div
-                id="simResultCard"
-                class="content-card glass-card"
-                style="
-                  display: none;
-                  margin: 0;
-                  border-left: 4px solid var(--color-primary);
-                "
-              >
-                <div class="content-card-header">
-                  <span class="content-card-title">📊 Simülasyon Sonucu</span>
-                  <span
-                    id="simBadge"
-                    style="
-                      font-size: 12px;
-                      padding: 3px 10px;
-                      border-radius: 20px;
-                      border: 1px solid;
-                      font-weight: 700;
-                      margin-left: auto;
-                    "
-                  ></span>
-                </div>
-                <div style="padding: 16px 24px 24px" id="simResultBody"></div>
-              </div>
-
-              <!-- Veri Yok Kartı -->
-              <div
-                id="simNoDataCard"
-                class="content-card glass-card"
-                style="
-                  display: none;
-                  text-align: center;
-                  padding: 40px 24px;
-                  margin: 0;
-                  border-left: 4px solid var(--color-error);
-                "
-              >
-                <p style="font-size: 32px; margin-bottom: 12px">🌱</p>
-                <p
-                  id="simNoDataMsg"
-                  style="font-size: 14px; color: var(--color-text-muted)"
-                ></p>
-              </div>
-
-              <!-- Bilgi kartı -->
-              <div
-                class="content-card glass-card"
-                style="margin: 0; border-left: 3px solid var(--color-primary)"
-              >
-                <div style="padding: 20px 24px">
-                  <h3
-                    style="
-                      margin: 0 0 8px;
-                      font-size: 15px;
-                      color: var(--color-brand-text);
-                    "
-                  >
-                    💡 Nasıl Çalışır?
-                  </h3>
-                  <p
-                    style="
-                      font-size: 13px;
-                      color: var(--color-text-muted);
-                      margin: 0;
-                      line-height: 1.7;
-                    "
-                  >
-                    Simülasyon, mevcut emisyon kayıtlarınızı temel alır.
-                    Belirlediğiniz oranda azaltım yapılırsa karbon ayak izinizin
-                    nasıl değişeceğini görselleştirir.
+                  <p style="font-size: 13px; color: var(--color-text-muted); margin: 8px 0 0">
+                    Önümüzdeki ay için yaşam tarzındaki değişimleri simüle et.
                   </p>
                 </div>
+
+                <div class="planner-body" id="actionsContainer" style="max-height: 520px; overflow-y: auto;">
+                  <!-- Action cards will be injected here by JS -->
+                  <div class="loader-placeholder" style="padding: 40px; text-align: center; color: var(--color-text-muted)">
+                    Aksiyonlar yükleniyor...
+                  </div>
+                </div>
+
+                <div style="padding: 24px; border-top: 1px solid rgba(255, 255, 255, 0.05); background: rgba(0,0,0,0.1)">
+                   <div class="summary-section">
+                      <div class="summary-stat">
+                        <span class="summary-stat-label">Mevcut Ortalama</span>
+                        <div class="summary-stat-value" id="currentTotalVal">0.0</div>
+                        <span class="summary-stat-unit">kg CO₂e</span>
+                      </div>
+                      <div class="summary-stat" style="border-color: var(--color-primary)">
+                        <span class="summary-stat-label">Projeksiyon</span>
+                        <div class="summary-stat-value" id="projectedTotalVal" style="color: var(--color-primary)">0.0</div>
+                        <span class="summary-stat-unit">kg CO₂e</span>
+                      </div>
+                   </div>
+                   
+                   <button id="resetBtn" class="btn-secondary" style="width: 100%; margin-top: 16px; padding: 12px; font-weight: 600">
+                     Sıfırla
+                   </button>
+                </div>
+              </div>
+              
+              <div id="targetGoalCard" class="content-card glass-card" style="margin-top: 24px; padding: 20px; border-left: 4px solid var(--color-primary)">
+                 <h4 id="targetGoalTitle" style="margin: 0 0 10px; font-size: 15px">Hedef Belirleme</h4>
+                 <p id="targetGoalText" style="font-size: 13px; color: var(--color-text-muted); line-height: 1.6; margin: 0">
+                   Türkiye ortalaması aylık <strong>450 kg CO₂e</strong>'dir. 
+                   Yeşil bir dünya için hedefiniz bu değerin altında kalmak olmalı. 
+                   Özellikle ulaşım ve enerji alanındaki küçük değişimler büyük farklar yaratır.
+                 </p>
               </div>
             </div>
 
             <!-- SAĞ: Görsel Karşılaştırma -->
-            <div class="globe-comparison-section">
-              <div
-                style="
-                  position: absolute;
-                  width: 600px;
-                  height: 600px;
-                  background: radial-gradient(
-                    circle,
-                    rgba(16, 185, 129, 0.04) 0%,
-                    transparent 70%
-                  );
-                  pointer-events: none;
-                "
-              ></div>
+            <div class="visualization-container">
+              <div class="impact-badge" id="impactBadge" style="display: none">
+                <span class="impact-title">Aylık Tasarruf</span>
+                <span class="impact-value" id="savingsVal">0.0 kg</span>
+              </div>
 
-              <!-- Mevcut Durum -->
-              <div
-                class="floating-globe-container"
-                style="margin-bottom: -30px"
-              >
-                <span
-                  class="globe-tag"
-                  style="color: var(--color-text-muted); opacity: 0.7"
-                  >📍 Şu Anki Durum</span
-                >
-                <div
-                  id="globeCurrentContainer"
-                  style="
-                    width: 240px;
-                    height: 240px;
-                    filter: drop-shadow(0 0 30px rgba(0, 0, 0, 0.4));
-                  "
-                ></div>
-                <div style="margin-top: 10px">
-                  <span
-                    id="globeCurrentLabel"
-                    style="
-                      font-size: 13px;
-                      font-weight: 600;
-                      color: var(--color-text-muted);
-                    "
-                    >Veri Yükleniyor...</span
-                  >
+              <div class="globe-pair">
+                <!-- Mevcut Durum (Küçük/Sol) -->
+                <div class="globe-box current" id="globeCurrentBox">
+                  <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--color-text-muted); display: block; margin-bottom: 8px">Şu Anki Gidişat</span>
+                  <div id="globeCurrentContainer" style="width: 220px; height: 220px"></div>
+                </div>
+
+                <div style="font-size: 24px; opacity: 0.3; margin: 0 -20px; z-index: 5">➜</div>
+
+                <!-- Simülasyon (Büyük/Merkez) -->
+                <div class="globe-box future" id="globeFutureBox">
+                  <span style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--color-primary); display: block; margin-bottom: 8px">Planlanan Gelecek</span>
+                  <div id="globeSimContainer" style="width: 440px; height: 440px"></div>
+                  <div id="globeSimLabel" style="font-weight: 700; font-size: 16px; margin-top: 10px">Yükleniyor...</div>
                 </div>
               </div>
 
-              <!-- Simülasyon Sonrası -->
-              <div class="floating-globe-container">
-                <span class="globe-tag" style="color: var(--color-primary)"
-                  >✨ Simülasyon Sonrası</span
-                >
-                <div
-                  id="globeSimContainer"
-                  style="
-                    width: 320px;
-                    height: 320px;
-                    filter: drop-shadow(0 0 50px rgba(16, 185, 129, 0.2));
-                  "
-                ></div>
-                <div style="margin-top: 12px">
-                  <span
-                    id="globeSimLabel"
-                    style="
-                      font-size: 16px;
-                      font-weight: 700;
-                      color: var(--color-primary);
-                    "
-                    >Bekleniyor...</span
-                  >
-                  <div
-                    id="globeSimText"
-                    style="
-                      font-size: 12px;
-                      color: var(--color-text-muted);
-                      margin-top: 4px;
-                    "
-                  >
-                    Parametreleri girin
-                  </div>
-                </div>
+              <div id="comparisonText" style="margin-top: 20px; text-align: center; max-width: 500px; font-size: 14px; color: var(--color-text-muted)">
+                Parametreleri değiştirerek gelecekteki etkinizi görün.
               </div>
             </div>
           </div>
