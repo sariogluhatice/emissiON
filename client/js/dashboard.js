@@ -86,7 +86,7 @@ async function initDashboard() {
       const reportBtn = document.getElementById('downloadReportBtn');
       if (reportBtn) {
         reportBtn.style.display = 'flex';
-        reportBtn.onclick = () => generatePDFReport(records, stats);
+        reportBtn.onclick = () => generateCorporateReport(records, stats);
       }
     }
 

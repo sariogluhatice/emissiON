@@ -15,7 +15,7 @@ const CATEGORY_LABELS = {
   materials: '📦 Malzeme',
   waste:     '🗑️ Atık',
   food:      '🍽️ Gıda',
-  shopping:  '🛍️ Alışveriş',
+  other:     '🔘 Diğer / Alışveriş',
 };
 
 const ACTIVITY_TYPE_LABELS = {

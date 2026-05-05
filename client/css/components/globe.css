@@ -52,7 +52,43 @@
 /* Three.js Canvas Fix */
 #globeCanvasContainer canvas {
   outline: none;
-  border-radius: 50%; /* Görsel olarak yuvarlaklık hissini pekiştirir */
+  border-radius: 50%;
+}
+
+/* ── Kritik Durum Halkası ── */
+#globeCanvasContainer {
+  border-radius: 50%;
+  transition: box-shadow 0.6s ease;
+}
+
+#globeCanvasContainer.is-critical {
+  box-shadow:
+    0 0 0 2px rgba(239, 68, 68, 0.85),
+    0 0 28px rgba(239, 68, 68, 0.40),
+    0 0 56px rgba(239, 68, 68, 0.20);
+}
+
+#globeCanvasContainer.is-critical::before {
+  content: '';
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 80, 80, 0.35);
+  box-shadow: 0 0 22px rgba(255, 80, 80, 0.28);
+  animation: criticalPulse 2.4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes criticalPulse {
+  0%, 100% { transform: scale(1);     opacity: 0.70; }
+  50%       { transform: scale(1.05); opacity: 1;    }
+}
+
+@media (max-width: 768px) {
+  #globeCanvasContainer.is-critical::before {
+    inset: -10px;
+  }
 }
 
 .globe-tooltip-row {

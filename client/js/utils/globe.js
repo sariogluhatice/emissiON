@@ -71,6 +71,13 @@ export function updateGlobe(totalKg, {
     renderers.get(containerId).currentKg = totalKg;
   }
 
+  // Kritik durum halkası — son seviye (>1200 kg) kritik kabul edilir
+  const isCritical = level === GLOBE_HEALTH_LEVELS.at(-1);
+  container.classList.toggle('is-critical', isCritical);
+  container.style.filter = isCritical
+    ? 'drop-shadow(0 0 50px rgba(239,68,68,0.45))'
+    : 'drop-shadow(0 0 50px rgba(16,185,129,0.2))';
+
   if (label) label.textContent = `${level.emoji} ${level.label}`;
   if (text) {
     text.textContent = totalKg > 0
