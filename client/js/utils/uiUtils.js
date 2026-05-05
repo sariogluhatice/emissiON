@@ -46,30 +46,42 @@ export function formatDate(iso) {
 
 /** Get emoji for specific categories */
 export function categoryEmoji(cat) {
-  const map = { 
-    Transport: '🚗', 
-    Energy: '⚡', 
-    Flight: '✈️',
-    Shopping: '🛍', 
-    Other: '📦',
-    Food: '🍽',
-    Waste: '🗑',
-    Water: '💧',
-    Paper: '📄',
-    Transportation: '🚗'
+  const map = {
+    energy:    '⚡',
+    water:     '💧',
+    gas:       '🔥',
+    transport: '🚗',
+    materials: '📦',
+    waste:     '🗑️',
+    food:      '🍽️',
+    shopping:  '🛍️',
+    // legacy keys
+    Transport: '🚗',
+    Energy:    '⚡',
+    Flight:    '✈️',
+    Shopping:  '🛍️',
+    Other:     '🛍️',
+    Food:      '🍽️',
+    Waste:     '🗑️',
+    Water:     '💧',
+    Paper:     '📦',
+    Transportation: '🚗',
   };
-  
-  // Try exact match or check if category string contains keywords
-  const lowerCat = String(cat).toLowerCase();
-  if (lowerCat.includes('flight')) return map.Flight;
-  if (lowerCat.includes('gas') || lowerCat.includes('electric')) return map.Energy;
-  if (lowerCat.includes('shop') || lowerCat.includes('retail')) return map.Shopping;
-  if (lowerCat.includes('car') || lowerCat.includes('diesel')) return map.Transport;
-  if (lowerCat.includes('waste')) return map.Waste;
-  if (lowerCat.includes('water')) return map.Water;
-  if (lowerCat.includes('paper')) return map.Paper;
 
-  return map[cat] ?? '📌';
+  if (map[cat]) return map[cat];
+
+  const lower = String(cat).toLowerCase();
+  if (lower.includes('flight') || lower.includes('uçuş')) return '✈️';
+  if (lower.includes('gas') || lower.includes('doğalgaz'))  return '🔥';
+  if (lower.includes('electric') || lower.includes('elektrik')) return '⚡';
+  if (lower.includes('shop') || lower.includes('retail') || lower.includes('alışveriş')) return '🛍️';
+  if (lower.includes('car') || lower.includes('diesel') || lower.includes('araç'))       return '🚗';
+  if (lower.includes('waste') || lower.includes('atık'))    return '🗑️';
+  if (lower.includes('water') || lower.includes('su'))      return '💧';
+  if (lower.includes('paper') || lower.includes('kağıt'))   return '📦';
+  if (lower.includes('food') || lower.includes('gıda'))     return '🍽️';
+
+  return '📌';
 }
 
 /** Calculate summary statistics from record list */

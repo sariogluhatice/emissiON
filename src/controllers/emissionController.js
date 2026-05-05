@@ -400,6 +400,7 @@ const getSmartInsights = async (req, res) => {
              LIMIT 6`,
             [userId]
         );
+        
 
         // 1b. Kategori Dağılımını Çek (Hangi kaynaklardan ne kadar salınım yapılmış?)
         const categoryResult = await pool.query(

@@ -95,8 +95,8 @@ const ACTIVITY_MAP = {
   food: [
     { id: 'general_retail-type_nonstore_retailers', label: 'Gıda Harcaması', unit: 'usd' },
   ],
-  other: [
-    { id: 'general_retail-type_nonstore_retailers', label: 'Genel Perakende / Alışveriş', unit: 'usd' },
+  shopping: [
+    { id: 'shopping_general', label: 'Genel Alışveriş', unit: 'usd' },
   ],
 };
 
@@ -342,10 +342,10 @@ if (isEdit) {
                 
                 // Try to guess category from source
                 const source = record.source.toLowerCase();
-                let category = 'other';
+                let category = 'shopping';
 
                 if (source.includes('electricity') || source.includes('elektrik')) category = 'energy';
-                else if (source.includes('water') || source.includes('su')) category = 'water';
+                else if (source.includes('water') || source.includes('su kullanımı')) category = 'water';
                 else if (source.includes('gas') || source.includes('doğalgaz')) category = 'gas';
                 else if (source.includes('car') || source.includes('araç') || source.includes('bus') || source.includes('otobüs')) category = 'transport';
                 else if (source.includes('flight') || source.includes('uçuş')) category = 'transport';
@@ -391,7 +391,7 @@ form.addEventListener('submit', async (e) => {
     } else {
       const catList = ACTIVITY_MAP[categoryEl.value];
       const item = catList?.find(i => i.id === activityEl.value);
-      source = item?.label || categoryEl.value || 'Diğer Aktivite';
+      source = item?.label || categoryEl.value || 'Genel Alışveriş';
     }
 
     const payload = {

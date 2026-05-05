@@ -4,7 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>emissiON – Karbon Ayak İzi Simülasyonu</title>
-    <style>html,body{background:#07090b;color:#ffffff}</style>
+    <style>
+      html,
+      body {
+        background: #07090b;
+        color: #ffffff;
+      }
+    </style>
     <link rel="stylesheet" href="css/main.css" />
     <style>
       body,
@@ -68,7 +74,19 @@
         opacity: 0.7;
         transition: all 0.3s;
         text-transform: uppercase;
-        <div class="landing-nav-links"></div>
+      }
+
+      .landing-nav-links a.nav-link:hover {
+        opacity: 1;
+      }
+
+      .landing-hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 120px 10% 80px 10%;
+        gap: 60px;
+        flex: 1;
       }
 
       .hero-text {
@@ -349,6 +367,6 @@
       document
         .getElementById("themeToggle")
         ?.addEventListener("click", () => ThemeManager.toggle());
-    
+    </script>
   </body>
 </html>

@@ -47,32 +47,36 @@
                 <select
                   class="input"
                   id="categoryFilter"
-                  style="width: auto; min-width: 160px"
+                  style="width: auto; min-width: 180px"
                 >
                   <option value="">Tüm Kategoriler</option>
-                  <option value="Transport">Ulaşım</option>
-                  <option value="Energy">Enerji</option>
-                  <option value="Food">Gıda</option>
-                  <option value="Shopping">Alışveriş</option>
-                  <option value="Other">Diğer</option>
+                  <option value="energy">⚡ Enerji (Elektrik)</option>
+                  <option value="water">💧 Su</option>
+                  <option value="gas">🔥 Doğalgaz</option>
+                  <option value="transport">🚗 Ulaşım</option>
+                  <option value="materials">📦 Malzeme</option>
+                  <option value="waste">🗑️ Atık</option>
+                  <option value="food">🍽️ Gıda</option>
+                  <option value="shopping">🛍️ Alışveriş</option>
                 </select>
               </div>
             </div>
 
-            <div class="table-wrapper">
-              <table class="data-table">
+            <div class="table-wrapper" style="overflow-x: auto">
+              <table class="data-table" style="min-width: 760px">
                 <thead>
                   <tr>
-                    <th>Tarih</th>
-                    <th>Kategori</th>
-                    <th>Açıklama</th>
-                    <th>Miktar (kg CO₂e)</th>
-                    <th>İşlemler</th>
+                    <th style="width: 110px">Tarih</th>
+                    <th style="width: 120px">Kategori</th>
+                    <th style="width: 140px">Faaliyet Türü</th>
+                    <th style="width: 180px">Açıklama</th>
+                    <th style="width: 100px">Miktar (kg CO₂e)</th>
+                    <th style="width: 160px">İşlemler</th>
                   </tr>
                 </thead>
                 <tbody id="emissionsTableBody">
                   <tr>
-                    <td colspan="5" class="table-empty">
+                    <td colspan="6" class="table-empty">
                       Kayıtlar yükleniyor…
                     </td>
                   </tr>

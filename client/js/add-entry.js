@@ -40,10 +40,10 @@ const ACTIVITY_MAP = {
         { id: 'food_general',   label: 'Genel Gıda',           units: ['kg'],         inputType: 'quantity' },
         { id: 'meat',           label: 'Et Tüketimi',          units: ['kg'],         inputType: 'quantity' },
     ],
-    other: [
-        { id: 'office_supplies',label: 'Ofis Malzemeleri',     units: ['TRY'],        inputType: 'spend'    },
-        { id: 'electronics',    label: 'Elektronik',           units: ['TRY'],        inputType: 'spend'    },
-        { id: 'shopping_general',label:'Genel Alışveriş',      units: ['TRY'],        inputType: 'spend'    },
+    shopping: [
+        { id: 'shopping_general', label: 'Genel Alışveriş',    units: ['TRY'],        inputType: 'spend'    },
+        { id: 'office_supplies',  label: 'Ofis Malzemeleri',   units: ['TRY'],        inputType: 'spend'    },
+        { id: 'electronics',      label: 'Elektronik',         units: ['TRY'],        inputType: 'spend'    },
     ],
 };
 
@@ -84,7 +84,7 @@ const GROQ_CATEGORY_MAP = {
     electricity: 'energy',
     water:       'water',
     gas:         'gas',
-    shopping:    'other',
+    shopping:    'shopping',
 };
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
@@ -350,7 +350,7 @@ async function scanImageGeneric(file) {
     console.log('[scanImageGeneric] detectedCategory=%s reason=%s',
         detected, localCat !== null ? 'local-regex' : 'groq');
 
-    if (detected && detected !== 'other') {
+    if (detected && detected !== 'shopping') {
         // ── Utility bill path (electricity / water / gas) ──────────────────
         categoryEl.value = detected;
         onCategoryChange();
@@ -391,9 +391,9 @@ async function scanImageGeneric(file) {
     }
 
     // ── Shopping / receipt path ─────────────────────────────────────────────
-    categoryEl.value = 'other';
-    onCategoryChange();                    // populates activityEl, auto-selects first option
-    activityEl.value = 'shopping_general'; // override to Genel Alışveriş
+    categoryEl.value = 'shopping';
+    onCategoryChange();                    // populates activityEl, auto-selects shopping_general (first option)
+    activityEl.value = 'shopping_general';
     onActivityChange();                    // setFormMode('spend') → shows #amountRow
 
     if (groqResult?.totalAmount) {
@@ -440,7 +440,7 @@ async function callGroqParser(ocrText) {
     }
 }
 
-// Returns the ACTIVITY_MAP category key, 'other' for shopping, or null if unclear.
+// Returns the ACTIVITY_MAP category key, 'shopping' for shopping signals, or null if unclear.
 // Priority: shopping > electricity > water > gas > null
 function detectCategoryFromText(text) {
     if (!text || typeof text !== 'string') return null;
@@ -451,7 +451,7 @@ function detectCategoryFromText(text) {
     const isShopping = /satış internet üzerinden|mağaza adı|sipariş no|kargo|kredi kartı|web adresi|mal hizmet|adet/i.test(t);
     if (isShopping) {
         console.log('[detectCategoryFromText] reason=shopping_signals');
-        return 'other';
+        return 'shopping';
     }
 
     // 2. Electricity — genuine consumption signals.
@@ -509,7 +509,7 @@ async function scanShoppingReceipt(file) {
     if (data.originalAmount) totalAmountEl.value = data.originalAmount;
 
     if (!categoryEl.value) {
-        categoryEl.value = 'other';
+        categoryEl.value = 'shopping';
         onCategoryChange();
     }
 
