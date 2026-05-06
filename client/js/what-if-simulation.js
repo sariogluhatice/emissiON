@@ -2,6 +2,7 @@ import { renderLayout } from './layout.js';
 import { showToast }    from './utils/uiUtils.js';
 import { ApiClient }    from './api/apiClient.js';
 import { updateGlobe } from './utils/globe.js';
+import { emissionService } from './api/emissionService.js';
 
 const user = renderLayout({ activeNav: 'nav-whatif', title: 'Gelecek Ay Planlayıcısı' });
 if (!user) throw new Error('redirect');
@@ -355,3 +356,66 @@ resetBtn.addEventListener('click', () => {
   renderSliders();
   updateProjection();
 });
+
+// ── Yapay Zeka Azaltım Yol Haritası ──────────────────────────────────────────
+const getAiRoadmapBtn = document.getElementById('getAiRoadmapBtn');
+const aiPlannerContent = document.getElementById('aiPlannerContent');
+const aiPlannerSteps = document.getElementById('aiPlannerSteps');
+
+if (getAiRoadmapBtn && aiPlannerContent && aiPlannerSteps) {
+  getAiRoadmapBtn.addEventListener('click', async () => {
+    try {
+      getAiRoadmapBtn.disabled = true;
+      getAiRoadmapBtn.innerHTML = '<span>Yol Haritası Hazırlanıyor...</span>';
+      
+      aiPlannerContent.style.display = 'block';
+      aiPlannerSteps.innerHTML = '<li style="list-style: none; margin-left: -20px; text-align: center; color: var(--color-text-muted);">Yapay zekanız verilerinizi analiz ediyor...</li>';
+
+      const roadmap = await emissionService.getSimulationRoadmap(changes);
+      
+      aiPlannerSteps.innerHTML = '';
+      if (roadmap.steps && roadmap.steps.length > 0) {
+        roadmap.steps.forEach(step => {
+          // Eğer adım yapısal olarak kategori ve adımlar dizisi içeriyorsa, şık bir grup halinde render et
+          if (step && typeof step === 'object' && step.kategori && Array.isArray(step.adimlar)) {
+            const catLi = document.createElement('li');
+            catLi.style.listStyle = 'none';
+            catLi.style.marginLeft = '-20px';
+            catLi.style.marginTop = '14px';
+            catLi.style.marginBottom = '6px';
+            catLi.style.fontWeight = '700';
+            catLi.style.color = '#3b82f6';
+            catLi.textContent = step.kategori;
+            aiPlannerSteps.appendChild(catLi);
+
+            step.adimlar.forEach(subStep => {
+              const subLi = document.createElement('li');
+              subLi.textContent = subStep;
+              subLi.style.marginBottom = '6px';
+              subLi.style.marginLeft = '10px';
+              subLi.style.listStyleType = 'circle';
+              aiPlannerSteps.appendChild(subLi);
+            });
+          } else {
+            const li = document.createElement('li');
+            if (step && typeof step === 'object') {
+              li.textContent = step.text || step.step || step.instruction || JSON.stringify(step);
+            } else {
+              li.textContent = step;
+            }
+            li.style.marginBottom = '8px';
+            aiPlannerSteps.appendChild(li);
+          }
+        });
+      } else {
+        aiPlannerSteps.innerHTML = '<li style="list-style: none; margin-left: -20px;">Sürgüleri sola kaydırarak hedefler belirleyin ve tekrar deneyin.</li>';
+      }
+    } catch (err) {
+      console.error('[planner.roadmap]', err);
+      aiPlannerSteps.innerHTML = '<li style="list-style: none; margin-left: -20px; color: var(--color-error);">Yol haritası oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.</li>';
+    } finally {
+      getAiRoadmapBtn.disabled = false;
+      getAiRoadmapBtn.innerHTML = '<span>Yol Haritası Üret</span>';
+    }
+  });
+}

@@ -169,28 +169,33 @@ OCR TEXT: ${ocrText.slice(0, 8000)}`;
             const historyText = history.map(h => `${h.month}: ${h.total_amount}kg`).join(', ');
             const categoriesText = categories.map(c => `${c.category}: ${c.total}kg`).join(', ');
             
-            prompt = `Sen kullanıcının kişisel 'Dijital Karbon İkizi' ve veri analisti uzmanısın.
+            prompt = `Sen kullanıcının kişisel 'Dijital Karbon İkizi' ve veri analisti uzmanısın. Projenin amacı kullanıcıyı profesyonel bir karbon analiz raporuyla aydınlatmaktır. Bu yüzden tahmin ve gidişat analizleri sığ ve kuru tek cümleler yerine, DERİNLEMESİNE, VERİYE DAYALI, DOLU ve SON DERECE PROFESYONEL paragraflar olmalıdır.
         
 VERİLER:
 - Geçmiş Emisyon Kayıtları: ${historyText}
 - Kategorik Dağılım: ${categoriesText}
 - Kullanıcı Profil Bilgileri (Onboarding): ${JSON.stringify(profile)}
 
-ZORUNLU ANALİZ KURALLARI:
-1. GERÇEKÇİLİK: Sadece yukarıdaki emisyon kayıtlarına ve kullanıcının profil bilgilerine dayanarak konuş. Veride olmayan bir aktiviteyi varmış gibi gösterme.
-2. PROFİL UYUMU: Kullanıcının onboarding sorularına verdiği cevapları (konut tipi, araç sahibi olup olmaması, beslenme tarzı vb.) analizine dahil et. Örn: "Dizel araç kullandığınızı belirtmişsiniz, bu ayki ulaşım emisyonunuz..." gibi.
-3. MATEMATİKSEL TREND: Geçmiş aylardaki veriler arasındaki değişimi (artış/azalış yüzdesi) hesapla ve gidişatı buna göre açıkla.
-4. ÖNERİLER: Kullanıcının en çok emisyon ürettiği kategoriye ve profilindeki "öncelikli alan" (priority_area) hedefine odaklanan, uygulanabilir, teknik ve spesifik 3 öneri sun.
-5. ASLA GENEL TAVSİYE VERME: "Ağaç dikin" veya "Geri dönüşüm yapın" gibi klişeler yerine, kullanıcının verisindeki spesifik bir yüksekliği düşürmeye yönelik konuş.
+ZORUNLU ANALİZ VE HESAPLAMA KURALLARI:
+1. GELECEK AY ÖNGÖRÜSÜ (DETAYLI VE DOLU): Kullanıcının geçmiş emisyon hızına ve profilindeki tüketim alışkanlıklarına bakarak gelecek ay için bilimsel bir tahmin modeli sun. Cümleler sığ ve kuru ("tasarruf sağlayabilirsiniz" gibi) KESİNLİKLE olmamalıdır. Tam olarak 2 zengin cümleyle, emisyonların yüzde kaç değişebileceğini, bu değişimi hangi kategorilerin tetikleyeceğini ve bu trendi kırmak için atılması gereken stratejik adımları derinlemesine analiz et.
+2. GİDİŞAT ANALİZİ (DETAYLI VE DOLU): Kullanıcının en yüksek emisyon ürettiği kategoriyi (örn: Sığır/Kırmızı Et veya Elektrik) ve geçmiş aylardaki matematiksel emisyon değişim trendini bilimsel olarak analiz et. Bu salınımın büyüklüğünü açıklamak için somut veriler, profil bilgileriyle kurulan bağlar ve tam olarak 2 zengin, ufuk açıcı cümle kullan.
+3. MATEMATİKSEL REALİTE (TL HESABI): Tasarruflardaki TL hesapları KESİNLİKLE gerçekçi olmalı. Aşağıdaki formülleri temel alarak hesaplama yap:
+   - Benzin / Mazot (Ulaşım) azaltımında: Azaltılan her 1 kg CO2 = ~18.5 TL tasarruftur. (Örn: 4.88 kg CO2 azaltımı = ~90 TL tasarruftur).
+   - Elektrik azaltımında: Azaltılan her 1 kg CO2 = ~5.5 TL tasarruftur. (Örn: 48.80 kg CO2 azaltımı = ~268 TL tasarruftur).
+   - Doğalgaz (Isınma) azaltımında: Azaltılan her 1 kg CO2 = ~5.2 TL tasarruftur.
+   - Atık / Geri Dönüşüm azaltımında: Azaltılan her 1 kg CO2 = ~3.0 TL tasarruftur. (Örn: 168 kg CO2 azaltımı = ~504 TL tasarruftur).
+4. ÖNERİLER: Kullanıcının en çok emisyon ürettiği kategorilere odaklanan, uygulanabilir, orta uzunlukta ve son derece somut tam 5 adet öneri sun.
 
 ZORUNLU JSON FORMATI (SADECE JSON):
 {
-  "prediction": "Gelecek ay için veriye dayalı öngörü (Maks 2 cümle)",
-  "trend_summary": "Verilerdeki gerçek gidişat ve profil uyumu özeti (Maks 2 cümle)",
+  "prediction": "Gelecek ay için veriye dayalı, tam olarak 2 adet zengin, akıcı ve profesyonel cümleden oluşan, yüzdeler ve trendler barındıran derinlemesine bilimsel gelecek ay öngörüsü analizi",
+  "trend_summary": "Geçmiş verilerdeki gidişatın ve en yüksek salınım yapılan alanın (Sığır/Kırmızı Et vb.) analizini sunan, tam olarak 2 adet zengin, akıcı ve profesyonel cümleden oluşan derinlemesine trend analizi",
   "recommendations": [
-    "Profil ve veriye dayalı 1. spesifik öneri",
-    "Profil ve veriye dayalı 2. spesifik öneri",
-    "Profil ve veriye dayalı 3. spesifik öneri"
+    {
+      "kategori": "Ulaşım / Enerji / Atık vb. (Kategori İsmi)",
+      "tasarruf": "Karbon azaltım oranı, hedef kg değerleri ve bunu başarmak için atılacak pratik adımı açıklayan tek akıcı cümle (Burada KESİNLİKLE finansal kazançtan veya TL tutarından bahsetme, onu sadece finansal_fayda kısmına sakla!)",
+      "finansal_fayda": "Yukarıdaki formüllere göre hesaplanmış GERÇEKÇİ tasarruf miktarı (Örn: '90 TL' veya '268 TL finansal kazanç')"
+    }
   ]
 }`;
         } else {
@@ -240,6 +245,70 @@ ZORUNLU JSON FORMATI:
                 prediction: "Veri bekleniyor...",
                 trend_summary: "Hoş geldiniz! Veri girişi yaparak analizi başlatabilirsiniz.",
                 recommendations: ["İlk kaydınızı ekleyin."]
+            };
+        }
+    }
+    /**
+     * 4. Simülasyon Yol Haritası (What-If Roadmap)
+     */
+    async generateSimulationRoadmap(reductions, role = 'individual') {
+        const reductionsText = Object.entries(reductions)
+            .filter(([_, val]) => val < 0)
+            .map(([cat, val]) => `${cat}: %${val}`)
+            .join(', ');
+
+        if (!reductionsText) {
+            return {
+                title: "Karbon Azaltım Planı",
+                steps: ["Sürgüleri sola kaydırarak gelecek ay emisyon azaltma hedeflerinizi belirleyin, size özel yol haritasını üretelim!"]
+            };
+        }
+
+        const prompt = `Görevin: Bir kullanıcının karbon emisyon simülasyonunda seçtiği azaltma yüzdelerine göre, bu azaltmaları nasıl sağlayabileceğine dair İNANILMAZ DERECEDE İLGİ ÇEKİCİ, DETAYLI ve ETKİLEYİCİ bir yol haritası (roadmap) üret. Sığ ve genelgeçer cümleler yerine, şaşırtıcı çevresel analojiler, finansal kazançlar ve spesifik teknik tüyolar kullan.
+        
+KULLANICI VERİLERİ:
+- Azaltım Hedefleri: ${reductionsText}
+- Kullanıcı Rolü: ${role}
+
+ZORUNLU KURALLAR:
+1. Sadece kullanıcının gerçekten azalttığı kategorileri (yukarıda belirtilenleri) ele al. Azaltmadığı kategoriler hakkında konuşma.
+2. Belirtilen azaltım oranlarını gerçekleştirmek için gereken somut, pratik, teknik ve şaşırtıcı adımları söyle. Örneğin: "%20 Elektrik tasarrufu için; kettle'da sadece ihtiyacınız kadar su kaynatmak yılda 120 kg CO2 önler. Stand-by modundaki cihazlar faturanızın %10'unu yutar." gibi şaşırtıcı ve detaylı bilgiler ver.
+3. Her kategorinin ilk adımı olarak mutlaka o azaltım oranının dünyamız için neye denk geldiğini anlatan (buzul erimesi, araba yolculuğu, telefon şarjı vb.) ŞAŞIRTICI ve ETKİLEYİCİ bir bilimsel kıyaslama/analoji yaz.
+4. Rol uyumuna dikkat et (company ise şirket ofisleri ve filo verimliliği, household ise aile içi işbirliği, individual ise kişisel alışkanlıklar).
+
+ZORUNLU JSON FORMATI (SADECE JSON):
+{
+  "title": "Gelecek Ay Azaltım Yol Haritanız",
+  "steps": [
+    {
+      "kategori": "Kategori İsmi (örn: Enerji %X azaltım hedefi için)",
+      "adimlar": [
+        "Bilimsel Kıyaslama: Bu azaltım hedefiniz, dünyamızda X kg buzul erimesini önlemeye veya X km araba sürüşünü sıfırlamaya eşdeğer!",
+        "1. spesifik, detaylı, şaşırtıcı teknik ve pratik öneri (ayrıntılı anlatım)",
+        "2. spesifik, detaylı, şaşırtıcı teknik ve pratik öneri (ayrıntılı anlatım)"
+      ]
+    }
+  ]
+}`;
+
+        let response = await this.callGroq(prompt, true);
+        if (!response) response = await this.callGemini(prompt, true);
+
+        try {
+            const cleaned = response.replace(/```json|```/gi, '').trim();
+            const parsed = JSON.parse(cleaned);
+            return {
+                title: parsed.title || "Gelecek Ay Azaltım Yol Haritanız",
+                steps: parsed.steps || ["Adımları belirlemek için veri girişine devam edin."]
+            };
+        } catch (e) {
+            return {
+                title: "Gelecek Ay Azaltım Yol Haritanız",
+                steps: [
+                    "Seçtiğiniz hedeflere ulaşmak için enerji tasarruflu cihazları tercih edin.",
+                    "Ulaşımda haftada en az bir gün toplu taşımayı veya bisikleti tercih edin.",
+                    "Su tüketiminde debi sınırlayıcı aparatlar kullanarak tasarrufu arttırın."
+                ]
             };
         }
     }

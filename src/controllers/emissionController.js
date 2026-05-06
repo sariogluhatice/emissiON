@@ -439,4 +439,23 @@ const getSmartInsights = async (req, res) => {
     }
 };
 
-module.exports = { getAll, create, update, remove, calculate, generateInsight, extractOcrBillData, extractOcrFromImage, getSmartInsights, parseOcrWithGroq };
+// --- SİMÜLASYON YOL HARİTASI (ROADMAP) ---
+// POST /api/emissions/simulation-roadmap
+const getSimulationRoadmap = async (req, res) => {
+    const role = req.user.role;
+    const { reductions } = req.body;
+
+    try {
+        if (!reductions) {
+            return res.status(400).json({ message: 'Azaltım verileri (reductions) gereklidir.' });
+        }
+
+        const roadmap = await aiService.generateSimulationRoadmap(reductions, role);
+        return res.status(200).json(roadmap);
+    } catch (err) {
+        console.error('[emissions.getSimulationRoadmap]', err.message);
+        return res.status(500).json({ message: 'Yol haritası şu an hazırlanamıyor.' });
+    }
+};
+
+module.exports = { getAll, create, update, remove, calculate, generateInsight, extractOcrBillData, extractOcrFromImage, getSmartInsights, parseOcrWithGroq, getSimulationRoadmap };

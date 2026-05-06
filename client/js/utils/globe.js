@@ -137,16 +137,17 @@ function initThreeJSGlobe(container, id, level, totalKg) {
     // 🌍 CANLI GÖRSEL GÜNCELLEME (Renk ve Sağlık Durumu)
     const currentKg = state.currentKg || 0;
     
-    // Dünyanın "ölme" faktörü
-    const factor = Math.max(0, 1 - (currentKg / 900));
-    const r = 0.5 + 0.5 * factor;
-    const g = 0.3 + 0.7 * factor;
-    const b = 0.2 + 0.8 * factor;
+    // Dünyanın "ölme" (kirlilik) faktörü — kirlilik arttıkça renkler çamur gibi kararmak yerine 
+    // daha dramatik, sıcak bir bakır/amber tonuna kayar ve parlaklığını korur.
+    const factor = Math.max(0, 1 - (currentKg / 1800));
+    const r = 0.75 + 0.25 * factor;
+    const g = 0.45 + 0.55 * factor;
+    const b = 0.40 + 0.60 * factor;
     mesh.material.color.setRGB(r, g, b);
 
-    // Işık şiddeti
-    sunLight.intensity = 0.5 + 0.8 * factor;
-    ambientLight.intensity = 0.4 + 0.6 * factor;
+    // Işık şiddeti — her durumda kıtaların ve detayların kusursuz gözükmesi için aydınlık tutulur.
+    sunLight.intensity = 1.0 + 0.4 * factor;
+    ambientLight.intensity = 0.8 + 0.2 * factor;
 
     // Atmosfer ve Bulutlar (Sera etkisi simülasyonu)
     if (glowMesh) {
@@ -162,8 +163,8 @@ function initThreeJSGlobe(container, id, level, totalKg) {
     }
 
     if (cloudsMesh) {
-      // Kirlilik arttıkça bulutlar grileşir ve kararır
-      const cloudTone = Math.max(0.35, 1.0 - (currentKg / 1200) * 0.65);
+      // Kirlilik arttıkça bulutlar kapkaranlık olmak yerine yumuşak dumanlı bir fildişi tonu alır.
+      const cloudTone = Math.max(0.65, 1.0 - (currentKg / 1500) * 0.35);
       cloudsMesh.material.color.setRGB(cloudTone, cloudTone, cloudTone);
     }
 
