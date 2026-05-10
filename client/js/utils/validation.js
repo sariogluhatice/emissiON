@@ -3,19 +3,19 @@
    ============================================================ */
 
 export function validateEmail(value) {
-  if (!value.trim()) return 'Email is required.';
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Invalid email address.';
+  if (!value.trim()) return 'E-posta adresi zorunludur.';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Geçerli bir e-posta adresi girin.';
   return '';
 }
 
 export function validatePassword(value, minLength = 8) {
-  if (!value) return 'Password is required.';
-  if (value.length < minLength) return `Password must be at least ${minLength} characters.`;
+  if (!value) return 'Şifre zorunludur.';
+  if (value.length < minLength) return `Şifre en az ${minLength} karakter olmalıdır.`;
   return '';
 }
 
 export function validateStrongPassword(value) {
-  if (!value) return 'Password is required.';
+  if (!value) return 'Şifre zorunludur.';
   if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$/.test(value)) {
     return 'Şifre en az 8 karakter olmalı; büyük harf, küçük harf, rakam ve sembol içermelidir.';
   }
@@ -23,13 +23,13 @@ export function validateStrongPassword(value) {
 }
 
 export function validateConfirmPassword(value, original) {
-  if (!value) return 'Please confirm your password.';
-  if (value !== original) return 'Passwords do not match.';
+  if (!value) return 'Lütfen şifrenizi onaylayın.';
+  if (value !== original) return 'Şifreler eşleşmiyor.';
   return '';
 }
 
-export function validateRequired(value, fieldName = 'This field') {
-  if (!value.trim()) return `${fieldName} is required.`;
+export function validateRequired(value, fieldName = 'Bu alan') {
+  if (!value.trim()) return `${fieldName} zorunludur.`;
   return '';
 }
 

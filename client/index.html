@@ -4,266 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>emissiON – Karbon Ayak İzi Simülasyonu</title>
-    <style>
-      html,
-      body {
-        background: #07090b;
-        color: #ffffff;
-      }
-    </style>
     <link rel="stylesheet" href="css/main.css" />
-    <style>
-      body,
-      html {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: 100%;
-      }
-
-      .landing-page {
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        background: #000000;
-        overflow-x: hidden;
-        color: #ffffff;
-      }
-
-      /* ── Nav ── */
-      .landing-nav {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 24px 5%;
-        background: rgba(6, 24, 16, 0.72); /* slightly green-tinted */
-        backdrop-filter: blur(18px);
-        border-bottom: 1px solid rgba(0, 255, 140, 0.06);
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 1000;
-      }
-
-      .landing-nav-brand {
-        font-size: 22px;
-        font-weight: 900;
-        letter-spacing: 4px;
-        color: var(--color-primary);
-        text-decoration: none;
-        text-shadow: var(--neon-glow);
-      }
-
-      .landing-nav-links {
-        display: flex;
-        align-items: center;
-        gap: 24px;
-      }
-
-      /* Hide theme toggle: light mode removed */
-      #themeToggle {
-        display: none !important;
-      }
-
-      .landing-nav-links a.nav-link {
-        font-size: 14px;
-        font-weight: 600;
-        color: #fff;
-        text-decoration: none;
-        opacity: 0.7;
-        transition: all 0.3s;
-        text-transform: uppercase;
-      }
-
-      .landing-nav-links a.nav-link:hover {
-        opacity: 1;
-      }
-
-      .landing-hero {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 120px 10% 80px 10%;
-        gap: 60px;
-        flex: 1;
-      }
-
-      .hero-text {
-        flex: 1;
-        max-width: 600px;
-        z-index: 2;
-        text-align: left;
-      }
-
-      .landing-badge {
-        display: inline-block;
-        background: rgba(0, 255, 140, 0.1);
-        color: var(--color-primary);
-        font-size: 12px;
-        font-weight: 800;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        padding: 8px 20px;
-        border-radius: 50px;
-        margin-bottom: 32px;
-        border: 1px solid rgba(0, 255, 140, 0.2);
-      }
-
-      .landing-hero h1 {
-        font-size: 64px;
-        font-weight: 900;
-        color: #fff;
-        line-height: 1.1;
-        margin-bottom: 24px;
-        text-transform: uppercase;
-        letter-spacing: -1px;
-      }
-
-      .landing-hero h1 span {
-        color: var(--color-primary);
-        text-shadow: var(--neon-glow);
-      }
-
-      .landing-hero p {
-        font-size: 18px;
-        color: rgba(255, 255, 255, 0.6);
-        line-height: 1.6;
-        margin-bottom: 40px;
-      }
-
-      .hero-visual {
-        flex: 1;
-        position: relative;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-
-      .visual-container {
-        width: 100%;
-        max-width: 500px;
-        aspect-ratio: 1;
-        background: #000000;
-        backdrop-filter: none;
-        border: none;
-        border-radius: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        overflow: hidden;
-      }
-      .visual-container img {
-        width: 90%;
-        height: 90%;
-        object-fit: cover;
-        animation: none;
-        transform: none;
-      }
-
-      /* Remove surrounding tonal differences (glow/shadow/border) */
-      .hero-visual .visual-container,
-      .hero-visual .visual-container::after,
-      .hero-visual .visual-container img {
-        box-shadow: none !important;
-        border: none !important;
-        background: #000000 !important;
-      }
-
-      .hero-visual .visual-container::after {
-        box-shadow: none !important;
-        background: transparent !important;
-        content: none !important;
-      }
-
-      .hero-visual .visual-container img {
-        filter: none !important;
-        mix-blend-mode: normal !important;
-        opacity: 1 !important;
-        border-radius: 0 !important;
-      }
-
-      /* ── Features ── */
-      .landing-features {
-        padding: 100px 10%;
-        background: rgba(0, 255, 140, 0.02); /* subtle green wash */
-      }
-
-      /* Slight green tint for feature cards to harmonize with nav */
-      .feature-card {
-        background: rgba(0, 255, 140, 0.01) !important;
-        border: 1px solid rgba(0, 255, 140, 0.04) !important;
-      }
-
-      .section-header {
-        text-align: center;
-        margin-bottom: 60px;
-      }
-
-      .section-header h2 {
-        font-size: 32px;
-        font-weight: 800;
-        color: #fff;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-      }
-
-      .features-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 32px;
-      }
-
-      .feature-card {
-        padding: 40px;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 24px;
-        transition: all 0.3s;
-      }
-
-      .feature-card:hover {
-        background: rgba(255, 255, 255, 0.06);
-        transform: translateY(-10px);
-        border-color: var(--color-primary);
-      }
-
-      .feature-icon {
-        font-size: 32px;
-        margin-bottom: 24px;
-      }
-
-      .feature-card h3 {
-        font-size: 18px;
-        font-weight: 700;
-        color: #fff;
-        margin-bottom: 12px;
-      }
-
-      .feature-card p {
-        font-size: 14px;
-        color: rgba(255, 255, 255, 0.5);
-        line-height: 1.6;
-      }
-
-      @media (max-width: 991px) {
-        .landing-hero {
-          flex-direction: column;
-          text-align: center;
-          padding-top: 120px;
-        }
-        .hero-text {
-          text-align: center;
-        }
-        .landing-hero h1 {
-          font-size: 48px;
-        }
-        .visual-container {
-          max-width: 400px;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="css/pages/landing.css" />
   </head>
   <body class="landing-body">
     <div class="landing-page">
@@ -322,8 +64,128 @@
         </div>
 
         <div class="hero-visual">
-          <div class="visual-container">
-            <img src="assets/simulation_globe.png" alt="Emisson Simülasyonu" />
+          <div class="hero-illustration">
+
+            <!-- Orbit rings (background layer) -->
+            <svg class="hero-orbits" viewBox="0 0 560 480" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <defs>
+                <linearGradient id="og1" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%"   stop-color="#7BC8E8" stop-opacity="0"/>
+                  <stop offset="50%"  stop-color="#7BC8E8" stop-opacity="0.7"/>
+                  <stop offset="100%" stop-color="#7BC8E8" stop-opacity="0"/>
+                </linearGradient>
+                <linearGradient id="og2" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%"   stop-color="#5BAD8E" stop-opacity="0"/>
+                  <stop offset="50%"  stop-color="#5BAD8E" stop-opacity="0.6"/>
+                  <stop offset="100%" stop-color="#5BAD8E" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <!-- Horizontal orbit -->
+              <ellipse cx="280" cy="240" rx="252" ry="68" fill="none" stroke="url(#og1)" stroke-width="1.5" stroke-dasharray="5 4"/>
+              <!-- Tilted vertical orbit -->
+              <ellipse cx="280" cy="240" rx="174" ry="255" fill="none" stroke="url(#og2)" stroke-width="1.5" stroke-dasharray="5 4"/>
+              <!-- Orbit nodes -->
+              <circle cx="32"  cy="248" r="4.5" fill="#7BC8E8" opacity="0.65"/>
+              <circle cx="528" cy="232" r="4.5" fill="#5BAD8E" opacity="0.65"/>
+              <circle cx="280" cy="490" r="4.5" fill="#7ADACE" opacity="0.55"/>
+              <circle cx="280" cy="0"   r="4.5" fill="#7ADACE" opacity="0.45"/>
+            </svg>
+
+            <!-- Globe SVG -->
+            <svg class="hero-globe" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" aria-label="Dünya haritası illüstrasyonu">
+              <defs>
+                <radialGradient id="rg-ocean" cx="36%" cy="33%" r="70%">
+                  <stop offset="0%"   stop-color="#D0EEF9"/>
+                  <stop offset="50%"  stop-color="#90C8E8"/>
+                  <stop offset="100%" stop-color="#5CA8D8"/>
+                </radialGradient>
+                <radialGradient id="rg-shade" cx="70%" cy="70%" r="58%">
+                  <stop offset="0%"   stop-color="rgba(20,70,140,0.22)"/>
+                  <stop offset="100%" stop-color="rgba(20,70,140,0)"/>
+                </radialGradient>
+                <radialGradient id="rg-hi" cx="30%" cy="27%" r="42%">
+                  <stop offset="0%"   stop-color="rgba(255,255,255,0.52)"/>
+                  <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+                </radialGradient>
+                <clipPath id="gc"><circle cx="160" cy="160" r="138"/></clipPath>
+                <filter id="gf" x="-25%" y="-25%" width="150%" height="150%">
+                  <feDropShadow dx="0" dy="10" stdDeviation="20" flood-color="#7BC8E8" flood-opacity="0.35"/>
+                  <feDropShadow dx="0" dy="0"  stdDeviation="32" flood-color="#5BAD8E" flood-opacity="0.18"/>
+                </filter>
+              </defs>
+
+              <!-- Ocean -->
+              <circle cx="160" cy="160" r="138" fill="url(#rg-ocean)" filter="url(#gf)"/>
+
+              <!-- Continents -->
+              <g clip-path="url(#gc)" fill="#A8D6B2" fill-opacity="0.90">
+                <!-- Europe -->
+                <path d="M148 66 C160 61 172 68 176 80 L179 97 C181 108 174 119 165 122 L153 124 C142 124 135 114 137 103 L139 87 C141 76 144 69 148 66Z"/>
+                <!-- Africa -->
+                <path d="M138 130 C152 123 167 130 172 144 L178 163 C181 179 178 196 168 207 L157 220 C145 231 129 232 121 222 L112 209 C104 196 107 178 116 169 L126 156 C133 145 136 133 138 130Z"/>
+                <!-- North America -->
+                <path d="M36 74 C52 66 70 73 79 87 L91 107 C100 124 97 144 86 155 L73 166 C59 175 43 170 35 158 L26 142 C19 126 24 108 35 97Z"/>
+                <!-- South America -->
+                <path d="M70 188 C84 181 98 188 103 202 L108 222 C113 240 108 258 97 267 L84 276 C70 283 56 276 50 264 L43 248 C37 232 42 214 53 205Z"/>
+                <!-- Asia -->
+                <path d="M188 60 C212 54 242 60 260 76 L276 94 C290 112 291 134 278 148 L261 162 C244 175 222 175 207 165 L188 152 C172 140 168 120 177 107 L184 88 C187 76 186 64 188 60Z"/>
+                <!-- Australia -->
+                <path d="M242 210 C256 203 270 210 275 224 L280 240 C284 255 277 268 266 272 L253 274 C240 276 229 267 228 254 L228 238 C228 223 236 214 242 210Z"/>
+                <!-- Greenland -->
+                <path d="M94 34 C105 28 117 33 121 45 L123 58 C125 69 118 78 107 80 L96 80 C85 78 79 69 81 58 L83 45 C85 38 90 35 94 34Z"/>
+              </g>
+
+              <!-- Latitude lines -->
+              <g clip-path="url(#gc)" stroke="rgba(255,255,255,0.16)" stroke-width="0.8" fill="none">
+                <ellipse cx="160" cy="112" rx="118" ry="21"/>
+                <ellipse cx="160" cy="160" rx="138" ry="27"/>
+                <ellipse cx="160" cy="208" rx="118" ry="21"/>
+              </g>
+
+              <!-- 3D overlays -->
+              <circle cx="160" cy="160" r="138" fill="url(#rg-shade)"/>
+              <circle cx="160" cy="160" r="138" fill="url(#rg-hi)"/>
+              <circle cx="160" cy="160" r="138" fill="none" stroke="rgba(150,210,240,0.25)" stroke-width="1.5"/>
+            </svg>
+
+            <!-- Floating info cards -->
+            <div class="hero-card card-co2">
+              <span class="hcard-icon">☁️</span>
+              <div>
+                <div class="hcard-label">CO₂ Takibi</div>
+                <div class="hcard-value">24.6 kg</div>
+                <div class="hcard-sub">Bu ay</div>
+              </div>
+            </div>
+
+            <div class="hero-card card-energy">
+              <span class="hcard-icon">⚡</span>
+              <div>
+                <div class="hcard-label">Enerji Kullanımı</div>
+                <div class="hcard-value hcard-positive">-12%</div>
+                <div class="hcard-sub">Bu ay</div>
+              </div>
+            </div>
+
+            <div class="hero-card card-sim">
+              <span class="hcard-icon">🌿</span>
+              <div>
+                <div class="hcard-label">Akıllı Simülasyon</div>
+                <div class="hcard-sub">Daha yeşil senaryoları keşfet →</div>
+              </div>
+            </div>
+
+            <div class="hero-card card-report">
+              <span class="hcard-icon">📊</span>
+              <div>
+                <div class="hcard-label">Aylık Rapor</div>
+                <div class="hcard-sub">Raporunu incele →</div>
+              </div>
+            </div>
+
+            <!-- Decorative leaves -->
+            <span class="hero-leaf leaf-1" aria-hidden="true">🌿</span>
+            <span class="hero-leaf leaf-2" aria-hidden="true">🍃</span>
           </div>
         </div>
       </section>

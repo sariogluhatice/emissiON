@@ -293,7 +293,7 @@
 
 .settings-nav-item.active {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-text-inverse);
   font-weight: 600;
 }
 
@@ -430,9 +430,9 @@
 }
 
 .btn-danger:hover {
-  background: var(--color-error);
-  color: #fff;
-  border-color: var(--color-error);
+  background: var(--color-danger);
+  color: var(--color-text-inverse);
+  border-color: var(--color-danger);
 }
 
 /* ── Delete account modal ── */

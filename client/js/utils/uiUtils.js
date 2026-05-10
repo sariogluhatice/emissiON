@@ -97,8 +97,8 @@ export function calculateStats(records = []) {
 
   const catTotals = {};
   records.forEach(e => { 
-    const cat = e.source || 'Other';
-    catTotals[cat] = (catTotals[cat] || 0) + parseFloat(e.amount); 
+    const cat = e.source || 'Diğer';
+    catTotals[cat] = (catTotals[cat] || 0) + parseFloat(e.amount);
   });
   const topCat = Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—';
 

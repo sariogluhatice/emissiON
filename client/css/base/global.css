@@ -4,11 +4,11 @@
 
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap");
 
-/* Ensure dark background/color on first paint to prevent white flash */
+/* Light mode first-paint — prevents any dark flash */
 html,
 body {
-  background: #07090b !important;
-  color: #ffffff !important;
+  background: var(--color-bg-main);
+  color: var(--color-text-main);
 }
 
 body {
@@ -24,7 +24,7 @@ body {
   overflow-x: hidden;
 }
 
-/* ── Dünya Simülasyonu Arka Plan Katmanı ── */
+/* ── Sayfa Arka Plan Dekoratif Katmanı ── */
 .app-shell::before {
   content: "";
   position: fixed;
@@ -35,10 +35,10 @@ body {
   background:
     radial-gradient(
       circle at 70% 30%,
-      rgba(0, 255, 140, 0.05),
+      rgba(34, 197, 94, 0.04),
       transparent 40%
     ),
-    radial-gradient(circle at 20% 80%, rgba(0, 255, 140, 0.03), transparent 40%);
+    radial-gradient(circle at 20% 80%, rgba(56, 189, 248, 0.04), transparent 40%);
   pointer-events: none;
   z-index: -1;
 }
@@ -55,10 +55,6 @@ body {
   pointer-events: none;
   z-index: 0;
   transition: opacity 0.5s ease;
-}
-
-[data-theme="dark"] .bg-decorative-element {
-  opacity: 0.12;
 }
 
 /* ── Metin & Linkler ── */
@@ -86,7 +82,6 @@ a {
 
 a:hover {
   color: var(--color-primary-dark);
-  text-shadow: var(--neon-glow);
 }
 
 /* Sayfa geçiş animasyonu */
@@ -109,15 +104,15 @@ a:hover {
 
 /* ── Modal & Glass Effects ── */
 .modal-backdrop {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(15, 23, 42, 0.35);
   backdrop-filter: blur(8px);
 }
 
 .glass-card {
-  background: var(--glass-bg);
+  background: var(--color-surface);
   backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--card-shadow);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
   border-radius: var(--radius-xl);
   color: var(--color-text);
 }
@@ -144,22 +139,20 @@ textarea::placeholder {
   cursor: pointer;
 }
 
-/* Light-mode rules removed — dark is the only theme */
-
-/* Dark mode landing adjustments */
-[data-theme="dark"] .landing-nav {
-  background: var(--navbar-bg-dark);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+/* Landing nav */
+.landing-nav {
+  background: var(--color-surface-soft);
+  border-bottom: 1px solid var(--color-border);
 }
 
-[data-theme="dark"] .landing-hero h1,
-[data-theme="dark"] .section-header h2,
-[data-theme="dark"] .feature-card h3 {
+.landing-hero h1,
+.section-header h2,
+.feature-card h3 {
   color: var(--color-text);
 }
 
-[data-theme="dark"] .landing-hero p,
-[data-theme="dark"] .feature-card p {
+.landing-hero p,
+.feature-card p {
   color: var(--color-text-muted);
 }
 
@@ -169,7 +162,7 @@ textarea::placeholder {
   border-radius: 18px;
   overflow: hidden;
   border: 1px solid var(--color-border);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-card);
   background-clip: padding-box;
 }
 
@@ -187,36 +180,31 @@ textarea::placeholder {
   display: none !important;
 }
 
-/* Soft neon glow for image cards while keeping it subtle */
+/* Soft glow for image cards */
 .visual-container::after,
 .auth-visual-img::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  box-shadow: 0 18px 40px rgba(0, 255, 140, 0.06);
+  box-shadow: var(--shadow-soft-green);
   border-radius: 18px;
 }
 
-/* Feature / Card styles adjustable per theme */
+/* Feature / Card styles */
 .feature-card {
   padding: 28px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 20px;
   color: var(--color-text);
   transition: all 0.24s ease;
-  box-shadow: 0 10px 30px rgba(2, 6, 6, 0.06);
+  box-shadow: var(--shadow-card);
 }
-
 
 /* Ensure hero visual does not overflow and is nicely framed */
 .hero-visual .visual-container {
   border-radius: 22px;
   overflow: hidden;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.02),
-    rgba(255, 255, 255, 0.01)
-  );
+  background: var(--gradient-card-soft);
 }

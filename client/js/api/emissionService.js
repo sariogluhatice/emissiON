@@ -4,6 +4,7 @@ const client = new ApiClient();
 
 export const emissionService = {
     getAll:         ()         => client.get('/emissions'),
+    getById:        (id)       => client.get(`/emissions/${id}`),
     create:         (data)     => client.post('/emissions', data),
     update:         (id, data) => client.put(`/emissions/${id}`, data),
     remove:         (id)       => client.delete(`/emissions/${id}`),

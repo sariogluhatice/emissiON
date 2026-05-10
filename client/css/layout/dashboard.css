@@ -72,9 +72,9 @@
 
 .nav-item.active {
   background: var(--color-primary);
-  color: #05060a; /* Açık yeşil üzerinde siyah/koyu metin okunabilirliği inanılmaz artırır */
+  color: var(--color-text-inverse);
   font-weight: 700;
-  box-shadow: 0 4px 12px rgba(0, 255, 140, 0.2);
+  box-shadow: var(--shadow-soft-green);
 }
 
 /* [Korkunç Görünüm Fix] İkon Boyutlandırma */
@@ -152,7 +152,7 @@
   width: 36px;
   height: 36px;
   background: var(--color-primary);
-  color: #05060a;
+  color: var(--color-text-inverse);
   border-radius: 50%;
   display: flex;
   align-items: center;

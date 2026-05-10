@@ -4,87 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Akıllı İçgörüler – emissiON</title>
-    <style>
-      html,
-      body {
-        background: #07090b;
-        color: #ffffff;
-      }
-    </style>
     <link rel="stylesheet" href="../css/main.css" />
-    <style>
-      .insight-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 24px;
-        margin-top: 24px;
-      }
-      .ai-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 16px;
-      }
-      .ai-badge {
-        background: linear-gradient(
-          135deg,
-          var(--color-primary),
-          var(--color-primary-dark)
-        );
-        color: #000;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        box-shadow: var(--neon-glow);
-      }
-      .recommendation-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-      .recommendation-item {
-        display: flex;
-        gap: 12px;
-        padding: 16px 0;
-        border-bottom: 1px solid var(--color-border);
-      }
-      .recommendation-item:last-child {
-        border-bottom: none;
-      }
-      .check-icon {
-        color: var(--color-primary);
-        flex-shrink: 0;
-      }
-      .skeleton {
-        background: linear-gradient(
-          90deg,
-          rgba(255, 255, 255, 0.05) 25%,
-          rgba(255, 255, 255, 0.1) 50%,
-          rgba(255, 255, 255, 0.05) 75%
-        );
-        background-size: 200% 100%;
-        animation: loading 1.5s infinite;
-        height: 20px;
-        border-radius: 4px;
-        margin-bottom: 10px;
-      }
-      @keyframes loading {
-        0% {
-          background-position: 200% 0;
-        }
-        100% {
-          background-position: -200% 0;
-        }
-      }
-      @media (max-width: 992px) {
-        .insight-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="../css/pages/smart-insights.css" />
   </head>
   <body>
     <div class="app-shell">

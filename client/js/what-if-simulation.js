@@ -111,14 +111,14 @@ let changes = {};   // { energy: 0, ... } (percentage -100 to 100)
     }
   } catch (e) {
     console.error('[planner] init error:', e);
-    showToast('Hata', 'Veriler yüklenirken bir hata oluştu', 'error');
+    showToast('Hata', 'Veriler yüklenirken bir hata oluştu.', 'error');
   }
 })();
 
 // ── Boş Durum Tasarımı (Veri Olmadığında Çalışır) ──────────────────────────────
 function renderEmptyState() {
   actionsContainer.innerHTML = `
-    <div class="glass-card" style="padding: 36px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; margin: 0; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; background: rgba(255,255,255,0.01);">
+    <div class="glass-card" style="padding: 36px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; margin: 0; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface);">
       <span style="font-size: 40px;">📊</span>
       <h3 style="margin: 0; font-size: 18px; color: var(--color-brand-text); font-weight: 700;">Henüz Veri Girişi Yapılmadı</h3>
       <p style="margin: 0; font-size: 13px; color: var(--color-text-muted); line-height: 1.6;">
@@ -254,7 +254,7 @@ function renderSliders() {
       <input type="range" class="custom-range" id="range-${cat}" 
              min="-100" max="100" step="5" value="${val}">
       <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--color-text-muted); margin-top:-4px">
-        <span id="badge-${cat}" style="font-weight: 600; color: ${val < 0 ? '#10b981' : (val > 0 ? '#f59e0b' : 'inherit')}">
+        <span id="badge-${cat}" style="font-weight: 600; color: ${val < 0 ? '#5BAD8E' : (val > 0 ? '#D4A017' : 'inherit')}">
           ${val > 0 ? '+' : ''}${val}%
         </span>
         <span>Mevcut: ${Math.round(baseline.qty)} ${config.unit} (${baseline.co2.toFixed(1)} kg)</span>
@@ -293,7 +293,7 @@ function updateProjection() {
     
     if (badge) {
       badge.textContent = `${changePct > 0 ? '+' : ''}${changePct}%`;
-      badge.style.color = changePct < 0 ? '#10b981' : (changePct > 0 ? '#f59e0b' : 'inherit');
+      badge.style.color = changePct < 0 ? '#5BAD8E' : (changePct > 0 ? '#D4A017' : 'inherit');
     }
     
     if (qtyDisplay) {
@@ -309,11 +309,11 @@ function updateProjection() {
   if (diff < -0.1) {
     impactBadge.style.display = 'flex';
     savingsVal.textContent = `${Math.abs(diff).toFixed(1)} kg`;
-    savingsVal.style.color = '#10b981';
+    savingsVal.style.color = '#5BAD8E';
   } else if (diff > 0.1) {
     impactBadge.style.display = 'flex';
     savingsVal.textContent = `+${diff.toFixed(1)} kg`;
-    savingsVal.style.color = '#f59e0b';
+    savingsVal.style.color = '#D4A017';
   } else {
     impactBadge.style.display = 'none';
   }
@@ -336,10 +336,10 @@ function updateProjection() {
   
   if (diff < -5) {
      const pctSaved = Math.round((Math.abs(diff) / currentTotal) * 100);
-     comparisonText.innerHTML = `Müthiş! Gelecek ay emisyonlarınızı <strong style="color:#10b981">%${pctSaved} (${Math.abs(diff).toFixed(1)} kg)</strong> oranında azaltmayı planlıyorsunuz.`;
+     comparisonText.innerHTML = `Müthiş! Gelecek ay emisyonlarınızı <strong style="color:#5BAD8E">%${pctSaved} (${Math.abs(diff).toFixed(1)} kg)</strong> oranında azaltmayı planlıyorsunuz.`;
   } else if (diff > 5) {
      const pctIncrease = Math.round((diff / currentTotal) * 100);
-     comparisonText.innerHTML = `Dikkat! Bu planla emisyonlarınız <strong style="color:#f59e0b">%${pctIncrease} (+${diff.toFixed(1)} kg)</strong> artacak gibi görünüyor.`;
+     comparisonText.innerHTML = `Dikkat! Bu planla emisyonlarınız <strong style="color:#D4A017">%${pctIncrease} (+${diff.toFixed(1)} kg)</strong> artacak gibi görünüyor.`;
   } else {
      comparisonText.innerHTML = `Mevcut alışkanlıklarınızı koruyarak stabil bir gelecek planlıyorsunuz.`;
   }
@@ -362,57 +362,82 @@ const getAiRoadmapBtn = document.getElementById('getAiRoadmapBtn');
 const aiPlannerContent = document.getElementById('aiPlannerContent');
 const aiPlannerSteps = document.getElementById('aiPlannerSteps');
 
+// Slider key → Türkçe kategori adı eşlemesi (frontend filtresi için)
+const ROADMAP_CAT_TR = {
+  energy:    'Enerji',
+  water:     'Su Kullanımı',
+  gas:       'Doğalgaz',
+  transport: 'Ulaşım',
+  food:      'Gıda',
+  waste:     'Atık',
+  materials: 'Malzeme',
+  shopping:  'Alışveriş',
+};
+
 if (getAiRoadmapBtn && aiPlannerContent && aiPlannerSteps) {
   getAiRoadmapBtn.addEventListener('click', async () => {
+    // Yalnızca negatif (azaltım) değerleri filtrele
+    const selectedChanges = {};
+    Object.entries(changes).forEach(([cat, val]) => {
+      if (Number(val) < 0) selectedChanges[cat] = val;
+    });
+
+    if (Object.keys(selectedChanges).length === 0) {
+      aiPlannerContent.style.display = 'block';
+      aiPlannerSteps.innerHTML = '<li style="list-style:none;margin-left:-20px;color:var(--color-text-muted);">Kişisel azaltım yol haritası oluşturmak için en az bir kategori için azaltım hedefi seçin (sürgüyü sola kaydırın).</li>';
+      aiPlannerContent.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      return;
+    }
+
+    // İzin verilen kategori adları (frontend filtresi)
+    const allowedNames = Object.keys(selectedChanges).map(c => (ROADMAP_CAT_TR[c] || c).toLowerCase());
+
     try {
       getAiRoadmapBtn.disabled = true;
       getAiRoadmapBtn.innerHTML = '<span>Yol Haritası Hazırlanıyor...</span>';
-      
-      aiPlannerContent.style.display = 'block';
-      aiPlannerSteps.innerHTML = '<li style="list-style: none; margin-left: -20px; text-align: center; color: var(--color-text-muted);">Yapay zekanız verilerinizi analiz ediyor...</li>';
 
-      const roadmap = await emissionService.getSimulationRoadmap(changes);
-      
+      aiPlannerContent.style.display = 'block';
+      aiPlannerSteps.innerHTML = '<li style="list-style:none;margin-left:-20px;text-align:center;color:var(--color-text-muted);">Yapay zekanız verilerinizi analiz ediyor...</li>';
+      aiPlannerContent.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      const roadmap = await emissionService.getSimulationRoadmap(selectedChanges);
+
+      // Seçilmemiş kategorileri frontend'de de filtrele
+      const steps = (roadmap.steps || []).filter(step => {
+        if (!step || typeof step !== 'object' || !step.kategori) return true;
+        return allowedNames.some(name => step.kategori.toLowerCase().includes(name));
+      });
+
       aiPlannerSteps.innerHTML = '';
-      if (roadmap.steps && roadmap.steps.length > 0) {
-        roadmap.steps.forEach(step => {
-          // Eğer adım yapısal olarak kategori ve adımlar dizisi içeriyorsa, şık bir grup halinde render et
+      if (steps.length > 0) {
+        steps.forEach(step => {
           if (step && typeof step === 'object' && step.kategori && Array.isArray(step.adimlar)) {
             const catLi = document.createElement('li');
-            catLi.style.listStyle = 'none';
-            catLi.style.marginLeft = '-20px';
-            catLi.style.marginTop = '14px';
-            catLi.style.marginBottom = '6px';
-            catLi.style.fontWeight = '700';
-            catLi.style.color = '#3b82f6';
+            catLi.style.cssText = 'list-style:none;margin-left:-20px;margin-top:14px;margin-bottom:6px;font-weight:700;color:var(--color-secondary)';
             catLi.textContent = step.kategori;
             aiPlannerSteps.appendChild(catLi);
 
             step.adimlar.forEach(subStep => {
               const subLi = document.createElement('li');
               subLi.textContent = subStep;
-              subLi.style.marginBottom = '6px';
-              subLi.style.marginLeft = '10px';
-              subLi.style.listStyleType = 'circle';
+              subLi.style.cssText = 'margin-bottom:6px;margin-left:10px;list-style-type:circle';
               aiPlannerSteps.appendChild(subLi);
             });
           } else {
             const li = document.createElement('li');
-            if (step && typeof step === 'object') {
-              li.textContent = step.text || step.step || step.instruction || JSON.stringify(step);
-            } else {
-              li.textContent = step;
-            }
+            li.textContent = step && typeof step === 'object'
+              ? (step.text || step.step || step.instruction || JSON.stringify(step))
+              : step;
             li.style.marginBottom = '8px';
             aiPlannerSteps.appendChild(li);
           }
         });
       } else {
-        aiPlannerSteps.innerHTML = '<li style="list-style: none; margin-left: -20px;">Sürgüleri sola kaydırarak hedefler belirleyin ve tekrar deneyin.</li>';
+        aiPlannerSteps.innerHTML = '<li style="list-style:none;margin-left:-20px;">Sürgüleri sola kaydırarak hedefler belirleyin ve tekrar deneyin.</li>';
       }
     } catch (err) {
       console.error('[planner.roadmap]', err);
-      aiPlannerSteps.innerHTML = '<li style="list-style: none; margin-left: -20px; color: var(--color-error);">Yol haritası oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.</li>';
+      aiPlannerSteps.innerHTML = '<li style="list-style:none;margin-left:-20px;color:var(--color-error);">Yol haritası oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.</li>';
     } finally {
       getAiRoadmapBtn.disabled = false;
       getAiRoadmapBtn.innerHTML = '<span>Yol Haritası Üret</span>';

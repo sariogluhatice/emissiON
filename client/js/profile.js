@@ -9,157 +9,157 @@ if (!user) throw new Error('redirect');
 // ── Human-readable label maps ────────────────────────────────────────────────
 
 const FIELD_LABELS = {
-  home_type:               'Housing type',
-  household_size:          'Household size',
-  is_household_head:       'Household head',
-  company_name:            'Company name',
-  industry:                'Industry',
-  employee_count_range:    'Number of employees',
-  department_count_range:  'Number of departments',
-  monthly_kwh:             'Monthly electricity',
-  heating_type:            'Heating source',
-  has_ac:                  'Air conditioning',
-  renewable_energy:        'Renewable energy',
-  water_saving_devices:    'Water-saving devices',
-  office_energy_source:    'Office energy source',
-  office_electricity_level:'Office electricity level',
-  remote_work_policy:      'Work policy',
-  has_car:                 'Car ownership',
-  car_fuel_type:           'Car fuel type',
-  weekly_km:               'Weekly driving distance',
-  carpooling:              'Carpooling / car-sharing',
-  has_company_vehicles:    'Company vehicles',
-  fleet_fuel:              'Fleet fuel type',
-  fleet_size:              'Fleet size',
-  public_transport_freq:   'Public transport frequency',
-  public_transport_type:   'Public transport type',
-  cycles_or_walks:         'Walks or cycles daily',
-  taxi_freq:               'Taxi / rideshare usage',
-  domestic_flights:        'Domestic flights per year',
-  international_flights:   'International flights per year',
-  typical_flight_distance: 'Typical flight length',
-  has_business_travel:     'Air travel for work',
-  diet_type:               'Diet type',
-  red_meat_freq:           'Red meat frequency',
-  dairy_level:             'Dairy consumption',
-  local_food_pref:         'Local / seasonal produce',
-  food_waste:              'Food waste level',
-  online_shopping_freq:    'Online shopping frequency',
-  new_vs_secondhand:       'New vs. second-hand',
-  fast_fashion:            'Fast fashion',
-  recycling_categories:    'Materials recycled',
-  composting:              'Composting',
-  waste_bags_week:         'Waste bags per week',
-  single_use_plastic:      'Single-use plastic',
-  motivation:              'Main motivation',
-  priority_area:           'Priority area',
+  home_type:               'Konut tipi',
+  household_size:          'Hane halkı büyüklüğü',
+  is_household_head:       'Hane reisi',
+  company_name:            'Şirket adı',
+  industry:                'Sektör',
+  employee_count_range:    'Çalışan sayısı',
+  department_count_range:  'Departman sayısı',
+  monthly_kwh:             'Aylık elektrik tüketimi',
+  heating_type:            'Isınma kaynağı',
+  has_ac:                  'Klima kullanımı',
+  renewable_energy:        'Yenilenebilir enerji',
+  water_saving_devices:    'Su tasarrufu cihazları',
+  office_energy_source:    'Ofis enerji kaynağı',
+  office_electricity_level:'Ofis elektrik tüketimi',
+  remote_work_policy:      'Çalışma politikası',
+  has_car:                 'Araç sahipliği',
+  car_fuel_type:           'Araç yakıt tipi',
+  weekly_km:               'Haftalık sürüş mesafesi',
+  carpooling:              'Araç paylaşımı',
+  has_company_vehicles:    'Şirket araçları',
+  fleet_fuel:              'Filo yakıt tipi',
+  fleet_size:              'Filo büyüklüğü',
+  public_transport_freq:   'Toplu taşıma sıklığı',
+  public_transport_type:   'Toplu taşıma türü',
+  cycles_or_walks:         'Yürüme / bisiklet kullanımı',
+  taxi_freq:               'Taksi / uygulama kullanımı',
+  domestic_flights:        'Yıllık yurt içi uçuş',
+  international_flights:   'Yıllık yurt dışı uçuş',
+  typical_flight_distance: 'Tipik uçuş mesafesi',
+  has_business_travel:     'İş seyahati (hava yolu)',
+  diet_type:               'Beslenme tarzı',
+  red_meat_freq:           'Kırmızı et tüketimi',
+  dairy_level:             'Süt ürünleri tüketimi',
+  local_food_pref:         'Yerel / mevsimsel ürün tercihi',
+  food_waste:              'Gıda israfı düzeyi',
+  online_shopping_freq:    'Online alışveriş sıklığı',
+  new_vs_secondhand:       'Yeni - İkinci el tercihi',
+  fast_fashion:            'Hızlı moda',
+  recycling_categories:    'Geri dönüşüm yapılan malzemeler',
+  composting:              'Kompost',
+  waste_bags_week:         'Haftalık çöp torbası sayısı',
+  single_use_plastic:      'Tek kullanımlık plastik',
+  motivation:              'Ana motivasyon',
+  priority_area:           'Öncelikli alan',
 };
 
 // Global value labels (used when no field-specific override applies)
 const VALUE_LABELS = {
-  apartment:      'Apartment',
-  house:          'House',
-  detached:       'Detached House',
-  shared:         'Shared / Rented',
-  dormitory:      'Dormitory',
-  natural_gas:    'Natural Gas',
-  electricity:    'Electricity',
-  coal:           'Coal / Solid Fuel',
-  wood:           'Wood / Biomass',
-  heat_pump:      'Heat Pump',
-  district:       'District Heating',
-  solar:          'Solar panels',
-  green_plan:     'Green electricity tariff',
-  both:           'Both',
-  none:           'None / No',
-  petrol:         'Petrol',
-  diesel:         'Diesel',
+  apartment:      'Apartman Dairesi',
+  house:          'Müstakil Ev',
+  detached:       'Villa / Köşk',
+  shared:         'Paylaşımlı / Kiralık',
+  dormitory:      'Öğrenci Yurdu',
+  natural_gas:    'Doğalgaz',
+  electricity:    'Elektrik',
+  coal:           'Kömür / Katı Yakıt',
+  wood:           'Odun / Biyokütle',
+  heat_pump:      'Isı Pompası',
+  district:       'Merkezi Isıtma',
+  solar:          'Güneş Panelleri',
+  green_plan:     'Yeşil Enerji Tarifesi',
+  both:           'Her İkisi',
+  none:           'Yok / Hayır',
+  petrol:         'Benzin',
+  diesel:         'Dizel',
   lpg:            'LPG',
-  hybrid:         'Hybrid',
-  electric:       'Electric',
-  '<50':          '< 50 km/week',
-  '50-150':       '50–150 km/week',
-  '150-300':      '150–300 km/week',
-  '300-500':      '300–500 km/week',
-  '>500':         '> 500 km/week',
-  '<100':         '< 100 kWh/month',
-  '100-200':      '100–200 kWh/month',
-  '200-400':      '200–400 kWh/month',
-  '400-600':      '400–600 kWh/month',
-  '>600':         '> 600 kWh/month',
-  unknown:        "I don't know",
-  daily:          'Daily',
-  few_week:       'A few times a week',
-  weekly:         'Weekly',
-  monthly:        'Monthly',
-  rarely:         'Rarely',
-  never:          'Never',
-  bus:            'Bus',
-  metro:          'Metro / Subway',
-  train:          'Train / Rail',
-  ferry:          'Ferry',
-  mixed:          'Mixed',
-  '0':            'None',
+  hybrid:         'Hibrit',
+  electric:       'Elektrikli',
+  '<50':          '< 50 km/hafta',
+  '50-150':       '50–150 km/hafta',
+  '150-300':      '150–300 km/hafta',
+  '300-500':      '300–500 km/hafta',
+  '>500':         '> 500 km/hafta',
+  '<100':         '< 100 kWh/ay',
+  '100-200':      '100–200 kWh/ay',
+  '200-400':      '200–400 kWh/ay',
+  '400-600':      '400–600 kWh/ay',
+  '>600':         '> 600 kWh/ay',
+  unknown:        'Bilmiyorum',
+  daily:          'Günlük',
+  few_week:       'Haftada birkaç kez',
+  weekly:         'Haftalık',
+  monthly:        'Aylık',
+  rarely:         'Nadiren',
+  never:          'Hiçbir zaman',
+  bus:            'Otobüs',
+  metro:          'Metro / Metrobüs',
+  train:          'Tren / Raylı Sistem',
+  ferry:          'Vapur',
+  mixed:          'Karma',
+  '0':            'Hiç',
   '1-2':          '1–2',
   '3-5':          '3–5',
   '6-10':         '6–10',
   '10+':          '10+',
-  short:          'Short-haul (< 3 h)',
-  medium:         'Medium-haul (3–7 h)',
-  long:           'Long-haul (7 h+)',
+  short:          'Kısa Mesafe (< 3 sa)',
+  medium:         'Orta Mesafe (3–7 sa)',
+  long:           'Uzun Mesafe (7 sa+)',
   vegan:          'Vegan',
-  vegetarian:     'Vegetarian',
-  pescatarian:    'Pescatarian',
-  meat_heavy:     'Meat-heavy',
-  high:           'High',
-  low:            'Low',
-  a_lot:          'A lot',
-  some:           'Some',
-  little:         'A little',
-  minimal:        'Almost none',
-  always:         'Always',
-  often:          'Often',
-  sometimes:      'Sometimes',
-  always_new:     'Always new',
-  mostly_new:     'Mostly new',
-  mostly_used:    'Mostly second-hand',
-  yes:            'Yes, regularly',
-  paper:          'Paper',
-  plastic:        'Plastic',
-  glass:          'Glass',
+  vegetarian:     'Vejetaryen',
+  pescatarian:    'Pesketaryen',
+  meat_heavy:     'Et ağırlıklı',
+  high:           'Yüksek',
+  low:            'Düşük',
+  a_lot:          'Çok fazla',
+  some:           'Biraz',
+  little:         'Çok az',
+  minimal:        'Neredeyse hiç',
+  always:         'Her zaman',
+  often:          'Sık sık',
+  sometimes:      'Bazen',
+  always_new:     'Her zaman yeni',
+  mostly_new:     'Çoğunlukla yeni',
+  mostly_used:    'Çoğunlukla ikinci el',
+  yes:            'Evet, düzenli olarak',
+  paper:          'Kağıt',
+  plastic:        'Plastik',
+  glass:          'Cam',
   metal:          'Metal',
-  ewaste:         'E-waste',
-  save_money:         'Save money',
-  reduce_carbon:      'Reduce carbon footprint',
-  company_reporting:  'Company reporting / compliance',
-  environmental:      'Environmental awareness',
-  academic:           'Academic / project use',
-  transport:          'Transport',
-  energy:             'Home energy',
-  flights:            'Flights & travel',
-  food:               'Food & diet',
-  shopping:           'Shopping',
-  waste:              'Waste & recycling',
-  supply_chain:       'Supply chain',
-  'true':             'Yes',
-  'false':            'No',
-  grid:               'Grid Electricity',
-  renewable:          'Renewable / Green Energy',
-  on_site:            'Fully On-Site',
-  fully_remote:       'Fully Remote',
-  manufacturing:      'Manufacturing',
-  technology:         'Technology',
-  retail:             'Retail',
-  healthcare:         'Healthcare',
-  finance:            'Finance',
-  education:          'Education',
-  construction:       'Construction',
-  other:              'Other',
+  ewaste:         'E-atık',
+  save_money:         'Para tasarrufu',
+  reduce_carbon:      'Karbon ayak izimi azaltmak',
+  company_reporting:  'Şirket raporlaması / uyumluluk',
+  environmental:      'Çevresel farkındalık',
+  academic:           'Akademik / proje kullanımı',
+  transport:          'Ulaşım',
+  energy:             'Ev enerjisi',
+  flights:            'Uçuş ve seyahat',
+  food:               'Gıda ve beslenme',
+  shopping:           'Alışveriş',
+  waste:              'Atık ve geri dönüşüm',
+  supply_chain:       'Tedarik zinciri',
+  'true':             'Evet',
+  'false':            'Hayır',
+  grid:               'Şebeke Elektriği',
+  renewable:          'Yenilenebilir / Yeşil Enerji',
+  on_site:            'Tamamen Ofisten',
+  fully_remote:       'Tamamen Uzaktan',
+  manufacturing:      'Üretim',
+  technology:         'Teknoloji',
+  retail:             'Perakende',
+  healthcare:         'Sağlık',
+  finance:            'Finans',
+  education:          'Eğitim',
+  construction:       'İnşaat',
+  other:              'Diğer',
   '1-10':  '1–10',
   '11-50': '11–50',
   '51-200':   '51–200',
-  '201-1000': '201–1,000',
-  '1000+':    '1,000+',
+  '201-1000': '201–1.000',
+  '1000+':    '1.000+',
   '1-3':  '1–3',
   '4-10': '4–10',
   '11-25':'11–25',
@@ -172,23 +172,23 @@ const VALUE_LABELS = {
 
 // Field-specific overrides that conflict with the global map
 const FIELD_VALUE_LABELS = {
-  diet_type: { mixed: 'Mixed / Omnivore' },
+  diet_type: { mixed: 'Karma / Her şeyi yiyen' },
   fleet_fuel: {
-    petrol:   'Mostly Petrol',
-    diesel:   'Mostly Diesel',
-    electric: 'Electric Fleet',
-    mixed:    'Mixed',
+    petrol:   'Ağırlıklı Benzin',
+    diesel:   'Ağırlıklı Dizel',
+    electric: 'Elektrikli Filo',
+    mixed:    'Karma',
   },
   office_electricity_level: {
-    low:       'Low (< 1,000 kWh/mo)',
-    medium:    'Medium (1,000–5,000 kWh/mo)',
-    high:      'High (5,000–20,000 kWh/mo)',
-    very_high: 'Very High (20,000+ kWh/mo)',
+    low:       'Düşük (< 1.000 kWh/ay)',
+    medium:    'Orta (1.000–5.000 kWh/ay)',
+    high:      'Yüksek (5.000–20.000 kWh/ay)',
+    very_high: 'Çok Yüksek (20.000+ kWh/ay)',
   },
   remote_work_policy: {
-    on_site:      'Fully On-Site',
-    hybrid:       'Hybrid',
-    fully_remote: 'Fully Remote',
+    on_site:      'Tamamen Ofisten',
+    hybrid:       'Hibrit',
+    fully_remote: 'Tamamen Uzaktan',
   },
 };
 
@@ -209,35 +209,35 @@ function formatValue(key, raw) {
 const PROFILE_SECTIONS = [
   {
     id: 'household_details',
-    title: 'Household Details',
+    title: 'Konut Bilgileri',
     icon: '🏠',
     roles: ['individual', 'household'],
     fields: ['home_type', 'household_size', 'is_household_head'],
   },
   {
     id: 'company_details',
-    title: 'Company Details',
+    title: 'Şirket Bilgileri',
     icon: '🏭',
     roles: ['company'],
     fields: ['company_name', 'industry', 'employee_count_range', 'department_count_range'],
   },
   {
     id: 'energy',
-    title: 'Home & Energy',
+    title: 'Ev & Enerji',
     icon: '⚡',
     roles: ['individual', 'household'],
     fields: ['monthly_kwh', 'heating_type', 'has_ac', 'renewable_energy', 'water_saving_devices'],
   },
   {
     id: 'office_energy',
-    title: 'Office & Energy',
+    title: 'Ofis & Enerji',
     icon: '🏢',
     roles: ['company'],
     fields: ['office_energy_source', 'office_electricity_level', 'remote_work_policy'],
   },
   {
     id: 'transport',
-    title: 'Transportation',
+    title: 'Ulaşım',
     icon: '🚗',
     roles: 'all',
     fields: [
@@ -249,21 +249,21 @@ const PROFILE_SECTIONS = [
   },
   {
     id: 'flights',
-    title: 'Flights & Travel',
+    title: 'Uçuş & Seyahat',
     icon: '✈️',
     roles: 'all',
     fields: ['domestic_flights', 'international_flights', 'typical_flight_distance', 'has_business_travel'],
   },
   {
     id: 'food',
-    title: 'Food & Diet',
+    title: 'Gıda & Beslenme',
     icon: '🍽',
     roles: ['individual', 'household'],
     fields: ['diet_type', 'red_meat_freq', 'dairy_level', 'local_food_pref', 'food_waste'],
   },
   {
     id: 'shopping',
-    title: 'Shopping & Waste',
+    title: 'Alışveriş & Atık',
     icon: '🛍',
     roles: ['individual', 'household'],
     fields: [
@@ -273,7 +273,7 @@ const PROFILE_SECTIONS = [
   },
   {
     id: 'goals',
-    title: 'Goals & Motivation',
+    title: 'Hedefler & Motivasyon',
     icon: '🎯',
     roles: 'all',
     fields: ['motivation', 'priority_area'],
@@ -290,7 +290,7 @@ function renderFieldRow(key, raw) {
   row.className = 'profile-field-row';
   row.innerHTML = `
     <span class="profile-field-label">${label}</span>
-    <span class="profile-field-value${display ? '' : ' not-provided'}">${display ?? 'Not provided'}</span>
+    <span class="profile-field-value${display ? '' : ' not-provided'}">${display ?? 'Belirtilmemiş'}</span>
   `;
   return row;
 }
@@ -317,7 +317,7 @@ function renderSection(section, answers) {
   if (populated.length === 0) {
     const empty = document.createElement('p');
     empty.className = 'profile-section-empty';
-    empty.textContent = 'No answers provided for this section.';
+    empty.textContent = 'Bu bölüm için yanıt girilmemiş.';
     card.appendChild(empty);
   } else {
     const list = document.createElement('div');
@@ -344,15 +344,15 @@ async function loadProfile() {
     document.getElementById('profileEmail').textContent  = u.email || '—';
     document.getElementById('profileRole').textContent   = u.role  || '—';
 
-    const since = new Date(u.created_at).toLocaleDateString('en-GB', { year: 'numeric', month: 'long' });
-    document.getElementById('profileSince').textContent = `Member since ${since}`;
+    const since = new Date(u.created_at).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long' });
+    document.getElementById('profileSince').textContent = `Üyelik başlangıcı: ${since}`;
 
     const badge = document.getElementById('obStatusBadge');
     if (u.onboarding_completed) {
-      badge.textContent = '✓ Carbon profile complete';
+      badge.textContent = '✓ Karbon profili tamamlandı';
       badge.className = 'profile-ob-badge complete';
     } else {
-      badge.textContent = '○ Carbon profile incomplete';
+      badge.textContent = '○ Karbon profili tamamlanmadı';
       badge.className = 'profile-ob-badge incomplete';
     }
 
@@ -365,8 +365,8 @@ async function loadProfile() {
       msg.className = 'content-card';
       msg.innerHTML = `
         <div style="text-align:center;padding:32px;color:var(--color-text-muted)">
-          <p style="margin-bottom:16px">Carbon profile not filled yet.</p>
-          <a href="onboarding.html" class="btn-primary">Complete carbon profile →</a>
+          <p style="margin-bottom:16px">Karbon profili henüz doldurulmadı.</p>
+          <a href="onboarding.html" class="btn-primary">Karbon profilini tamamla →</a>
         </div>
       `;
       container.appendChild(msg);
@@ -376,7 +376,7 @@ async function loadProfile() {
     // Section heading
     const heading = document.createElement('div');
     heading.className = 'profile-carbon-heading';
-    heading.innerHTML = '<span>Carbon Profile</span><a href="carbon-profile.html" class="profile-retake-link">Profili Düzenle →</a>';
+    heading.innerHTML = '<span>Karbon Profili</span><a href="carbon-profile.html" class="profile-retake-link">Profili Düzenle →</a>';
     container.appendChild(heading);
 
     PROFILE_SECTIONS
@@ -385,7 +385,7 @@ async function loadProfile() {
 
   } catch (err) {
     console.error('[profile] load error:', err.message);
-    showToast('Error', 'Could not load profile data.', 'error');
+    showToast('Hata', 'Profil verileri yüklenemedi.', 'error');
   }
 }
 

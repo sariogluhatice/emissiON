@@ -27,6 +27,12 @@ const ACTIVITY_TYPE_LABELS = {
   shopping:      'Alışveriş',
   food:          'Gıda',
   water:         'Su',
+  beef_red_meat: 'Sığır / Kırmızı Et',
+  chicken:       'Tavuk',
+  vegetables:    'Sebze',
+  rice_grains:   'Pirinç / Tahıl',
+  food_general:  'Genel Gıda',
+  meat:          'Et Tüketimi',
 };
 
 // source label (DB'deki değer) → category key eşlemesi
@@ -41,6 +47,12 @@ const SOURCE_TO_CATEGORY = {
   'Plastik / Ambalaj (Harcama)': 'materials',
   'Genel Atık':                  'waste',
   'Gıda Harcaması':              'food',
+  'Sığır / Kırmızı Et':         'food',
+  'Tavuk':                       'food',
+  'Sebze':                       'food',
+  'Pirinç / Tahıl':              'food',
+  'Genel Gıda':                  'food',
+  'Et Tüketimi':                 'food',
   // shopping — yeni ve eski kayıtlar
   'Genel Alışveriş':             'shopping',
   'Genel Perakende / Alışveriş': 'shopping',
@@ -161,7 +173,7 @@ function render() {
       <td><strong>${parseFloat(record.amount || 0).toFixed(1)}</strong></td>
       <td>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <a href="add-emission.html?id=${record.id}" class="btn-action btn-edit" title="Düzenle">
+          <a href="add-entry.html?edit=${record.id}" class="btn-action btn-edit" title="Düzenle">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path></svg>
             Düzenle
           </a>

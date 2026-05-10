@@ -26,7 +26,7 @@
 }
 
 .checkbox-label input[type="checkbox"]:focus {
-  box-shadow: 0 6px 18px rgba(0, 255, 140, 0.06);
+  box-shadow: 0 6px 18px rgba(34, 197, 94, 0.12);
   outline: none;
 }
 
@@ -49,13 +49,8 @@
 }
 
 .checkbox-label input[type="checkbox"]:checked::after {
-  border-color: #04110a; /* dark check for contrast on lime */
+  border-color: var(--color-text-inverse);
   opacity: 1;
-}
-
-/* Dark mode checkmark color */
-[data-theme="dark"] .checkbox-label input[type="checkbox"]:checked::after {
-  border-color: #ffffff;
 }
 
 .bottom-text {

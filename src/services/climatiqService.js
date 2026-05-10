@@ -2,6 +2,14 @@
  * Climatiq API ile iletişim kuran servis.
  * Node 18+ sürümünde bulunan yerleşik fetch fonksiyonunu kullanır.
  */
+
+const FOOD_ACTIVITY_MAP = {
+    beef_red_meat: 'food-type_beef-origin_region_multi_region',
+    chicken:       'food-type_chicken',
+    vegetables:    'food-type_vegetables_average',
+    rice_grains:   'food-type_rice-origin_region_multi_region',
+};
+
 class ClimatiqService {
     constructor() {
         this.apiKey = process.env.CLIMATIQ_API_KEY;
@@ -58,6 +66,13 @@ class ClimatiqService {
         }
 
         return this.calculateEmission(activityId, distance, 'km');
+    }
+
+    /** Gıda emisyonu tahmini (ağırlık bazlı, WRAP faktörleri) */
+    async calculateFoodEmission(activityType, amountKg) {
+        const activityId = FOOD_ACTIVITY_MAP[activityType];
+        if (!activityId) throw new Error(`Bilinmeyen gıda türü: ${activityType}`);
+        return this.calculateEmission(activityId, amountKg, 'kg');
     }
 
     /** API istekleri için özel yardımcı fonksiyon */

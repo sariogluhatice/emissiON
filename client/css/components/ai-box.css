@@ -22,8 +22,8 @@
 }
 
 .sparkle-icon {
-    color: #4cc9f0;
-    filter: drop-shadow(0 0 3px rgba(76, 201, 240, 0.5));
+    color: var(--color-secondary);
+    filter: drop-shadow(0 0 3px rgba(56, 189, 248, 0.4));
 }
 
 .ai-insight-text {
@@ -36,16 +36,16 @@
     font-style: italic;
     font-size: 1rem;
     margin-bottom: 10px;
-    color: #2b3a67;
+    color: var(--color-text-strong);
 }
 
 .insight-tip {
     font-size: 0.9rem;
-    background: rgba(255, 255, 255, 0.5);
+    background: var(--color-surface-blue);
     padding: 8px 12px;
     border-radius: 8px;
-    border-left: 3px solid #4cc9f0;
-    color: #475569;
+    border-left: 3px solid var(--color-secondary);
+    color: var(--color-text-muted);
 }
 
 .ai-insight-box.loading {

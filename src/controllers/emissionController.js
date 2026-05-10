@@ -31,14 +31,24 @@ const normalizeExtractedBillData = (raw = {}) => {
 // --- HESAPLA (CALCULATE) ---
 // POST /api/emissions/calculate
 // Gövde (Body): { activityId, quantity, unit, activityLabel } VEYA { from, to, flightClass }
+const VALID_FOOD_TYPES = ['beef_red_meat', 'chicken', 'vegetables', 'rice_grains'];
+
 const calculate = async (req, res) => {
-    const { activityId, quantity, unit, from, to, flightClass, activityLabel } = req.body;
+    const { activityId, quantity, unit, from, to, flightClass, activityLabel, category, activityType } = req.body;
 
     try {
         let result;
-        // Eğer 'from' ve 'to' sağlanmışsa, bunun bir uçuş rotası hesaplaması olduğunu varsayalım
         if (from && to) {
             result = await climatiqService.calculateFlightEmission(from, to, flightClass);
+        } else if (category === 'food') {
+            if (!VALID_FOOD_TYPES.includes(activityType)) {
+                return res.status(400).json({ message: 'Geçersiz gıda türü. beef_red_meat, chicken, vegetables veya rice_grains olmalıdır.' });
+            }
+            const amt = parseFloat(quantity);
+            if (!Number.isFinite(amt) || amt <= 0) {
+                return res.status(400).json({ message: 'Miktar pozitif bir sayı olmalıdır.' });
+            }
+            result = await climatiqService.calculateFoodEmission(activityType, amt);
         } else {
             if (!activityId || !quantity || !unit) {
                 return res.status(400).json({ message: 'Genel hesaplama için activityId, miktar (quantity) ve birim (unit) gereklidir.' });
@@ -272,7 +282,7 @@ ${String(ocrText).slice(0, 4000)}`;
 const getAll = async (req, res) => {
     try {
         const result = await pool.query(
-            `SELECT id, source, amount, date, created_at
+            `SELECT id, source, amount, date, category, activity_type, created_at
              FROM emission_records
              WHERE user_id = $1
              ORDER BY date DESC`,
@@ -289,7 +299,7 @@ const getAll = async (req, res) => {
 // POST /api/emissions
 // Gövde (Body): { source, amount, date }
 const create = async (req, res) => {
-    const { source: rawSource, amount, date } = req.body;
+    const { source: rawSource, amount, date, category, activity_type } = req.body;
     const source = typeof rawSource === 'string' ? rawSource.trim() : '';
 
     if (!source || amount === undefined || !date) {
@@ -301,12 +311,15 @@ const create = async (req, res) => {
         return res.status(400).json({ message: 'Miktar pozitif bir sayı olmalıdır.' });
     }
 
+    const cat = typeof category === 'string' && category.trim() ? category.trim() : null;
+    const actType = typeof activity_type === 'string' && activity_type.trim() ? activity_type.trim() : null;
+
     try {
         const result = await pool.query(
-            `INSERT INTO emission_records (user_id, source, amount, date)
-             VALUES ($1, $2, $3, $4)
-             RETURNING id, source, amount, date, created_at`,
-            [req.user.id, source, parsedAmount, date]
+            `INSERT INTO emission_records (user_id, source, amount, date, category, activity_type)
+             VALUES ($1, $2, $3, $4, $5, $6)
+             RETURNING id, source, amount, date, category, activity_type, created_at`,
+            [req.user.id, source, parsedAmount, date, cat, actType]
         );
         return res.status(201).json({
             message: 'Kayıt oluşturuldu.',
@@ -318,11 +331,31 @@ const create = async (req, res) => {
     }
 };
 
+// --- TEK KAYIT GETİR (GET BY ID) ---
+// GET /api/emissions/:id
+const getById = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query(
+            `SELECT id, source, amount, date, category, activity_type, created_at
+             FROM emission_records WHERE id = $1 AND user_id = $2`,
+            [id, req.user.id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Kayıt bulunamadı.' });
+        }
+        return res.status(200).json({ record: result.rows[0] });
+    } catch (err) {
+        console.error('[emissions.getById]', err.message);
+        return res.status(500).json({ message: 'Sunucu hatası.' });
+    }
+};
+
 // --- GÜNCELLE (UPDATE) ---
 // PUT /api/emissions/:id
 const update = async (req, res) => {
     const { id } = req.params;
-    const { source: rawSource, amount, date } = req.body;
+    const { source: rawSource, amount, date, category, activity_type } = req.body;
     const source = typeof rawSource === 'string' ? rawSource.trim() : '';
 
     if (!source || amount === undefined || !date) {
@@ -334,13 +367,16 @@ const update = async (req, res) => {
         return res.status(400).json({ message: 'Miktar pozitif bir sayı olmalıdır.' });
     }
 
+    const cat = typeof category === 'string' && category.trim() ? category.trim() : null;
+    const actType = typeof activity_type === 'string' && activity_type.trim() ? activity_type.trim() : null;
+
     try {
         const result = await pool.query(
             `UPDATE emission_records
-             SET source = $1, amount = $2, date = $3
-             WHERE id = $4 AND user_id = $5
-             RETURNING id, source, amount, date, created_at`,
-            [source, parsedAmount, date, id, req.user.id]
+             SET source = $1, amount = $2, date = $3, category = $4, activity_type = $5
+             WHERE id = $6 AND user_id = $7
+             RETURNING id, source, amount, date, category, activity_type, created_at`,
+            [source, parsedAmount, date, cat, actType, id, req.user.id]
         );
 
         if (result.rows.length === 0) {
@@ -458,4 +494,4 @@ const getSimulationRoadmap = async (req, res) => {
     }
 };
 
-module.exports = { getAll, create, update, remove, calculate, generateInsight, extractOcrBillData, extractOcrFromImage, getSmartInsights, parseOcrWithGroq, getSimulationRoadmap };
+module.exports = { getAll, getById, create, update, remove, calculate, generateInsight, extractOcrBillData, extractOcrFromImage, getSmartInsights, parseOcrWithGroq, getSimulationRoadmap };

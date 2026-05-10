@@ -30,10 +30,12 @@ CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower_unique ON users (LOWER(email
 CREATE TABLE IF NOT EXISTS emission_records (
     id         SERIAL PRIMARY KEY,
     user_id    INT           NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    source     VARCHAR(100)  NOT NULL,
-    amount     NUMERIC(10,2) NOT NULL CHECK (amount > 0),  -- kg CO₂, must be positive
-    date       DATE          NOT NULL,
-    created_at TIMESTAMP     NOT NULL DEFAULT NOW()
+    source        VARCHAR(100)  NOT NULL,
+    amount        NUMERIC(10,2) NOT NULL CHECK (amount > 0),  -- kg CO₂, must be positive
+    date          DATE          NOT NULL,
+    category      VARCHAR(50),
+    activity_type VARCHAR(50),
+    created_at    TIMESTAMP     NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX ON emission_records (user_id, date DESC);

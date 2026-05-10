@@ -1,16 +1,93 @@
 /* ============================================================
-   SETTINGS — design tokens (CSS custom properties)
-   Tüm renkler, spacing, radius ve shadow değerleri burada.
+   SETTINGS / VARIABLES — Design token sistemi
+   Tüm renkler, gölgeler ve gradyanlar burada tanımlanır.
    ============================================================ */
 
 :root {
-  /* Dark mode as default (project-wide) */
-  --color-primary: #00ff8c;
-  --color-primary-dark: #00cc70;
-  --color-error: #ff4b4b;
-  --color-success: #00ff8c;
+  /* ── Backgrounds ─────────────────────────────────────────── */
+  --color-bg:                 #F7FAF8;
+  --color-bg-main:            #F7FAF8;
+  --color-bg-gradient-start:  #F7FAF8;
+  --color-bg-gradient-end:    #EFF7FF;
+  --color-bg-soft-green:      #EEFAF4;
+  --color-bg-soft-blue:       #EFF7FF;
 
-  /* Spacing & Radius */
+  /* ── Surfaces / Cards ────────────────────────────────────── */
+  --color-surface:            #FFFFFF;
+  --color-surface-soft:       rgba(255, 255, 255, 0.90);
+  --color-surface-green:      #F2FCF6;
+  --color-surface-blue:       #F0F6FF;
+  --color-surface-muted:      #F8FAFB;
+
+  /* ── Primary Brand (pastel sage yeşil) ───────────────────── */
+  --color-primary:            #5BAD8E;
+  --color-primary-hover:      #47967A;
+  --color-primary-soft:       #B8E4D4;
+  --color-primary-dark:       #2F7A5C;
+  --color-brand:              #5BAD8E;
+  --color-brand-hover:        #47967A;
+  --color-brand-text:         #2F7A5C;
+
+  /* ── Secondary Brand (pastel gökyüzü mavisi) ─────────────── */
+  --color-secondary:          #7BC8E8;
+  --color-secondary-hover:    #52AEDA;
+  --color-secondary-soft:     #C5E8F7;
+
+  /* ── Accent Colors (tam pastel) ──────────────────────────── */
+  --color-accent-teal:        #7ADACE;
+  --color-accent-yellow:      #F8D98A;
+  --color-accent-purple:      #C4B4F5;
+  --color-accent-coral:       #F5A8B0;
+
+  /* ── Status Colors ───────────────────────────────────────── */
+  --color-success:            #5BAD8E;
+  --color-success-soft:       #E4F6EE;
+  --color-warning:            #F5C87A;
+  --color-warning-soft:       #FEF8E8;
+  --color-error:              #F4918A;
+  --color-error-soft:         #FEF0EF;
+  --color-danger:             #F4918A;
+  --color-danger-soft:        #FEF0EF;
+  --color-info:               #7BC8E8;
+  --color-info-soft:          #EDF7FC;
+
+  /* ── Text Colors ─────────────────────────────────────────── */
+  --color-text:               #2D4A3E;
+  --color-text-main:          #2D4A3E;
+  --color-text-strong:        #1A3028;
+  --color-text-muted:         #7A9E8F;
+  --color-text-soft:          #A8C4BA;
+  --color-text-inverse:       #FFFFFF;
+  --color-placeholder:        #A8C4BA;
+
+  /* ── Borders ─────────────────────────────────────────────── */
+  --color-border:             #C8E4D8;
+  --color-border-blue:        #B8DCEE;
+  --color-border-soft:        rgba(91, 173, 142, 0.15);
+
+  /* ── Shadows ─────────────────────────────────────────────── */
+  --shadow-card:              0 8px 24px rgba(91, 173, 142, 0.10);
+  --shadow-card-hover:        0 16px 36px rgba(91, 173, 142, 0.15);
+  --shadow-soft-green:        0 0 32px rgba(91, 173, 142, 0.12);
+  --shadow-soft-blue:         0 0 32px rgba(123, 200, 232, 0.14);
+
+  /* ── Legacy tokens (kept for compatibility) ──────────────── */
+  --glass-bg:                 rgba(255, 255, 255, 0.90);
+  --glass-blur:               blur(12px);
+  --glass-border:             #C8E4D8;
+  --card-shadow:              0 8px 24px rgba(91, 173, 142, 0.10);
+  --neon-glow:                0 0 20px rgba(91, 173, 142, 0.14);
+  --navbar-bg-dark:           rgba(255, 255, 255, 0.94);
+  --card-bg-dark:             rgba(255, 255, 255, 0.90);
+  --sidebar-bg:               #FFFFFF;
+
+  /* ── Gradients ───────────────────────────────────────────── */
+  --gradient-page:            linear-gradient(135deg, #F7FAF8 0%, #EFF7FF 100%);
+  --gradient-primary:         linear-gradient(135deg, #7ADACE 0%, #7BC8E8 100%);
+  --gradient-primary-soft:    linear-gradient(135deg, rgba(91,173,142,0.16) 0%, rgba(123,200,232,0.16) 100%);
+  --gradient-card-soft:       linear-gradient(145deg, rgba(255,255,255,0.98), rgba(242,252,246,0.80));
+
+  /* ── Spacing & Radius ────────────────────────────────────── */
   --spacing-xs:  4px;
   --spacing-sm:  8px;
   --spacing-md:  16px;
@@ -22,30 +99,20 @@
   --radius-lg: 16px;
   --radius-xl: 24px;
 
-  /* Neon / effects */
-  --neon-glow: 0 0 20px rgba(0, 255, 140, 0.22);
-  --glass-blur: blur(12px);
-
-  /* Dark theme tokens (now defaults) */
-  --color-bg: #07090b;
-  --color-surface: #0f1418;
-  --color-border: rgba(255, 255, 255, 0.06);
-  --color-text: #f6fbff;
-  --color-text-muted: #9aa5b1;
-  --color-placeholder: #7f8a95;
-  --glass-bg: rgba(16, 20, 24, 0.6);
-  --glass-border: rgba(255, 255, 255, 0.06);
-  --sidebar-bg: #0d1117;
-  --card-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-  --navbar-bg-dark: rgba(6, 8, 10, 0.6);
-  --card-bg-dark: rgba(16, 20, 24, 0.6);
+  /* ── Chart Colors (pastel) ───────────────────────────────── */
+  --chart-green:              #86EFAC;
+  --chart-blue:               #93C5FD;
+  --chart-teal:               #5EEAD4;
+  --chart-yellow:             #FDE68A;
+  --chart-purple:             #C4B5FD;
+  --chart-coral:              #FDA4AF;
 }
 
 /* Modal ve Özel Bileşenler İçin Helper Değişkenler */
 .modal-box,
 .glass-card {
-  background: var(--glass-bg);
+  background: var(--color-surface);
   backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-border);
   color: var(--color-text);
 }

@@ -33,14 +33,14 @@ dateInput.setAttribute('min', minDate);
 scanBtn.addEventListener('click', async () => {
     const file = receiptFileEl.files?.[0];
     if (!file) {
-        showToast('No file', 'Please select a PDF or image first.', 'error');
+        showToast('Dosya Seçilmedi', 'Lütfen önce bir PDF veya görsel seçin.', 'error');
         return;
     }
 
     scanBtn.disabled = true;
-    scanProgress.textContent = 'Uploading and scanning…';
+    scanProgress.textContent = 'Yükleniyor ve taranıyor…';
     extractedBox.style.display = 'none';
-    resultBox.textContent = 'Scan a receipt to see the CO₂ breakdown here.';
+    resultBox.textContent = 'CO₂ dağılımını görmek için bir fiş tarayın.';
 
     try {
         const formData = new FormData();
@@ -53,7 +53,7 @@ scanBtn.addEventListener('click', async () => {
         });
 
         const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Scan failed.');
+        if (!res.ok) throw new Error(data.message || 'Tarama başarısız.');
 
         // DEBUG — remove when done
         console.log('[Shopping OCR raw response]', data);
@@ -70,7 +70,7 @@ scanBtn.addEventListener('click', async () => {
         extractedBox.style.display = 'block';
         extAmount.textContent   = `${data.originalAmount} ${data.currency}`;
         extCurrency.textContent = data.currency;
-        extDate.textContent     = data.date || 'Not found';
+        extDate.textContent     = data.date || 'Bulunamadı';
         extRate.textContent     = data.exchangeRate
             ? `1 ${data.currency} = ${data.exchangeRate} USD`
             : '—';
@@ -84,20 +84,20 @@ scanBtn.addEventListener('click', async () => {
 
         // Result summary box
         resultBox.innerHTML = `
-            <strong style="display:block;margin-bottom:4px;">CO₂ Breakdown</strong>
+            <strong style="display:block;margin-bottom:4px;">CO₂ Dağılımı</strong>
             ${data.originalAmount} ${data.currency}
             → $${data.usdAmount} USD
-            (rate: ${data.exchangeRate ?? '—'})<br>
+            (kur: ${data.exchangeRate ?? '—'})<br>
             <span style="font-size:15px;font-weight:700;color:var(--color-primary);">
               ${parseFloat(data.co2e).toFixed(3)} kg CO₂e
             </span>
         `;
 
-        scanProgress.textContent = 'Scan complete — review and save below.';
-        showToast('Scan complete', `${data.originalAmount} ${data.currency} → ${parseFloat(data.co2e).toFixed(3)} kg CO₂e`, 'success');
+        scanProgress.textContent = 'Tarama tamamlandı — aşağıdan inceleyin ve kaydedin.';
+        showToast('Tarama Tamamlandı', `${data.originalAmount} ${data.currency} → ${parseFloat(data.co2e).toFixed(3)} kg CO₂e`, 'success');
     } catch (err) {
-        scanProgress.textContent = `Error: ${err.message}`;
-        showToast('Scan failed', err.message, 'error');
+        scanProgress.textContent = `Hata: ${err.message}`;
+        showToast('Tarama Başarısız', err.message, 'error');
     } finally {
         scanBtn.disabled = false;
     }
@@ -111,21 +111,21 @@ saveForm.addEventListener('submit', async (e) => {
 
     const co2  = parseFloat(co2Input.value);
     const date = dateInput.value;
-    const desc = descInput.value.trim() || 'Shopping Receipt';
+    const desc = descInput.value.trim() || 'Alışveriş Fişi';
 
     let valid = true;
     if (!co2 || co2 <= 0) {
-        document.getElementById('co2Error').textContent = 'Please scan a receipt first or enter a value.';
+        document.getElementById('co2Error').textContent = 'Önce bir fiş tarayın veya değer girin.';
         valid = false;
     }
     if (!date) {
-        document.getElementById('dateError').textContent = 'Please select a date.';
+        document.getElementById('dateError').textContent = 'Lütfen bir tarih seçin.';
         valid = false;
     }
     if (!valid) return;
 
     saveBtn.disabled = true;
-    saveBtn.textContent = 'Saving…';
+    saveBtn.textContent = 'Kaydediliyor…';
 
     try {
         await emissionService.create({
@@ -133,11 +133,11 @@ saveForm.addEventListener('submit', async (e) => {
             amount: co2,
             date
         });
-        showToast('Saved!', 'Emission entry created successfully.', 'success');
+        showToast('Kaydedildi!', 'Emisyon kaydı başarıyla oluşturuldu.', 'success');
         setTimeout(() => { window.location.href = 'emissions.html'; }, 1200);
     } catch (err) {
-        showToast('Save failed', err.message || 'Could not save entry.', 'error');
+        showToast('Kayıt Başarısız', err.message || 'Kayıt yapılamadı.', 'error');
         saveBtn.disabled = false;
-        saveBtn.textContent = 'Save Emission Entry';
+        saveBtn.textContent = 'Emisyon Kaydını Kaydet';
     }
 });

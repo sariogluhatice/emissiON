@@ -252,47 +252,96 @@ ZORUNLU JSON FORMATI:
      * 4. Simülasyon Yol Haritası (What-If Roadmap)
      */
     async generateSimulationRoadmap(reductions, role = 'individual') {
-        const reductionsText = Object.entries(reductions)
-            .filter(([_, val]) => val < 0)
-            .map(([cat, val]) => `${cat}: %${val}`)
-            .join(', ');
+        const CATEGORY_NAMES = {
+            energy:    'Enerji',
+            water:     'Su Kullanımı',
+            gas:       'Doğalgaz',
+            transport: 'Ulaşım',
+            food:      'Gıda',
+            waste:     'Atık',
+            materials: 'Malzeme',
+            shopping:  'Alışveriş',
+        };
 
-        if (!reductionsText) {
+        const selected = Object.entries(reductions)
+            .filter(([_, val]) => Number(val) < 0)
+            .map(([cat, val]) => ({
+                key: cat,
+                name: CATEGORY_NAMES[cat] || cat,
+                pct: Math.abs(Number(val)),
+            }));
+
+        if (selected.length === 0) {
             return {
-                title: "Karbon Azaltım Planı",
-                steps: ["Sürgüleri sola kaydırarak gelecek ay emisyon azaltma hedeflerinizi belirleyin, size özel yol haritasını üretelim!"]
+                title: "Azaltım Hedefi Seçilmedi",
+                steps: ["Kişisel azaltım yol haritası oluşturmak için en az bir kategori için azaltım hedefi seçin."]
             };
         }
 
-        const prompt = `Görevin: Bir kullanıcının karbon emisyon simülasyonunda seçtiği azaltma yüzdelerine göre, bu azaltmaları nasıl sağlayabileceğine dair İNANILMAZ DERECEDE İLGİ ÇEKİCİ, DETAYLI ve ETKİLEYİCİ bir yol haritası (roadmap) üret. Sığ ve genelgeçer cümleler yerine, şaşırtıcı çevresel analojiler, finansal kazançlar ve spesifik teknik tüyolar kullan.
-        
+        const selectedLines = selected.map(r => `- ${r.name}: %${r.pct} azaltım hedefi`).join('\n');
+        const selectedNames = selected.map(r => r.name).join(', ');
+        const notSelected = Object.values(CATEGORY_NAMES)
+            .filter(n => !selected.some(r => r.name === n))
+            .join(', ');
+
+        const roleNote = role === 'company'
+            ? 'Şirket ofisi, filo ve tedarik zinciri bağlamında öneriler ver.'
+            : role === 'household'
+            ? 'Aile içi işbirliğine yönelik öneriler ver.'
+            : 'Kişisel günlük alışkanlıklara yönelik öneriler ver.';
+
+        const prompt = `Görevin: Kullanıcının karbon emisyon simülasyonunda seçtiği azaltım hedefleri için kişisel bir yol haritası üret.
+
 KULLANICI VERİLERİ:
-- Azaltım Hedefleri: ${reductionsText}
-- Kullanıcı Rolü: ${role}
+${selectedLines}
+Kullanıcı Rolü: ${role}
 
 ZORUNLU KURALLAR:
-1. Sadece kullanıcının gerçekten azalttığı kategorileri (yukarıda belirtilenleri) ele al. Azaltmadığı kategoriler hakkında konuşma.
-2. Belirtilen azaltım oranlarını gerçekleştirmek için gereken somut, pratik, teknik ve şaşırtıcı adımları söyle. Örneğin: "%20 Elektrik tasarrufu için; kettle'da sadece ihtiyacınız kadar su kaynatmak yılda 120 kg CO2 önler. Stand-by modundaki cihazlar faturanızın %10'unu yutar." gibi şaşırtıcı ve detaylı bilgiler ver.
-3. Her kategorinin ilk adımı olarak mutlaka o azaltım oranının dünyamız için neye denk geldiğini anlatan (buzul erimesi, araba yolculuğu, telefon şarjı vb.) ŞAŞIRTICI ve ETKİLEYİCİ bir bilimsel kıyaslama/analoji yaz.
-4. Rol uyumuna dikkat et (company ise şirket ofisleri ve filo verimliliği, household ise aile içi işbirliği, individual ise kişisel alışkanlıklar).
+1. YALNIZCA şu kategoriler için bölüm oluştur: ${selectedNames}
+2. Şu kategoriler seçilmedi — bunlar hakkında HİÇBİR ŞEY yazma, başlık ekleme: ${notSelected}
+3. Her kategoriye yalnızca o kategoriyle doğrudan ilgili, pratik, uygulanabilir öneriler yaz:
+   - Enerji → elektrik tasarrufu, standby cihaz, LED aydınlatma, yenilenebilir enerji
+   - Su Kullanımı → duş süresi, akan musluk, debi sınırlayıcı, bahçe sulama zamanlaması
+   - Doğalgaz → ısıtma termostatı, yalıtım, kombi bakımı, petek havalandırması
+   - Ulaşım → toplu taşıma, bisiklet, yürüme, araç paylaşımı, yakıt verimliliği
+   - Gıda → et tüketimi azaltma, yerel ve mevsim ürünleri, yemek israfını önleme
+   - Atık → geri dönüşüm, kompost, ambalaj azaltımı, sıfır atık alışkanlıkları
+   - Malzeme → tamir, yeniden kullanım, ikinci el tercih
+   - Alışveriş → gereksiz satın alma azaltımı, kalıcı ürün tercihi, geri dönüştürülebilir ambalaj
+4. Doğrulanamayan iddiaları (buzul erimesi miktarı gibi) yazma. Sadece somut, günlük hayata uygulanabilir öneriler.
+5. ${roleNote}
 
-ZORUNLU JSON FORMATI (SADECE JSON):
+ZORUNLU JSON FORMATI (SADECE JSON, MARKDOWN KOD BLOĞU KULLANMA):
 {
-  "title": "Gelecek Ay Azaltım Yol Haritanız",
+  "title": "Kişisel Azaltım Yol Haritanız",
   "steps": [
     {
-      "kategori": "Kategori İsmi (örn: Enerji %X azaltım hedefi için)",
+      "kategori": "[Kategori Adı] %[oran] Azaltım Hedefi",
       "adimlar": [
-        "Bilimsel Kıyaslama: Bu azaltım hedefiniz, dünyamızda X kg buzul erimesini önlemeye veya X km araba sürüşünü sıfırlamaya eşdeğer!",
-        "1. spesifik, detaylı, şaşırtıcı teknik ve pratik öneri (ayrıntılı anlatım)",
-        "2. spesifik, detaylı, şaşırtıcı teknik ve pratik öneri (ayrıntılı anlatım)"
+        "Kısa açıklama: Bu hedefe ulaşmak için yapılabilecekler.",
+        "1. Spesifik, uygulanabilir öneri.",
+        "2. Spesifik, uygulanabilir öneri.",
+        "3. Spesifik, uygulanabilir öneri."
       ]
     }
   ]
-}`;
+}
+
+ÖNEMLİ: steps dizisinde YALNIZCA ${selectedNames} kategorileri olmalı. Toplam ${selected.length} bölüm üret.`;
 
         let response = await this.callGroq(prompt, true);
         if (!response) response = await this.callGemini(prompt, true);
+
+        const fallback = {
+            title: "Gelecek Ay Azaltım Yol Haritanız",
+            steps: [
+                "Seçtiğiniz hedeflere ulaşmak için enerji tasarruflu cihazları tercih edin.",
+                "Ulaşımda haftada en az bir gün toplu taşımayı veya bisikleti tercih edin.",
+                "Su tüketiminde debi sınırlayıcı aparatlar kullanarak tasarrufu arttırın."
+            ]
+        };
+
+        if (!response) return fallback;
 
         try {
             const cleaned = response.replace(/```json|```/gi, '').trim();
@@ -302,14 +351,7 @@ ZORUNLU JSON FORMATI (SADECE JSON):
                 steps: parsed.steps || ["Adımları belirlemek için veri girişine devam edin."]
             };
         } catch (e) {
-            return {
-                title: "Gelecek Ay Azaltım Yol Haritanız",
-                steps: [
-                    "Seçtiğiniz hedeflere ulaşmak için enerji tasarruflu cihazları tercih edin.",
-                    "Ulaşımda haftada en az bir gün toplu taşımayı veya bisikleti tercih edin.",
-                    "Su tüketiminde debi sınırlayıcı aparatlar kullanarak tasarrufu arttırın."
-                ]
-            };
+            return fallback;
         }
     }
 }

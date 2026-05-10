@@ -28,8 +28,8 @@ function setApiMessage(text, isError) {
 }
 
 function validateCode(value) {
-  if (!value.trim()) return 'Verification code is required.';
-  if (!/^\d{6}$/.test(value.trim())) return 'Code must be exactly 6 digits.';
+  if (!value.trim()) return 'Doğrulama kodu zorunludur.';
+  if (!/^\d{6}$/.test(value.trim())) return 'Kod tam olarak 6 rakamdan oluşmalıdır.';
   return '';
 }
 
@@ -59,13 +59,13 @@ form.addEventListener('submit', async (e) => {
     );
 
     sessionStorage.removeItem('pending_email');
-    setApiMessage('Email verified successfully. Please log in.', false);
+    setApiMessage('E-posta başarıyla doğrulandı. Lütfen giriş yapın.', false);
 
     setTimeout(() => {
       window.location.href = 'login.html';
     }, 2000);
   } catch (err) {
-    setApiMessage(err.message || 'Verification failed. Please try again.', true);
+    setApiMessage(err.message || 'Doğrulama başarısız. Lütfen tekrar deneyin.', true);
     submitBtn.disabled = false;
   }
 });
@@ -82,9 +82,9 @@ resendBtn.addEventListener('click', async () => {
 
   try {
     await authService.resendCode(emailInput.value.trim());
-    setApiMessage('A new code has been sent to your email.', false);
+    setApiMessage('E-posta adresinize yeni bir kod gönderildi.', false);
   } catch (err) {
-    setApiMessage(err.message || 'Failed to resend code. Please try again.', true);
+    setApiMessage(err.message || 'Kod gönderilemedi. Lütfen tekrar deneyin.', true);
   } finally {
     resendBtn.disabled = false;
   }

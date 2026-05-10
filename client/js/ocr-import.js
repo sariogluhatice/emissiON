@@ -27,17 +27,17 @@ const CATEGORY_ACTIVITY = {
   energy: {
     activityId: 'electricity-supply_grid-source_supplier_mix',
     expectedUnit: 'kWh',
-    sourceLabel: 'Electricity Bill (OCR)'
+    sourceLabel: 'Elektrik Faturası (OCR)'
   },
   water: {
     activityId: 'water_supply-type_na',
     expectedUnit: 'l',
-    sourceLabel: 'Water Bill (OCR)'
+    sourceLabel: 'Su Faturası (OCR)'
   },
   gas: {
     activityId: 'fuel-type_gaseous_fuels_net-fuel_use_na',
     expectedUnit: 'kWh',
-    sourceLabel: 'Natural Gas Bill (OCR)'
+    sourceLabel: 'Doğalgaz Faturası (OCR)'
   }
 };
 
@@ -57,7 +57,7 @@ function normalizeQuantityForCalculation(category, quantity, unit) {
   let value = Number(quantity);
 
   if (!Number.isFinite(value) || value <= 0) {
-    throw new Error('Quantity must be a positive number.');
+    throw new Error('Miktar pozitif bir sayı olmalıdır.');
   }
 
   if (category === 'water') {
@@ -76,23 +76,23 @@ function normalizeQuantityForCalculation(category, quantity, unit) {
 runOcrBtn.addEventListener('click', async () => {
   const file = billImageEl.files?.[0];
   if (!file) {
-    showToast('Missing file', 'Please select a bill image first.', 'error');
+    showToast('Dosya Seçilmedi', 'Lütfen önce bir fatura görseli seçin.', 'error');
     return;
   }
 
   const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
   if (!allowedTypes.includes(file.type)) {
-    showToast('Invalid file', 'Please upload JPG, PNG, or WEBP image.', 'error');
+    showToast('Geçersiz Dosya', 'Lütfen JPG, PNG veya WEBP görsel yükleyin.', 'error');
     return;
   }
 
   if (file.size > 5 * 1024 * 1024) {
-    showToast('File too large', 'Please upload an image smaller than 5MB.', 'error');
+    showToast('Dosya Çok Büyük', 'Lütfen 5 MB\'dan küçük bir görsel yükleyin.', 'error');
     return;
   }
 
   runOcrBtn.disabled = true;
-  ocrProgressEl.textContent = 'Uploading image to AWS Textract...';
+  ocrProgressEl.textContent = 'Görsel AWS Textract\'a yükleniyor...';
 
   try {
     const imageBase64 = await fileToBase64(file);
@@ -117,17 +117,17 @@ runOcrBtn.addEventListener('click', async () => {
     unitEl.value = extracted?.unit || '';
     periodEl.value = extracted?.date || '';
 
-    ocrProgressEl.textContent = ocrText ? 'Textract completed. Please verify extracted fields.' : 'No readable text found.';
+    ocrProgressEl.textContent = ocrText ? 'Textract tamamlandı. Lütfen çıkarılan alanları doğrulayın.' : 'Okunabilir metin bulunamadı.';
 
     if (!ocrText) {
-      showToast('No text', 'Textract could not detect enough text from this image.', 'error');
+      showToast('Metin Yok', 'Textract bu görselden yeterli metin algılayamadı.', 'error');
     } else {
-      showToast('Textract done', 'Text read and fields prefilled. Please verify.', 'success');
+      showToast('Textract Tamamlandı', 'Metin okundu ve alanlar dolduruldu. Lütfen doğrulayın.', 'success');
     }
   } catch (err) {
     console.error('[ocr-import] Textract flow failed:', err);
-    ocrProgressEl.textContent = 'Textract failed.';
-    showToast('Textract failed', err.message || 'Could not process this image.', 'error');
+    ocrProgressEl.textContent = 'Textract başarısız.';
+    showToast('Textract Başarısız', err.message || 'Bu görsel işlenemedi.', 'error');
   } finally {
     runOcrBtn.disabled = false;
   }
@@ -137,7 +137,7 @@ function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = () => reject(new Error('Failed to read selected file.'));
+    reader.onerror = () => reject(new Error('Seçilen dosya okunamadı.'));
     reader.readAsDataURL(file);
   });
 }
@@ -145,12 +145,12 @@ function fileToBase64(file) {
 extractBtn.addEventListener('click', async () => {
   const text = ocrTextEl.value.trim();
   if (text.length < 20) {
-    showToast('Insufficient text', 'OCR text is too short for extraction.', 'error');
+    showToast('Yetersiz Metin', 'OCR metni çıkarma için çok kısa.', 'error');
     return;
   }
 
   extractBtn.disabled = true;
-  extractBtn.textContent = 'Extracting...';
+  extractBtn.textContent = 'Çıkarılıyor...';
 
   try {
     const { extracted } = await emissionService.extractOcr(text);
@@ -162,13 +162,13 @@ extractBtn.addEventListener('click', async () => {
     unitEl.value = extracted?.unit || '';
     periodEl.value = extracted?.date || '';
 
-    showToast('Extraction done', 'Please verify fields before creating the entry.', 'success');
+    showToast('Çıkarma Tamamlandı', 'Kayıt oluşturmadan önce alanları doğrulayın.', 'success');
   } catch (err) {
     console.error('[ocr-import] Extraction failed:', err);
-    showToast('Extraction failed', err.message || 'Could not extract structured fields.', 'error');
+    showToast('Çıkarma Başarısız', err.message || 'Yapısal alanlar çıkarılamadı.', 'error');
   } finally {
     extractBtn.disabled = false;
-    extractBtn.textContent = 'Extract Structured Data';
+    extractBtn.textContent = 'Yapısal Veri Çıkar';
   }
 });
 
@@ -182,18 +182,18 @@ verifyForm.addEventListener('submit', async (e) => {
   const period = periodEl.value;
 
   if (!category || !activityType || !unit || !period || !Number.isFinite(quantity) || quantity <= 0) {
-    showToast('Invalid data', 'Please complete and verify all fields.', 'error');
+    showToast('Geçersiz Veri', 'Lütfen tüm alanları doldurun ve doğrulayın.', 'error');
     return;
   }
 
   const mapping = CATEGORY_ACTIVITY[category];
   if (!mapping) {
-    showToast('Unsupported category', 'Selected category cannot be calculated right now.', 'error');
+    showToast('Desteklenmeyen Kategori', 'Seçili kategori şu an hesaplanamıyor.', 'error');
     return;
   }
 
   confirmCreateBtn.disabled = true;
-  confirmCreateBtn.textContent = 'Creating...';
+  confirmCreateBtn.textContent = 'Oluşturuluyor...';
 
   try {
     const quantityForCalc = normalizeQuantityForCalculation(category, quantity, unit);
@@ -215,15 +215,15 @@ verifyForm.addEventListener('submit', async (e) => {
 
     const calcData = await calcRes.json();
     if (!calcRes.ok) {
-      throw new Error(calcData.message || 'Emission calculation failed.');
+      throw new Error(calcData.message || 'Emisyon hesaplama başarısız.');
     }
 
     const emissionAmount = Number(calcData.co2e);
     if (!Number.isFinite(emissionAmount) || emissionAmount <= 0) {
-      throw new Error('Calculated emission amount is invalid.');
+      throw new Error('Hesaplanan emisyon miktarı geçersiz.');
     }
 
-    calcPreviewEl.textContent = `Estimated footprint: ${emissionAmount.toFixed(2)} kg CO2e`;
+    calcPreviewEl.textContent = `Tahmini karbon ayak izi: ${emissionAmount.toFixed(2)} kg CO2e`;
 
     await emissionService.create({
       source: `${mapping.sourceLabel} - ${activityType}`,
@@ -231,15 +231,15 @@ verifyForm.addEventListener('submit', async (e) => {
       date: `${period}-01`
     });
 
-    showToast('Entry created', 'OCR verified entry was created successfully.', 'success');
+    showToast('Kayıt Oluşturuldu', 'OCR doğrulamalı kayıt başarıyla oluşturuldu.', 'success');
     setTimeout(() => {
       window.location.href = 'emissions.html';
     }, 1200);
   } catch (err) {
     console.error('[ocr-import] Create flow failed:', err);
-    showToast('Create failed', err.message || 'Could not create entry.', 'error');
+    showToast('Oluşturma Başarısız', err.message || 'Kayıt oluşturulamadı.', 'error');
   } finally {
     confirmCreateBtn.disabled = false;
-    confirmCreateBtn.textContent = 'Confirm and Create Entry';
+    confirmCreateBtn.textContent = 'Onayla ve Kaydı Oluştur';
   }
 });

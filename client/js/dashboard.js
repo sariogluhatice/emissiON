@@ -246,8 +246,8 @@ function renderBadges(records) {
     el.className = 'badge-item';
     el.style = `
       flex: 0 0 auto;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
       border-radius: 12px;
       padding: 16px;
       width: 120px;
@@ -258,7 +258,7 @@ function renderBadges(records) {
     el.title = b.desc;
     el.innerHTML = `
       <div style="font-size: 32px; margin-bottom: 8px;">${b.icon}</div>
-      <div style="font-size: 12px; font-weight: 600; color: #f59e0b;">${b.name}</div>
+      <div style="font-size: 12px; font-weight: 600; color: #F59E0B;">${b.name}</div>
     `;
     el.onmouseover = () => el.style.transform = 'translateY(-5px)';
     el.onmouseout  = () => el.style.transform = 'translateY(0)';
@@ -277,8 +277,8 @@ if (recordList) {
 
     try {
       deleteBtn.disabled = true;
-      deleteBtn.textContent = 'Siliniyor...';
-      
+      deleteBtn.textContent = 'Siliniyor…';
+
       await emissionService.remove(id);
       await initDashboard(); // İstatistikleri ve listeyi tazele
     } catch (err) {
@@ -290,14 +290,27 @@ if (recordList) {
   });
 }
 
+const CHART_CATEGORY_LABELS = {
+  energy:    '⚡ Enerji',
+  water:     '💧 Su',
+  gas:       '🔥 Doğalgaz',
+  transport: '🚗 Ulaşım',
+  materials: '📦 Malzeme',
+  waste:     '🗑️ Atık',
+  food:      '🍽️ Gıda',
+  shopping:  '🛍️ Alışveriş',
+};
+
 function initChart(data) {
   const ctx = document.getElementById('emissionChart');
   if (!ctx) return;
 
   const categories = {};
   data.forEach(e => {
-    const cat = e.source || 'Other';
-    categories[cat] = (categories[cat] || 0) + parseFloat(e.amount);
+    const label = e.category
+      ? (CHART_CATEGORY_LABELS[e.category] || e.category)
+      : (e.source || 'Diğer');
+    categories[label] = (categories[label] || 0) + parseFloat(e.amount);
   });
 
   const labels = Object.keys(categories);
@@ -322,8 +335,7 @@ function initChart(data) {
       labels: labels,
       datasets: [{
         data: values,
-        // Daha modern, pastel ve göz yormayan Premium renk paleti
-        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#6366f1', '#8b5cf6'],
+        backgroundColor: ['#86EFAC', '#93C5FD', '#5EEAD4', '#FDE68A', '#C4B5FD', '#FDA4AF'],
         borderWidth: 0, // Çizgileri kaldırıp saf renk görünümü
         hoverOffset: 8
       }]
@@ -383,7 +395,7 @@ function generateCorporateReport(records, user) {
   // Company & Report Info
   doc.setFontSize(10);
   doc.setTextColor(100);
-  doc.text(`Sirket: ${user.name}`, 14, 52);
+  doc.text(`Şirket: ${user.name}`, 14, 52);
   doc.text(`Rapor No: ${Math.random().toString(36).substr(2, 9).toUpperCase()}`, 14, 58);
   doc.text(`Rapor Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 14, 64);
   
@@ -393,7 +405,7 @@ function generateCorporateReport(records, user) {
   if (aiText && !aiText.includes('bekle')) {
     doc.setFontSize(12);
     doc.setTextColor(16, 185, 129);
-    doc.text('Yapay Zeka Analiz Ozeti', 14, 78);
+    doc.text('Yapay Zeka Analiz Özeti', 14, 78);
     doc.setFontSize(10);
     doc.setTextColor(50);
     const splitText = doc.splitTextToSize(aiText, 182);
@@ -407,15 +419,15 @@ function generateCorporateReport(records, user) {
   
   doc.setFontSize(12);
   doc.setTextColor(0);
-  doc.text('Emisyon Performans Gostergeleri', 14, nextY);
+  doc.text('Emisyon Performans Göstergeleri', 14, nextY);
   
   doc.autoTable({
     startY: nextY + 4,
-    head: [['Metrik', 'Deger', 'Birim']],
+    head: [['Metrik', 'Değer', 'Birim']],
     body: [
-      ['Toplam Karbon Ayak Izi', stats.total, 'kg CO2e'],
-      ['Aktif Emisyon Kaydi', stats.entries, 'Adet'],
-      ['Kritik Emisyon Kaynagi', stats.topCat, '-'],
+      ['Toplam Karbon Ayak İzi', stats.total, 'kg CO2e'],
+      ['Aktif Emisyon Kaydı', stats.entries, 'Adet'],
+      ['Kritik Emisyon Kaynağı', stats.topCat, '-'],
       ['Tahmini Karbon Maliyeti', `${Math.round(totalCost).toLocaleString('tr-TR')} TL`, 'TRY']
     ],
     theme: 'striped',
@@ -430,7 +442,7 @@ function generateCorporateReport(records, user) {
     doc.setFontSize(11);
     doc.setTextColor(16, 185, 129);
     doc.setFont("helvetica", "bold");
-    doc.text('AB Sinirda Karbon Duzenleme Mekanizmasi (CBAM) Vergi Projeksiyonu', 14, lastY + 12);
+    doc.text('AB Sınırda Karbon Düzenleme Mekanizması (CBAM) Vergi Projeksiyonu', 14, lastY + 12);
     
     const co2Tons = stats.total / 1000;
     const cbamRateEur = 85; // 85 EUR per ton of CO2
@@ -439,12 +451,12 @@ function generateCorporateReport(records, user) {
 
     doc.autoTable({
       startY: lastY + 16,
-      head: [['CBAM Metrisi', 'Hesaplama Orani', 'Ongorulen Tutar']],
+      head: [['CBAM Metriği', 'Hesaplama Oranı', 'Öngörülen Tutar']],
       body: [
         ['Toplam Karbon Tonu', 'Toplam kg CO2e / 1.000', `${co2Tons.toFixed(3)} Ton`],
         ['AB ETS Karbon Referans Bedeli', 'AB Komisyonu Sabit Birim Bedel', '85.00 EUR / Ton'],
-        ['Ongorulan Yillik Karbon Vergisi (EUR)', 'Toplam Ton x 85.00 EUR', `${cbamTaxEur.toFixed(2).toLocaleString('tr-TR')} EUR`],
-        ['Tahmini SKDM Yukumlulugu (TL)', 'EUR Tutar x 35.50 TRY/EUR', `${Math.round(cbamTaxTry).toLocaleString('tr-TR')} TL`]
+        ['Öngörülen Yıllık Karbon Vergisi (EUR)', 'Toplam Ton x 85.00 EUR', `${cbamTaxEur.toFixed(2).toLocaleString('tr-TR')} EUR`],
+        ['Tahmini SKDM Yükümlülüğü (TL)', 'EUR Tutar x 35.50 TRY/EUR', `${Math.round(cbamTaxTry).toLocaleString('tr-TR')} TL`]
       ],
       theme: 'striped',
       headStyles: { fillColor: [59, 130, 246] }, // Blue for compliance
@@ -458,18 +470,18 @@ function generateCorporateReport(records, user) {
   doc.setFontSize(11);
   doc.setTextColor(0);
   doc.setFont("helvetica", "bold");
-  doc.text('Detayli Faaliyet Dokumu', 14, lastY + 15);
+  doc.text('Detaylı Faaliyet Dökümü', 14, lastY + 15);
 
   const tableData = records.sort((a,b) => new Date(b.date) - new Date(a.date)).map(r => [
     new Date(r.date).toLocaleDateString('tr-TR'),
     r.source,
-    r.description || 'Aciklama yok',
+    r.description || 'Açıklama yok',
     `${parseFloat(r.amount).toFixed(2)} kg`
   ]);
 
   doc.autoTable({
     startY: lastY + 20,
-    head: [['Tarih', 'Kategori', 'Aciklama', 'Miktar']],
+    head: [['Tarih', 'Kategori', 'Açıklama', 'Miktar']],
     body: tableData,
     theme: 'grid',
     headStyles: { fillColor: [50, 50, 50] },
@@ -482,8 +494,8 @@ function generateCorporateReport(records, user) {
     doc.setPage(i);
     doc.setFontSize(9);
     doc.setTextColor(150);
-    doc.text(`Sayfa ${i} / ${pageCount} - emissiON Digital Twin Report`, 14, doc.internal.pageSize.height - 10);
-    doc.text('Bu rapor otomatik olarak olusturulmustur.', 140, doc.internal.pageSize.height - 10);
+    doc.text(`Sayfa ${i} / ${pageCount} - emissiON Dijital İkiz Raporu`, 14, doc.internal.pageSize.height - 10);
+    doc.text('Bu rapor otomatik olarak oluşturulmuştur.', 140, doc.internal.pageSize.height - 10);
   }
 
   doc.save(`Sustainability_Report_${user.name.replace(/\s+/g, '_')}.pdf`);
@@ -498,9 +510,9 @@ if (user.role === 'individual') {
 // ── Bireysel Karşılaştırma ────────────────────────────────────────────────────
 
 const BADGE_STYLES = {
-  'Çok iyi':          { color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
-  'İyi':              { color: '#00d27f', bg: 'rgba(0,210,127,0.12)'  },
-  'Geliştirilebilir': { color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
+  'Çok iyi':          { color: '#2F7A5C', bg: 'rgba(91,173,142,0.14)'  },
+  'İyi':              { color: '#2F7A5C', bg: 'rgba(91,173,142,0.10)'  },
+  'Geliştirilebilir': { color: '#B07A20', bg: 'rgba(245,200,122,0.18)' },
 };
 
 async function loadIndividualComparison() {
@@ -547,7 +559,7 @@ function renderComparison(data) {
     <p style="font-size:14px; margin:0 0 12px; opacity:0.9">${data.message}</p>
     <p style="font-size:13px; color:var(--color-text-muted); margin:0 0 14px">${data.badgeDescription}</p>
 
-    <div style="background:var(--color-bg-alt,#151a1f);border-radius:8px;height:8px;overflow:hidden;margin-bottom:10px">
+    <div style="background:var(--color-border);border-radius:8px;height:8px;overflow:hidden;margin-bottom:10px">
       <div style="
         width:${data.percentile}%;
         height:100%;

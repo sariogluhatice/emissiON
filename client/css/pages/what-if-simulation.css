@@ -1,0 +1,191 @@
+      :root {
+        --slider-track: var(--color-border);
+        --slider-thumb: var(--color-primary);
+      }
+
+      .sim-layout {
+        display: grid;
+        grid-template-columns: 480px 1fr;
+        gap: 32px;
+        align-items: start;
+        margin-top: 10px;
+      }
+
+      /* Planlayıcı Kartı */
+      .planner-card {
+        padding: 0 !important;
+        overflow: hidden;
+      }
+
+      .planner-header {
+        padding: 24px;
+        background: var(--gradient-primary-soft);
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      .planner-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 20px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .planner-body {
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      /* Kategori Sürgü Kartları */
+      .cat-slider-item {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .cat-label-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .cat-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--color-text);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .custom-range {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 6px;
+        background: var(--slider-track);
+        border-radius: 10px;
+        outline: none;
+      }
+
+      .custom-range::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        background: var(--color-primary);
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: var(--shadow-soft-green);
+        transition: transform 0.2s;
+      }
+
+      .custom-range::-webkit-slider-thumb:hover {
+        transform: scale(1.2);
+      }
+
+
+
+
+      /* Sonuç Paneli */
+      .summary-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 8px;
+      }
+
+      .summary-stat {
+        padding: 16px;
+        background: var(--color-surface);
+        border-radius: 12px;
+        border: 1px solid var(--color-border);
+      }
+
+      .summary-stat-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-text-muted);
+        margin-bottom: 4px;
+        display: block;
+      }
+
+      .summary-stat-value {
+        font-size: 22px;
+        font-weight: 800;
+        font-family: 'Outfit', sans-serif;
+      }
+
+      .summary-stat-unit {
+        font-size: 12px;
+        color: var(--color-text-muted);
+        margin-left: 4px;
+      }
+
+      /* Globe Visualization */
+      .visualization-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        height: 100%;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+      }
+
+      .globe-pair {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        position: relative;
+      }
+
+      .globe-box {
+        text-align: center;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .globe-box.current {
+        opacity: 0.6;
+        transform: scale(0.8);
+      }
+
+      .globe-box.future {
+        z-index: 10;
+      }
+
+      .impact-badge {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        background: var(--color-success-soft);
+        border: 1px solid var(--color-primary-soft);
+        border-radius: 16px;
+        backdrop-filter: blur(10px);
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+      }
+
+      .impact-title {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--color-primary);
+        letter-spacing: 0.1em;
+      }
+
+      .impact-value {
+        font-size: 28px;
+        font-weight: 800;
+        font-family: 'Outfit', sans-serif;
+        color: var(--color-text-strong);
+      }
+
+      @media (max-width: 1024px) {
+        .sim-layout { grid-template-columns: 1fr; }
+      }

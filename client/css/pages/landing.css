@@ -1,0 +1,297 @@
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .landing-page {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: var(--gradient-page);
+        overflow-x: hidden;
+        color: var(--color-text);
+      }
+
+      /* ── Nav ── */
+      .landing-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 24px 5%;
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--color-border);
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+      }
+
+      .landing-nav-brand {
+        font-size: 22px;
+        font-weight: 900;
+        letter-spacing: 4px;
+        color: var(--color-primary);
+        text-decoration: none;
+      }
+
+      .landing-nav-links {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+      }
+
+      /* Hide theme toggle: light mode only */
+      #themeToggle {
+        display: none !important;
+      }
+
+      .landing-nav-links a.nav-link {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--color-text-muted);
+        text-decoration: none;
+        opacity: 0.85;
+        transition: all 0.3s;
+        text-transform: uppercase;
+      }
+
+      .landing-nav-links a.nav-link:hover {
+        opacity: 1;
+        color: var(--color-primary);
+      }
+
+      .landing-hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 120px 10% 80px 10%;
+        gap: 60px;
+        flex: 1;
+      }
+
+      .hero-text {
+        flex: 1;
+        max-width: 600px;
+        z-index: 2;
+        text-align: left;
+      }
+
+      .landing-badge {
+        display: inline-block;
+        background: var(--color-bg-soft-green);
+        color: var(--color-primary);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        padding: 8px 20px;
+        border-radius: 50px;
+        margin-bottom: 32px;
+        border: 1px solid var(--color-primary-soft);
+      }
+
+      .landing-hero h1 {
+        font-size: 64px;
+        font-weight: 900;
+        color: var(--color-text-strong);
+        line-height: 1.1;
+        margin-bottom: 24px;
+        text-transform: uppercase;
+        letter-spacing: -1px;
+      }
+
+      .landing-hero h1 span {
+        color: var(--color-primary);
+      }
+
+      .landing-hero p {
+        font-size: 18px;
+        color: var(--color-text-muted);
+        line-height: 1.6;
+        margin-bottom: 40px;
+      }
+
+      /* ── Hero Visual — Illustration ── */
+      .hero-visual {
+        flex: 1;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .hero-illustration {
+        position: relative;
+        width: 540px;
+        height: 500px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Orbit rings layer */
+      .hero-orbits {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      /* Globe SVG */
+      .hero-globe {
+        width: 310px;
+        height: 310px;
+        position: relative;
+        z-index: 2;
+        animation: globeFloat 7s ease-in-out infinite;
+        flex-shrink: 0;
+      }
+
+      @keyframes globeFloat {
+        0%, 100% { transform: translateY(0); }
+        50%       { transform: translateY(-12px); }
+      }
+
+      /* ── Glassmorphism info cards ── */
+      .hero-card {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.82);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border: 1px solid rgba(200, 228, 216, 0.65);
+        border-radius: 18px;
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 8px 28px rgba(91, 173, 142, 0.13);
+        z-index: 3;
+        min-width: 155px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      .hero-card:hover {
+        transform: translateY(-4px) !important;
+        box-shadow: 0 14px 36px rgba(91, 173, 142, 0.20);
+      }
+
+      .hcard-icon  { font-size: 22px; line-height: 1; flex-shrink: 0; }
+      .hcard-label { font-size: 10px; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.9px; white-space: nowrap; }
+      .hcard-value { font-size: 20px; font-weight: 800; color: var(--color-text-strong); line-height: 1.25; }
+      .hcard-positive { color: var(--color-primary) !important; }
+      .hcard-sub   { font-size: 11px; color: var(--color-text-soft); margin-top: 1px; }
+
+      /* Card positions + individual float animations */
+      .card-co2    { top: 28px;   left: 4px;   animation: fc1 7.5s ease-in-out infinite; }
+      .card-energy { top: 38px;   right: 4px;  animation: fc2 8.5s ease-in-out infinite; }
+      .card-sim    { bottom: 55px; left: 10px;  animation: fc3 9s   ease-in-out infinite; }
+      .card-report { bottom: 38px; right: 10px; animation: fc4 6.5s ease-in-out infinite; }
+
+      @keyframes fc1 { 0%,100%{transform:translateY(0)}   50%{transform:translateY(-7px)}  }
+      @keyframes fc2 { 0%,100%{transform:translateY(-4px)} 50%{transform:translateY(5px)}   }
+      @keyframes fc3 { 0%,100%{transform:translateY(0)}   50%{transform:translateY(-9px)}  }
+      @keyframes fc4 { 0%,100%{transform:translateY(-3px)} 50%{transform:translateY(6px)}   }
+
+      /* Decorative leaves */
+      .hero-leaf   { position: absolute; font-size: 20px; opacity: 0.65; pointer-events: none; z-index: 4; }
+      .leaf-1      { top: 138px; right: 28px; animation: leafFloat 6.5s ease-in-out infinite; }
+      .leaf-2      { bottom: 138px; left: 22px; animation: leafFloat 8.5s ease-in-out infinite reverse; }
+
+      @keyframes leafFloat {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        40%       { transform: translateY(-9px) rotate(10deg); }
+        70%       { transform: translateY(4px)  rotate(-6deg); }
+      }
+
+      /* ── Features ── */
+      .landing-features {
+        padding: 100px 10%;
+        background: var(--color-bg-soft-green);
+      }
+
+      .feature-card {
+        background: var(--color-surface) !important;
+        border: 1px solid var(--color-border) !important;
+      }
+
+      .section-header {
+        text-align: center;
+        margin-bottom: 60px;
+      }
+
+      .section-header h2 {
+        font-size: 32px;
+        font-weight: 800;
+        color: var(--color-text-strong);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+      }
+
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 32px;
+      }
+
+      .feature-card {
+        padding: 40px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 24px;
+        transition: all 0.3s;
+      }
+
+      .feature-card:hover {
+        background: var(--color-surface-green);
+        transform: translateY(-10px);
+        border-color: var(--color-primary);
+      }
+
+      .feature-icon {
+        font-size: 32px;
+        margin-bottom: 24px;
+      }
+
+      .feature-card h3 {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--color-text-strong);
+        margin-bottom: 12px;
+      }
+
+      .feature-card p {
+        font-size: 14px;
+        color: var(--color-text-muted);
+        line-height: 1.6;
+      }
+
+      @media (max-width: 991px) {
+        .landing-hero {
+          flex-direction: column;
+          text-align: center;
+          padding-top: 120px;
+        }
+        .hero-text { text-align: center; }
+        .landing-hero h1 { font-size: 48px; }
+
+        .hero-illustration { width: 400px; height: 400px; }
+        .hero-globe { width: 240px; height: 240px; }
+        .card-co2    { top: 12px;   left: 0; }
+        .card-energy { top: 12px;   right: 0; }
+        .card-sim    { bottom: 22px; left: 0; }
+        .card-report { bottom: 10px; right: 0; }
+      }
+
+      @media (max-width: 600px) {
+        .hero-illustration { width: 340px; height: 360px; }
+        .hero-globe { width: 200px; height: 200px; }
+        .hero-card { min-width: 130px; padding: 10px 13px; gap: 9px; }
+        .hcard-value { font-size: 17px; }
+        .hero-leaf { display: none; }
+      }

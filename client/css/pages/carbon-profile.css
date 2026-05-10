@@ -1,0 +1,38 @@
+      .ob-field-wrapper { margin-bottom: 20px; }
+      .ob-field-wrapper .label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--color-text-muted, #a0aab4);
+        margin-bottom: 8px;
+      }
+      .radio-group, .checkbox-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .radio-group input[type="radio"],
+      .checkbox-group input[type="checkbox"] { display: none; }
+      .radio-group label,
+      .checkbox-group label {
+        display: inline-flex;
+        align-items: center;
+        padding: 7px 14px;
+        border: 1px solid var(--color-border, #2a2f36);
+        border-radius: 8px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+        color: var(--color-text-muted, #a0aab4);
+      }
+      .radio-group input[type="radio"]:checked + label,
+      .checkbox-group input[type="checkbox"]:checked + label {
+        background: var(--color-primary, #00d27f);
+        border-color: var(--color-primary, #00d27f);
+        color: var(--color-text-strong);
+        font-weight: 600;
+      }
+      .radio-group label:hover,
+      .checkbox-group label:hover {
+        border-color: var(--color-primary, #00d27f);
+      }

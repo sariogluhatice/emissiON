@@ -70,8 +70,8 @@ async function loadData() {
     const obRow = document.getElementById('obStatusRow');
     if (obRow) {
       obRow.innerHTML = u.onboarding_completed
-        ? '<span class="profile-ob-badge complete">✓ Carbon profile complete</span>'
-        : '<span class="profile-ob-badge incomplete">○ Carbon profile not completed yet</span>';
+        ? '<span class="profile-ob-badge complete">✓ Karbon profili tamamlandı</span>'
+        : '<span class="profile-ob-badge incomplete">○ Karbon profili henüz tamamlanmadı</span>';
     }
 
     // Notification toggles
@@ -97,7 +97,7 @@ document.getElementById('editNameForm').addEventListener('submit', async (e) => 
   const name = document.getElementById('editName').value.trim();
 
   if (!name || name.length < 2) {
-    return setMsg('editNameMsg', 'Name must be at least 2 characters.', true);
+    return setMsg('editNameMsg', 'Ad en az 2 karakter olmalıdır.', true);
   }
 
   const btn = document.getElementById('saveNameBtn');
@@ -114,10 +114,10 @@ document.getElementById('editNameForm').addEventListener('submit', async (e) => 
     }
     renderTopbarUser(updated);
 
-    setMsg('editNameMsg', 'Name updated successfully.');
-    showToast('Saved', 'Name updated.', 'success');
+    setMsg('editNameMsg', 'Ad başarıyla güncellendi.');
+    showToast('Kaydedildi', 'Ad güncellendi.', 'success');
   } catch (err) {
-    setMsg('editNameMsg', err.message || 'Could not update name.', true);
+    setMsg('editNameMsg', err.message || 'Ad güncellenemedi.', true);
   } finally {
     btn.disabled = false;
   }
@@ -132,7 +132,7 @@ document.getElementById('emailChangeForm').addEventListener('submit', async (e) 
   const newEmail = document.getElementById('newEmail').value.trim();
 
   if (!newEmail) {
-    return setMsg('emailChangeMsg', 'Please enter a new email address.', true);
+    return setMsg('emailChangeMsg', 'Lütfen yeni bir e-posta adresi girin.', true);
   }
 
   const btn = document.getElementById('requestEmailChangeBtn');
@@ -140,9 +140,9 @@ document.getElementById('emailChangeForm').addEventListener('submit', async (e) 
 
   try {
     await profileService.requestEmailChange({ newEmail });
-    openVerifyModal('email', `A 6-digit code was sent to ${newEmail}. Enter it below to confirm the change.`);
+    openVerifyModal('email', `${newEmail} adresine 6 haneli bir kod gönderildi. Değişikliği onaylamak için aşağıya girin.`);
   } catch (err) {
-    setMsg('emailChangeMsg', err.message || 'Could not send verification code.', true);
+    setMsg('emailChangeMsg', err.message || 'Doğrulama kodu gönderilemedi.', true);
   } finally {
     btn.disabled = false;
   }
@@ -159,13 +159,13 @@ document.getElementById('changePasswordForm').addEventListener('submit', async (
   const confirmPassword = document.getElementById('confirmPassword').value;
 
   if (!currentPassword) {
-    return setMsg('changePasswordMsg', 'Please enter your current password.', true);
+    return setMsg('changePasswordMsg', 'Lütfen mevcut şifrenizi girin.', true);
   }
   if (!newPassword) {
-    return setMsg('changePasswordMsg', 'Please enter a new password.', true);
+    return setMsg('changePasswordMsg', 'Lütfen yeni bir şifre girin.', true);
   }
   if (newPassword !== confirmPassword) {
-    return setMsg('changePasswordMsg', 'Passwords do not match.', true);
+    return setMsg('changePasswordMsg', 'Şifreler eşleşmiyor.', true);
   }
 
   const btn = document.getElementById('savePasswordBtn');
@@ -173,9 +173,9 @@ document.getElementById('changePasswordForm').addEventListener('submit', async (
 
   try {
     await profileService.requestPasswordChange({ currentPassword, newPassword });
-    openVerifyModal('password', 'A 6-digit code was sent to your current email. Enter it below to confirm the password change.');
+    openVerifyModal('password', 'Mevcut e-posta adresinize 6 haneli bir kod gönderildi. Şifre değişikliğini onaylamak için aşağıya girin.');
   } catch (err) {
-    setMsg('changePasswordMsg', err.message || 'Could not send verification code.', true);
+    setMsg('changePasswordMsg', err.message || 'Doğrulama kodu gönderilemedi.', true);
   } finally {
     btn.disabled = false;
   }
@@ -213,7 +213,7 @@ document.getElementById('verifyConfirmBtn').addEventListener('click', async () =
 
   const code = document.getElementById('verifyCode').value.trim();
   if (!code || code.length !== 6) {
-    return setMsg('verifyMsg', 'Please enter the 6-digit code.', true);
+    return setMsg('verifyMsg', 'Lütfen 6 haneli kodu girin.', true);
   }
 
   const btn = document.getElementById('verifyConfirmBtn');
@@ -227,10 +227,10 @@ document.getElementById('verifyConfirmBtn').addEventListener('click', async () =
     }
 
     closeVerifyModal();
-    showToast('Success', 'Change confirmed. Please log in again.', 'success');
+    showToast('Başarılı', 'Değişiklik onaylandı. Lütfen tekrar giriş yapın.', 'success');
     setTimeout(forceLogout, 1500);
   } catch (err) {
-    setMsg('verifyMsg', err.message || 'Verification failed. Please try again.', true);
+    setMsg('verifyMsg', err.message || 'Doğrulama başarısız. Lütfen tekrar deneyin.', true);
     btn.disabled = false;
   }
 });
@@ -252,9 +252,9 @@ async function saveNotifications() {
       email_notifications:       document.getElementById('emailNotifications').checked,
       carbon_tips_notifications: document.getElementById('carbonTips').checked,
     });
-    setMsg('notifMsg', 'Preferences saved.');
+    setMsg('notifMsg', 'Tercihler kaydedildi.');
   } catch (err) {
-    setMsg('notifMsg', err.message || 'Could not save preferences.', true);
+    setMsg('notifMsg', err.message || 'Tercihler kaydedilemedi.', true);
   }
 }
 
@@ -284,7 +284,7 @@ document.getElementById('deleteConfirmBtn').addEventListener('click', async () =
   const password = document.getElementById('deletePassword').value;
 
   if (!password) {
-    return setMsg('deleteMsg', 'Password required.', true);
+    return setMsg('deleteMsg', 'Şifre zorunludur.', true);
   }
 
   const btn = document.getElementById('deleteConfirmBtn');
@@ -296,7 +296,7 @@ document.getElementById('deleteConfirmBtn').addEventListener('click', async () =
     localStorage.removeItem('user');
     window.location.replace('../index.html');
   } catch (err) {
-    setMsg('deleteMsg', err.message || 'Could not delete account.', true);
+    setMsg('deleteMsg', err.message || 'Hesap silinemedi.', true);
     btn.disabled = false;
   }
 });

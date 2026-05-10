@@ -34,3 +34,11 @@
 @import "./components/ai-box.css";
 @import "./components/ocr-import.css";
 @import "./components/globe.css";
+
+/* 5. Pages */
+@import "./pages/add-entry.css";
+@import "./pages/onboarding.css";
+@import "./pages/what-if-simulation.css";
+@import "./pages/smart-insights.css";
+@import "./pages/settings.css";
+@import "./pages/carbon-profile.css";
