@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hane Üyeleri – emissiON</title>
+    <link rel="stylesheet" href="../css/main.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar"></aside>
+
+      <div class="main-content">
+        <header class="topbar" id="topbar"></header>
+
+        <main class="page-body">
+          <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <h1>Hane Üyeleri</h1>
+              <p>Üyelerin emisyon verilerini inceleyin ve kayıtlara yorum bırakın.</p>
+            </div>
+            <a href="household.html" class="btn-secondary" style="white-space:nowrap;">← Hane Paneli</a>
+          </div>
+
+          <!-- ── Members list ─────────────────────────────────────────── -->
+          <div class="content-card glass-card" id="membersCard">
+            <div class="content-card-header">
+              <span class="content-card-title">Üyeler</span>
+              <span id="memberCount" style="font-size:13px;color:var(--color-text-muted);"></span>
+            </div>
+            <div id="membersList">
+              <div class="hh-loading">Yükleniyor…</div>
+            </div>
+          </div>
+
+          <!-- ── Member emissions panel (hidden until a member is clicked) ─ -->
+          <div id="memberEmissionsCard" class="content-card glass-card" style="display:none;margin-top:var(--spacing-lg);">
+            <div class="content-card-header">
+              <span class="content-card-title" id="selectedMemberTitle">Emisyon Kayıtları</span>
+              <button id="closeEmissionsBtn" class="btn-secondary" style="font-size:13px;padding:6px 14px;">Kapat</button>
+            </div>
+            <div id="emissionsTableWrapper" style="overflow-x:auto;">
+              <div class="hh-loading">Yükleniyor…</div>
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+
+    <!-- ── Comment modal ─────────────────────────────────────────────────── -->
+    <div id="commentModal" class="modal-backdrop" style="display:none;">
+      <div class="modal-box glass-card" style="max-width:480px;width:100%;">
+        <h2 class="modal-title">Emisyon Yorumu</h2>
+        <p id="commentModalMeta" style="font-size:13px;color:var(--color-text-muted);margin-bottom:16px;"></p>
+
+        <!-- Existing comments -->
+        <div id="existingComments" class="hh-comment-thread"></div>
+
+        <!-- New comment textarea -->
+        <div class="form-group">
+          <label class="form-label" for="commentInput">Yeni Yorum</label>
+          <textarea class="input" id="commentInput" rows="3" placeholder="Bu emisyon kaydına yorumunuzu yazın…" style="resize:vertical;min-height:80px;"></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-secondary" id="cancelCommentBtn">İptal</button>
+          <button class="btn-primary"   id="saveCommentBtn">Kaydet</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="../js/household-members.js"></script>
+  </body>
+</html>

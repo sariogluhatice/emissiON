@@ -52,6 +52,36 @@
               </select>
             </div>
 
+            <!-- Household intent (visible only when Hane is selected) -->
+            <div class="form-group" id="householdIntentGroup" style="display:none;">
+              <label class="label">Hane Hesabı Türü</label>
+              <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px;">
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:var(--color-text);">
+                  <input type="radio" name="householdIntent" value="create" checked
+                    style="width:16px;height:16px;accent-color:var(--color-primary);flex-shrink:0;" />
+                  <span>Yeni hane oluşturacağım <span style="display:block;font-size:12px;color:var(--color-text-muted);">Yönetici olarak hane kurun, üyeleri davet edin.</span></span>
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:var(--color-text);">
+                  <input type="radio" name="householdIntent" value="join"
+                    style="width:16px;height:16px;accent-color:var(--color-primary);flex-shrink:0;" />
+                  <span>Davet kodum var, mevcut haneye katılacağım <span style="display:block;font-size:12px;color:var(--color-text-muted);">Yöneticinin size verdiği davet kodunu girin.</span></span>
+                </label>
+              </div>
+
+              <!-- Invite code input — shown only when "join" is selected -->
+              <div id="inviteCodeGroup" style="display:none;margin-top:12px;padding-left:26px;">
+                <label class="label" for="regInviteCode" style="font-size:13px;margin-bottom:4px;">
+                  Davet Kodu <span style="color:var(--color-error)">*</span>
+                </label>
+                <input class="input" type="text" id="regInviteCode"
+                  placeholder="Örn: A1B2C3D4"
+                  maxlength="20"
+                  autocomplete="off"
+                  style="text-transform:uppercase;letter-spacing:2px;font-weight:700;" />
+                <span class="error-msg" id="inviteCodeError"></span>
+              </div>
+            </div>
+
             <!-- Email -->
             <div class="form-group">
               <label class="label" for="email">E-posta</label>

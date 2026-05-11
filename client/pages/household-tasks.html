@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hane Görevleri – emissiON</title>
+    <link rel="stylesheet" href="../css/main.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar"></aside>
+
+      <div class="main-content">
+        <header class="topbar" id="topbar"></header>
+
+        <main class="page-body">
+          <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <h1>Hane Görevleri</h1>
+              <p>Üyelere karbon azaltım görevleri atayın ve ilerlemeyi takip edin.</p>
+            </div>
+            <a href="household.html" class="btn-secondary" style="white-space:nowrap;">← Hane Paneli</a>
+          </div>
+
+          <!-- ── Create task form ─────────────────────────────────────── -->
+          <div class="content-card glass-card" style="margin-bottom:var(--spacing-lg);">
+            <div class="content-card-header">
+              <span class="content-card-title">Yeni Görev Oluştur</span>
+            </div>
+
+            <div class="hh-task-form-grid">
+              <div class="form-group full-width">
+                <label class="form-label" for="taskTitle">Görev Başlığı <span style="color:var(--color-error)">*</span></label>
+                <input class="input" type="text" id="taskTitle" placeholder="Örn: Bu ay araç kullanımını %20 azalt" maxlength="200" />
+              </div>
+
+              <div class="form-group full-width">
+                <label class="form-label" for="taskDesc">Açıklama <span style="color:var(--color-text-muted);font-weight:400;">— İsteğe Bağlı</span></label>
+                <textarea class="input" id="taskDesc" rows="2" placeholder="Görevin detayları…" style="resize:vertical;"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="taskAssignee">Atanan Üye</label>
+                <select class="input" id="taskAssignee">
+                  <option value="">🏠 Tüm Hane</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="taskDueDate">Son Tarih <span style="color:var(--color-text-muted);font-weight:400;">— İsteğe Bağlı</span></label>
+                <input class="input" type="date" id="taskDueDate" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="taskReduction">Hedef Azaltım (kg CO₂) <span style="color:var(--color-text-muted);font-weight:400;">— İsteğe Bağlı</span></label>
+                <input class="input" type="number" id="taskReduction" placeholder="Örn: 15" min="0.01" step="0.01" />
+              </div>
+
+              <div class="form-group" style="display:flex;align-items:flex-end;">
+                <button class="btn-primary" id="createTaskBtn" style="width:100%;">Görev Oluştur</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Tasks list ───────────────────────────────────────────── -->
+          <div class="content-card glass-card">
+            <div class="content-card-header">
+              <span class="content-card-title">Görev Listesi</span>
+              <span id="taskCountEl" style="font-size:13px;color:var(--color-text-muted);"></span>
+            </div>
+
+            <div id="tasksContainer">
+              <div class="hh-loading">Yükleniyor…</div>
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="../js/household-tasks.js"></script>
+  </body>
+</html>

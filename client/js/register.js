@@ -10,14 +10,18 @@ import { AuthService } from './api/authService.js';
 
 const authService = new AuthService();
 
-const form          = document.getElementById('registerForm');
-const nameInput     = document.getElementById('name');
-const roleSelect    = document.getElementById('role');
-const emailInput    = document.getElementById('email');
-const passwordInput = document.getElementById('password');
-const confirmInput  = document.getElementById('confirmPassword');
-const submitBtn     = document.getElementById('submitBtn');
-const apiMessage    = document.getElementById('apiMessage');
+const form               = document.getElementById('registerForm');
+const nameInput          = document.getElementById('name');
+const roleSelect         = document.getElementById('role');
+const householdIntentEl  = document.getElementById('householdIntentGroup');
+const inviteCodeGroupEl  = document.getElementById('inviteCodeGroup');
+const inviteCodeInput    = document.getElementById('regInviteCode');
+const inviteCodeError    = document.getElementById('inviteCodeError');
+const emailInput         = document.getElementById('email');
+const passwordInput      = document.getElementById('password');
+const confirmInput       = document.getElementById('confirmPassword');
+const submitBtn          = document.getElementById('submitBtn');
+const apiMessage         = document.getElementById('apiMessage');
 
 const nameError     = document.getElementById('nameError');
 const emailError    = document.getElementById('emailError');
@@ -28,6 +32,21 @@ bindFieldValidation(nameInput,     nameError,     () => validateRequired(nameInp
 bindFieldValidation(emailInput,    emailError,    () => validateEmail(emailInput.value));
 bindFieldValidation(passwordInput, passwordError, () => validateStrongPassword(passwordInput.value));
 bindFieldValidation(confirmInput,  confirmError,  () => validateConfirmPassword(confirmInput.value, passwordInput.value));
+
+function getIntent() {
+  return document.querySelector('input[name="householdIntent"]:checked')?.value ?? 'create';
+}
+
+function syncHouseholdUI() {
+  const isHousehold = roleSelect.value === 'household';
+  householdIntentEl.style.display  = isHousehold ? 'block' : 'none';
+  inviteCodeGroupEl.style.display  = isHousehold && getIntent() === 'join' ? 'block' : 'none';
+}
+
+roleSelect.addEventListener('change', syncHouseholdUI);
+document.querySelectorAll('input[name="householdIntent"]').forEach(r =>
+  r.addEventListener('change', syncHouseholdUI)
+);
 
 function setApiMessage(text, isError) {
   apiMessage.textContent = text;
@@ -41,13 +60,16 @@ form.addEventListener('submit', async (e) => {
   const eErr = validateEmail(emailInput.value);
   const pErr = validateStrongPassword(passwordInput.value);
   const cErr = validateConfirmPassword(confirmInput.value, passwordInput.value);
+  const isJoin = roleSelect.value === 'household' && getIntent() === 'join';
+  const iErr = isJoin && !inviteCodeInput.value.trim() ? 'Davet kodu gereklidir.' : null;
 
   showError(nameInput,     nameError,     nErr);
   showError(emailInput,    emailError,    eErr);
   showError(passwordInput, passwordError, pErr);
   showError(confirmInput,  confirmError,  cErr);
+  if (inviteCodeError) showError(inviteCodeInput, inviteCodeError, iErr);
 
-  if (nErr || eErr || pErr || cErr) return;
+  if (nErr || eErr || pErr || cErr || iErr) return;
 
   submitBtn.disabled = true;
   setApiMessage('', false);
@@ -59,6 +81,16 @@ form.addEventListener('submit', async (e) => {
       passwordInput.value,
       roleSelect.value,
     );
+
+    // Persist household intent (and invite code for join) so onboarding and household.html can act
+    // Uses localStorage so the values survive the email-verification tab and any subsequent login.
+    if (roleSelect.value === 'household') {
+      const intent = getIntent();
+      localStorage.setItem('household_intent', intent);
+      if (intent === 'join') {
+        localStorage.setItem('household_invite_code', inviteCodeInput.value.trim().toUpperCase());
+      }
+    }
 
     if (response.requiresEmailVerification) {
       sessionStorage.setItem('pending_email', emailInput.value.trim());

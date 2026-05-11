@@ -1,4 +1,5 @@
 import { emissionService } from './api/emissionService.js';
+import { householdService } from './api/householdService.js';
 import { renderLayout } from './layout.js';
 import { formatDate } from './utils/uiUtils.js';
 
@@ -97,6 +98,41 @@ function getActivityTypeLabel(record) {
   return record.source || '—';
 }
 
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+async function openCommentModal(emissionId) {
+  const modal = document.getElementById('commentViewModal');
+  const list  = document.getElementById('commentViewList');
+  if (!modal || !list) return;
+
+  list.innerHTML = '<p style="color:var(--color-text-muted);font-size:13px;">Yorumlar yükleniyor…</p>';
+  modal.style.display = 'flex';
+
+  try {
+    const res      = await householdService.getComments(emissionId);
+    const comments = res.data?.comments ?? [];
+
+    if (!comments.length) {
+      list.innerHTML = '<p style="font-size:13px;color:var(--color-text-muted);">Bu kayıt için henüz yönetici yorumu yok.</p>';
+      return;
+    }
+
+    list.innerHTML = comments.map(c => `
+      <div style="border-left:3px solid var(--color-primary);padding:8px 12px;margin-bottom:10px;background:var(--color-surface-elevated);border-radius:0 6px 6px 0;">
+        <div style="font-size:11px;color:var(--color-text-muted);margin-bottom:4px;">${escapeHtml(c.admin_name || 'Yönetici')} · ${formatDate(c.created_at)}</div>
+        <div style="font-size:13px;color:var(--color-text);">${escapeHtml(c.comment)}</div>
+      </div>`).join('');
+  } catch (err) {
+    list.innerHTML = `<p style="font-size:13px;color:var(--color-error);">Yorumlar yüklenemedi: ${escapeHtml(err.message)}</p>`;
+  }
+}
+
 // --- Durum (State) ---
 let allEmissions = [];
 let pendingDeleteId = null;
@@ -164,6 +200,10 @@ function render() {
     const catLabel = CATEGORY_LABELS[catKey] || catKey || '—';
     const actLabel = getActivityTypeLabel(record);
 
+    const commentBtn = user.role === 'household'
+      ? `<button class="btn-action btn-edit comment-view-btn" data-id="${record.id}" style="font-size:12px;" title="Yönetici Yorumları">💬 Yorum</button>`
+      : '';
+
     return `
     <tr>
       <td>${formatDate(record.date)}</td>
@@ -181,6 +221,7 @@ function render() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
             Sil
           </button>
+          ${commentBtn}
         </div>
       </td>
     </tr>`;
@@ -192,6 +233,12 @@ function render() {
       if (deleteModal) deleteModal.style.display = 'flex';
     });
   });
+
+  if (user.role === 'household') {
+    tbody.querySelectorAll('.comment-view-btn').forEach(btn => {
+      btn.addEventListener('click', () => openCommentModal(btn.dataset.id));
+    });
+  }
 }
 
 // --- Olay Dinleyiciler ---
@@ -217,3 +264,12 @@ confirmDeleteBtn?.addEventListener('click', async () => {
 });
 
 loadData();
+
+document.getElementById('closeCommentViewBtn')?.addEventListener('click', () => {
+  document.getElementById('commentViewModal').style.display = 'none';
+});
+document.getElementById('commentViewModal')?.addEventListener('click', (e) => {
+  if (e.target === document.getElementById('commentViewModal')) {
+    document.getElementById('commentViewModal').style.display = 'none';
+  }
+});

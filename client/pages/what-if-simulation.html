@@ -126,6 +126,51 @@
       </div>
     </div>
 
+    <!-- Add as Household Task modal — visible only to household admins after roadmap generation -->
+    <div id="addTaskModal" class="modal-backdrop" style="display:none;">
+      <div class="modal-box glass-card" style="max-width:480px;">
+        <h2 class="modal-title">Hane Görevi Ekle</h2>
+        <p style="font-size:13px;color:var(--color-text-muted);margin:0 0 16px;">
+          Bu AI önerisini emisyon takipli bir hane görevine dönüştürün.
+        </p>
+
+        <input type="hidden" id="taskModalCategoryKey" />
+
+        <div style="margin-bottom:12px;">
+          <label class="label" style="font-size:13px;display:block;margin-bottom:4px;">Kategori</label>
+          <div id="taskModalCategoryLabel"
+               style="font-size:13px;font-weight:700;padding:8px 12px;background:var(--color-surface);border-radius:6px;color:var(--color-primary);border:1px solid var(--color-border);"></div>
+        </div>
+
+        <div style="margin-bottom:12px;">
+          <label class="label" for="taskModalTitle" style="font-size:13px;display:block;margin-bottom:4px;">Görev Başlığı</label>
+          <input class="input" type="text" id="taskModalTitle" maxlength="200" />
+        </div>
+
+        <div style="margin-bottom:12px;">
+          <label class="label" for="taskModalPct" style="font-size:13px;display:block;margin-bottom:4px;">Hedef Azaltım (%)</label>
+          <input class="input" type="number" id="taskModalPct" min="1" max="99" step="1" />
+        </div>
+
+        <div style="margin-bottom:12px;">
+          <label class="label" for="taskModalAssignee" style="font-size:13px;display:block;margin-bottom:4px;">Atanan Üye</label>
+          <select class="input" id="taskModalAssignee">
+            <option value="">🏠 Tüm Hane</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom:20px;">
+          <label class="label" for="taskModalDueDate" style="font-size:13px;display:block;margin-bottom:4px;">Son Tarih <span style="color:var(--color-text-muted);font-weight:400;">— İsteğe Bağlı</span></label>
+          <input class="input" type="date" id="taskModalDueDate" />
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-secondary" id="cancelAddTaskBtn">İptal</button>
+          <button class="btn-primary" id="confirmAddTaskBtn">Görevi Oluştur</button>
+        </div>
+      </div>
+    </div>
+
     <script type="module" src="../js/what-if-simulation.js"></script>
   </body>
 </html>

@@ -12,6 +12,18 @@ if (!user || (user.onboarding_completed === true && !isRetake)) window.location.
 const role = user?.role ?? 'individual';
 const api  = new ApiClient();
 
+// For household users, branch on the intent stored at registration time.
+// localStorage survives the email-verification tab; read here but do NOT remove
+// (household.js consumes and removes it when the household is created/joined).
+const householdIntent = role === 'household'
+    ? (localStorage.getItem('household_intent') ?? 'create')
+    : null;
+// Map intent value ('create'/'join') to a named subtype for getVisibleSteps().
+// 'create' → 'household_admin', 'join' → 'household_member', no intent → null
+const subtype = householdIntent === 'create' ? 'household_admin'
+    : householdIntent === 'join'   ? 'household_member'
+    : null;
+
 // ── Collected answers (persists across steps) ───────────────────────────────
 const answers = {};
 
@@ -246,8 +258,173 @@ const ALL_STEPS = [
   },
 ];
 
+// ── Household admin setup steps (role=household, intent=create) ──────────────
+// Covers the whole home. ALL_STEPS household entries are intentionally not used
+// for new registrations — these focused steps replace them for this subtype.
+const HOUSEHOLD_ADMIN_STEPS = [
+  {
+    id: 'hh_profile', title: 'Hane Profili',
+    subtitle: 'Hanenizin fiziksel özellikleri, tüm karbon hesaplamalarının temelini oluşturur.',
+    rightDesc: 'Doğru konut bilgileri, size özel enerji ve tüketim analizleri üretmemizi sağlar.',
+    icon: '🏠', roles: ['household'],
+    fields: [
+      rad('home_type', 'Konut Tipi',
+        [['apartment','Apartman Dairesi'],['house','Müstakil Ev'],
+         ['detached','Villa / Köşk'],['shared','Paylaşımlı / Kiralık']]),
+      rad('household_size', 'Hanede kaç kişi yaşıyor?',
+        [['2','2'],['3','3'],['4','4'],['5','5'],['6+','6 ve üzeri']]),
+      txt('city', 'Şehir / İlçe', false),
+    ],
+  },
+  {
+    id: 'hh_energy', title: 'Ev & Enerji',
+    subtitle: 'Hanenizin enerji tüketimi, kolektif karbon izinin en büyük bileşenidir.',
+    rightDesc: 'Isınma ve elektrik alışkanlıklarınızı anlayarak hane bazlı tasarruf önerileri sunabiliriz.',
+    icon: '⚡', roles: ['household'],
+    fields: [
+      sel('monthly_kwh', 'Tahmini aylık elektrik kullanımı',
+        [['<100','100 kWh\'den az'],['100-200','100–200 kWh'],['200-400','200–400 kWh'],
+         ['400-600','400–600 kWh'],['>600','600 kWh üzeri'],['unknown','Bilmiyorum']]),
+      sel('heating_type', 'Birincil ısınma kaynağı',
+        [['natural_gas','Doğalgaz'],['electricity','Elektrik'],['coal','Kömür / Katı Yakıt'],
+         ['wood','Odun / Biyokütle'],['heat_pump','Isı Pompası'],['district','Merkezi Isıtma'],['none','Isınma yok']]),
+      rad('has_ac', 'Klima kullanıyor musunuz?',
+        [['true','Evet'],['false','Hayır']]),
+      sel('renewable_energy', 'Evdeki yenilenebilir enerji',
+        [['solar','Güneş Panelleri'],['green_plan','Yeşil Enerji Tarifesi'],['both','Her İkisi'],['none','Hiçbiri']]),
+      rad('water_saving_devices', 'Su tasarrufu cihazları kullanıyor musunuz?',
+        [['true','Evet'],['false','Hayır']], false),
+    ],
+  },
+  {
+    id: 'hh_transport', title: 'Araçlar & Ulaşım',
+    subtitle: 'Hanenizdeki araç sayısı ve toplu taşıma alışkanlıklarınız.',
+    rightDesc: 'Araç kullanım yoğunluğu, hane karbon izinin önemli bir parçasıdır.',
+    icon: '🚗', roles: ['household'],
+    fields: [
+      rad('car_count', 'Hanede kaç araç var?',
+        [['0','Araç yok'],['1','1 araç'],['2','2 araç'],['3+','3 veya daha fazla']]),
+      rad('car_fuel_type', 'Birincil araç yakıt tipi',
+        [['petrol','Benzin'],['diesel','Dizel'],['lpg','LPG'],['hybrid','Hibrit'],['electric','Elektrikli']],
+        true, 'all', a => a.car_count !== '0' && !!a.car_count),
+      rad('weekly_km', 'Haftalık ortalama toplam sürüş mesafesi',
+        [['<50','< 50 km'],['50-150','50–150 km'],['150-300','150–300 km'],
+         ['300-500','300–500 km'],['>500','> 500 km']],
+        false, 'all', a => a.car_count !== '0' && !!a.car_count),
+      sel('public_transport_freq', 'Toplu taşıma kullanım sıklığı (hane geneli)',
+        [['daily','Günlük'],['few_week','Haftada birkaç kez'],['weekly','Haftalık'],['rarely','Nadiren'],['never','Hiçbir zaman']]),
+    ],
+  },
+  {
+    id: 'hh_food', title: 'Gıda & Alışkanlıklar',
+    subtitle: 'Hanenizin beslenme ve tüketim tercihleri.',
+    rightDesc: 'Gıda tercihleri, hane karbon izinin %10–30\'unu oluşturabilir.',
+    icon: '🍽', roles: ['household'],
+    fields: [
+      rad('diet_type', 'Hane halkının genel beslenme tarzı',
+        [['vegan','Vegan'],['vegetarian','Vejetaryen'],['pescatarian','Pesketaryen'],
+         ['mixed','Karma'],['meat_heavy','Et ağırlıklı']]),
+      rad('food_waste', 'Genellikle ne kadar gıda israf ediyorsunuz?',
+        [['a_lot','Çok fazla'],['some','Biraz'],['little','Çok az'],['minimal','Neredeyse hiç']], false),
+      rad('online_shopping_freq', 'Online alışveriş sıklığı',
+        [['daily','Günlük'],['weekly','Haftalık'],['monthly','Aylık'],['rarely','Nadiren']], false),
+    ],
+  },
+  {
+    id: 'hh_goals', title: 'Hane Hedefleri',
+    subtitle: 'Hane olarak önceliklerinizi ve motivasyonunuzu belirleyin.',
+    rightDesc: 'Hedeflerinize göre kişiselleştirilmiş öneriler ve analizler sunacağız.',
+    icon: '🎯', roles: ['household'],
+    fields: [
+      rad('motivation', 'Hane halkı olarak emisyon takibindeki ana motivasyonunuz',
+        [['save_money','Aile bütçesinde tasarruf sağlamak'],
+         ['reduce_carbon','Hane halkı karbon salımını düşürmek'],
+         ['environmental','Çocuklarımıza daha temiz bir gelecek bırakmak'],
+         ['awareness','Enerji kullanımımızı bilinçli yönetmek']]),
+      rad('priority_area', 'Hane olarak ilk iyileştirmek istediğiniz alan',
+        [['energy','Ev ve ısıtma enerjisi verimliliği'],
+         ['transport','Aile araç kullanımı ve ulaşım'],
+         ['food','Mutfak harcamaları ve gıda tasarrufu'],
+         ['waste','Hane çöpleri ve geri dönüşüm']]),
+    ],
+  },
+];
+
+// ── Household member personal steps (role=household, intent=join) ─────────────
+// Covers personal behaviour only. Household-level setup (home type, car count,
+// heating, etc.) is the admin's responsibility and must not be duplicated here.
+const HOUSEHOLD_MEMBER_STEPS = [
+  {
+    id: 'mem_transport', title: 'Kişisel Ulaşım',
+    subtitle: 'Bireysel seyahat ve ulaşım alışkanlıklarınız.',
+    rightDesc: 'Kişisel ulaşım tercihleri, hane karbon toplamına önemli katkıda bulunur.',
+    icon: '🚗', roles: ['household'],
+    fields: [
+      rad('has_car', 'Düzenli olarak araç kullanıyor musunuz?',
+        [['true','Evet'],['false','Hayır']]),
+      rad('car_fuel_type', 'Araç yakıt tipi',
+        [['petrol','Benzin'],['diesel','Dizel'],['lpg','LPG'],['hybrid','Hibrit'],['electric','Elektrikli']],
+        true, 'all', a => a.has_car === 'true'),
+      rad('weekly_km', 'Haftalık ortalama sürüş mesafesi',
+        [['<50','< 50 km'],['50-150','50–150 km'],['150-300','150–300 km'],
+         ['300-500','300–500 km'],['>500','> 500 km']],
+        false, 'all', a => a.has_car === 'true'),
+      sel('public_transport_freq', 'Toplu taşıma kullanım sıklığı',
+        [['daily','Günlük'],['few_week','Haftada birkaç kez'],['weekly','Haftalık'],['rarely','Nadiren'],['never','Hiçbir zaman']]),
+    ],
+  },
+  {
+    id: 'mem_food', title: 'Beslenme',
+    subtitle: 'Kişisel beslenme tercihleriniz.',
+    rightDesc: 'Bireysel beslenme alışkanlıkları, hane karbon profiline önemli katkıda bulunur.',
+    icon: '🍽', roles: ['household'],
+    fields: [
+      rad('diet_type', 'Beslenme tarzınızı nasıl tanımlarsınız?',
+        [['vegan','Vegan'],['vegetarian','Vejetaryen'],['pescatarian','Pesketaryen'],
+         ['mixed','Karma / Her şeyi yiyen'],['meat_heavy','Et ağırlıklı']]),
+      rad('food_waste', 'Genellikle ne kadar gıda israf edersiniz?',
+        [['a_lot','Çok fazla'],['some','Biraz'],['little','Çok az'],['minimal','Neredeyse hiç']], false),
+    ],
+  },
+  {
+    id: 'mem_shopping', title: 'Tüketim & Geri Dönüşüm',
+    subtitle: 'Alışveriş ve atık yönetimi alışkanlıklarınız.',
+    rightDesc: 'Tüketim ve geri dönüşüm seçimleriniz hane sürdürülebilirliğini doğrudan etkiler.',
+    icon: '🛍', roles: ['household'],
+    fields: [
+      rad('online_shopping_freq', 'Online alışveriş sıklığı',
+        [['daily','Günlük'],['weekly','Haftalık'],['monthly','Aylık'],['rarely','Nadiren']]),
+      chk('recycling_categories', 'Hangi malzemeleri geri dönüştürürsünüz?',
+        [['paper','Kağıt'],['plastic','Plastik'],['glass','Cam'],
+         ['metal','Metal'],['ewaste','E-atık'],['none','Şu an geri dönüşüm yapmıyorum']]),
+      rad('composting', 'Kompost yapıyor musunuz?',
+        [['true','Evet'],['false','Hayır']], false),
+    ],
+  },
+  {
+    id: 'mem_goals', title: 'Kişisel Hedef',
+    subtitle: 'Bireysel sürdürülebilirlik önceliklerinizi belirleyin.',
+    rightDesc: 'Kişisel hedefleriniz doğrultusunda size özel öneriler sunacağız.',
+    icon: '🎯', roles: ['household'],
+    fields: [
+      rad('motivation', 'Emisyon takibindeki kişisel motivasyonunuz',
+        [['save_money','Kişisel bütçemde tasarruf sağlamak'],
+         ['reduce_carbon','Kişisel karbon ayak izimi azaltmak'],
+         ['environmental','Ailemin çevresel sorumluluğuna katkıda bulunmak'],
+         ['awareness','Tüketim alışkanlıklarımı bilinçli yönetmek']]),
+      rad('priority_area', 'İlk iyileştirmek istediğiniz alan',
+        [['transport','Kişisel ulaşım alışkanlıklarım'],
+         ['food','Beslenme tarzım'],
+         ['waste','Geri dönüşüm ve atık azaltma'],
+         ['shopping','Alışveriş ve tüketim tercihlerim']]),
+    ],
+  },
+];
+
 // ── Resolve step list for this user's role ───────────────────────────────────
 function getVisibleSteps() {
+  if (subtype === 'household_admin')  return HOUSEHOLD_ADMIN_STEPS;
+  if (subtype === 'household_member') return HOUSEHOLD_MEMBER_STEPS;
   return ALL_STEPS.filter(s =>
     s.roles === 'all' || s.roles.includes(role)
   );

@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hanem – emissiON</title>
+    <link rel="stylesheet" href="../css/main.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar"></aside>
+
+      <div class="main-content">
+        <div class="bg-decorative-element">
+          <img src="../assets/simulation_globe.png" alt="" style="width:100%;height:100%;object-fit:contain;opacity:0.1;filter:blur(20px);" />
+        </div>
+
+        <header class="topbar" id="topbar"></header>
+
+        <main class="page-body">
+          <div class="page-header">
+            <h1>Hanem</h1>
+            <p>Hane grubunuzu yönetin, toplam karbon ayak izinizi takip edin.</p>
+          </div>
+
+          <!-- ── Loading state ──────────────────────────────────────── -->
+          <div id="loadingState" class="hh-loading">Yükleniyor…</div>
+
+          <!-- ── No household: create or join ──────────────────────── -->
+          <div id="noHouseholdState" style="display:none">
+            <div class="content-card glass-card" style="text-align:center;padding:32px 24px 16px;">
+              <div style="font-size:40px;margin-bottom:12px;">🏠</div>
+              <h2 style="font-size:20px;font-weight:700;color:var(--color-text);margin-bottom:8px;">Henüz bir haneye üye değilsiniz</h2>
+              <p style="color:var(--color-text-muted);font-size:14px;margin:0;">Yeni bir hane oluşturun ya da davet koduyla mevcut bir haneye katılın.</p>
+            </div>
+
+            <div class="hh-onboard-grid">
+
+              <!-- Create household -->
+              <div class="hh-onboard-card">
+                <div>
+                  <h2>Yeni Hane Oluştur</h2>
+                  <p>Siz yönetici olursunuz ve aile üyelerinizi davet edebilirsiniz.</p>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="createName">Hane Adı <span style="color:var(--color-error)">*</span></label>
+                  <input class="input" type="text" id="createName" placeholder="Örn: Yılmaz Ailesi" maxlength="150" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="createTarget">Aylık Hane Karbon Hedefi (kg CO₂) <span style="color:var(--color-text-muted);font-weight:400;">— İsteğe Bağlı</span></label>
+                  <span style="display:block;font-size:12px;color:var(--color-text-muted);margin-bottom:6px;">Tüm hane üyelerinin aylık toplam karbon emisyonu için ortak hedef.</span>
+                  <input class="input" type="number" id="createTarget" placeholder="Örn: 250" min="1" step="1" />
+                </div>
+                <button class="btn-primary" id="createHouseholdBtn" style="margin-top:auto;">Hane Oluştur</button>
+              </div>
+
+              <!-- Join household -->
+              <div class="hh-onboard-card">
+                <div>
+                  <h2>Haneye Katıl</h2>
+                  <p>Yöneticinizin size verdiği 8 haneli davet kodunu girin.</p>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="joinCode">Davet Kodu <span style="color:var(--color-error)">*</span></label>
+                  <input class="input" type="text" id="joinCode" placeholder="Örn: 3F2A1C9B" maxlength="20" style="text-transform:uppercase;letter-spacing:2px;font-weight:700;" />
+                </div>
+                <button class="btn-primary" id="joinHouseholdBtn" style="margin-top:auto;">Haneye Katıl</button>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ── Has household: dashboard ───────────────────────────── -->
+          <div id="householdState" style="display:none">
+
+            <!-- Household name + role badge -->
+            <div class="hh-header">
+              <h2 id="hhName">—</h2>
+              <span class="hh-role-badge" id="hhRoleBadge">—</span>
+            </div>
+
+            <!-- Invite code (admin only) -->
+            <div id="hhInviteBox" class="hh-invite-box" style="display:none">
+              <div>
+                <div class="hh-invite-label">Davet Kodu</div>
+                <div class="hh-invite-code" id="hhInviteCode">—</div>
+              </div>
+              <button class="hh-copy-btn" id="hhCopyBtn">Kopyala</button>
+            </div>
+
+            <!-- Admin quick links (admin only) -->
+            <div id="hhAdminLinks" class="hh-admin-links" style="display:none">
+              <a href="household-members.html" class="hh-admin-link">
+                <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Üyeler
+              </a>
+              <a href="household-tasks.html" class="hh-admin-link">
+                <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                Görevler
+              </a>
+            </div>
+
+            <!-- Summary stat cards -->
+            <div class="card-grid" id="hhStatCards">
+              <div class="glass-card stat-card">
+                <div class="stat-label">Toplam Emisyon</div>
+                <div class="stat-value" id="statTotal">—</div>
+                <div class="stat-unit">kg CO₂e</div>
+              </div>
+              <div class="glass-card stat-card">
+                <div class="stat-label">Üye Sayısı</div>
+                <div class="stat-value" id="statMembers">—</div>
+                <div class="stat-unit">kişi</div>
+              </div>
+              <div class="glass-card stat-card">
+                <div class="stat-label">Kişi Başı Emisyon</div>
+                <div class="stat-value" id="statPerMember">—</div>
+                <div class="stat-unit">kg CO₂e / kişi</div>
+              </div>
+              <div class="glass-card stat-card" id="statTargetCard">
+                <div class="stat-label">Aylık Hedef</div>
+                <div class="stat-value" id="statTarget">—</div>
+                <div class="stat-unit">kg CO₂e / ay</div>
+              </div>
+            </div>
+
+            <!-- Monthly trend + Category breakdown -->
+            <div class="hh-dashboard-grid">
+
+              <div class="content-card glass-card">
+                <div class="content-card-header">
+                  <span class="content-card-title">Aylık Emisyon Trendi</span>
+                </div>
+                <div class="hh-chart-wrapper">
+                  <canvas id="monthlyChart"></canvas>
+                </div>
+              </div>
+
+              <div class="content-card glass-card">
+                <div class="content-card-header">
+                  <span class="content-card-title">Kategori Dağılımı</span>
+                </div>
+                <div id="categoryList">
+                  <div class="hh-loading" style="padding:24px 0">Yükleniyor…</div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Recent tasks + Comparison -->
+            <div class="hh-dashboard-grid" style="margin-top:var(--spacing-lg)">
+
+              <div class="content-card glass-card">
+                <div class="content-card-header">
+                  <span class="content-card-title">Son Görevler</span>
+                  <a id="allTasksLink" href="household-tasks.html" style="display:none;font-size:13px;color:var(--color-primary);font-weight:600;">Tümünü Gör</a>
+                </div>
+                <div id="recentTasksList">
+                  <div class="hh-loading" style="padding:24px 0">Yükleniyor…</div>
+                </div>
+              </div>
+
+              <div class="content-card glass-card">
+                <div class="content-card-header">
+                  <span class="content-card-title">Hane Karşılaştırması</span>
+                </div>
+                <div id="comparisonSection">
+                  <div class="hh-loading" style="padding:24px 0">Yükleniyor…</div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+          <!-- end #householdState -->
+
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="../js/household.js"></script>
+  </body>
+</html>

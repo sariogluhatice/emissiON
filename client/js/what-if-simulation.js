@@ -3,9 +3,21 @@ import { showToast }    from './utils/uiUtils.js';
 import { ApiClient }    from './api/apiClient.js';
 import { updateGlobe } from './utils/globe.js';
 import { emissionService } from './api/emissionService.js';
+import { householdService } from './api/householdService.js';
 
 const user = renderLayout({ activeNav: 'nav-whatif', title: 'Gelecek Ay Planlayıcısı' });
 if (!user) throw new Error('redirect');
+
+// ── Household admin detection ─────────────────────────────────────────────────
+// Determines whether to show "Add as Household Task" buttons on roadmap steps.
+let isHouseholdAdmin = false;
+let _householdMembersCache = null;
+
+if (user.role === 'household') {
+    householdService.getMe().then(res => {
+        isHouseholdAdmin = res.data?.household?.role === 'admin';
+    }).catch(() => {});
+}
 
 const api = new ApiClient();
 
@@ -413,8 +425,25 @@ if (getAiRoadmapBtn && aiPlannerContent && aiPlannerSteps) {
         steps.forEach(step => {
           if (step && typeof step === 'object' && step.kategori && Array.isArray(step.adimlar)) {
             const catLi = document.createElement('li');
-            catLi.style.cssText = 'list-style:none;margin-left:-20px;margin-top:14px;margin-bottom:6px;font-weight:700;color:var(--color-secondary)';
+            catLi.style.cssText = 'list-style:none;margin-left:-20px;margin-top:14px;margin-bottom:6px;font-weight:700;color:var(--color-secondary);display:flex;align-items:center;gap:8px;flex-wrap:wrap;';
             catLi.textContent = step.kategori;
+
+            if (isHouseholdAdmin) {
+              const matchedCat = Object.keys(selectedChanges).find(key => {
+                const tr = (ROADMAP_CAT_TR[key] || '').toLowerCase();
+                const lower = step.kategori.toLowerCase();
+                return lower.includes(tr) || lower.includes(tr.split(' ')[0]);
+              });
+              const pctMatch = step.kategori.match(/(\d+(?:\.\d+)?)/);
+              if (matchedCat && pctMatch) {
+                const addBtn = document.createElement('button');
+                addBtn.textContent = '+ Hane Görevi Ekle';
+                addBtn.style.cssText = 'font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--color-primary);background:transparent;color:var(--color-primary);cursor:pointer;font-weight:600;flex-shrink:0;';
+                addBtn.addEventListener('click', () => openAddTaskModal(matchedCat, parseFloat(pctMatch[1]), step.kategori));
+                catLi.appendChild(addBtn);
+              }
+            }
+
             aiPlannerSteps.appendChild(catLi);
 
             step.adimlar.forEach(subStep => {
@@ -444,3 +473,98 @@ if (getAiRoadmapBtn && aiPlannerContent && aiPlannerSteps) {
     }
   });
 }
+
+// ── Add as Household Task modal ───────────────────────────────────────────────
+const addTaskModal       = document.getElementById('addTaskModal');
+const cancelAddTaskBtn   = document.getElementById('cancelAddTaskBtn');
+const confirmAddTaskBtn  = document.getElementById('confirmAddTaskBtn');
+const taskModalTitle     = document.getElementById('taskModalTitle');
+const taskModalPct       = document.getElementById('taskModalPct');
+const taskModalCategoryKey   = document.getElementById('taskModalCategoryKey');
+const taskModalCategoryLabel = document.getElementById('taskModalCategoryLabel');
+const taskModalAssignee  = document.getElementById('taskModalAssignee');
+const taskModalDueDate   = document.getElementById('taskModalDueDate');
+
+const CATEGORY_TR_LABELS = {
+  energy: 'Enerji (Elektrik)', water: 'Su Kullanımı', gas: 'Doğalgaz',
+  transport: 'Ulaşım', materials: 'Malzeme', waste: 'Atık',
+  food: 'Gıda', shopping: 'Alışveriş',
+};
+
+async function _ensureMembers() {
+  if (_householdMembersCache) return _householdMembersCache;
+  try {
+    const res = await householdService.getMembers();
+    _householdMembersCache = res.data?.members ?? [];
+  } catch {
+    _householdMembersCache = [];
+  }
+  return _householdMembersCache;
+}
+
+async function openAddTaskModal(categoryKey, pct, label) {
+  if (!addTaskModal) return;
+
+  taskModalCategoryKey.value     = categoryKey;
+  taskModalCategoryLabel.textContent = CATEGORY_TR_LABELS[categoryKey] || categoryKey;
+  taskModalTitle.value           = label;
+  taskModalPct.value             = Math.round(pct);
+
+  // Default due date = last day of current month
+  const now     = new Date();
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  taskModalDueDate.value = lastDay.toISOString().slice(0, 10);
+
+  // Populate assignee dropdown (lazy, cached)
+  taskModalAssignee.innerHTML = '<option value="">🏠 Tüm Hane</option>';
+  const members = await _ensureMembers();
+  members.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value       = m.user_id;
+    opt.textContent = `👤 ${m.name || m.email}${m.role === 'admin' ? ' (Yönetici)' : ''}`;
+    taskModalAssignee.appendChild(opt);
+  });
+
+  addTaskModal.style.display = 'flex';
+}
+
+cancelAddTaskBtn?.addEventListener('click', () => {
+  if (addTaskModal) addTaskModal.style.display = 'none';
+});
+addTaskModal?.addEventListener('click', e => {
+  if (e.target === addTaskModal) addTaskModal.style.display = 'none';
+});
+
+confirmAddTaskBtn?.addEventListener('click', async () => {
+  const title    = taskModalTitle?.value.trim();
+  const pct      = parseFloat(taskModalPct?.value);
+  const category = taskModalCategoryKey?.value;
+
+  if (!title) {
+    showToast('Hata', 'Görev başlığı gereklidir.', 'error');
+    return;
+  }
+  if (!pct || pct <= 0 || pct >= 100) {
+    showToast('Hata', 'Hedef azaltım 1 ile 99 arasında olmalıdır.', 'error');
+    return;
+  }
+
+  confirmAddTaskBtn.disabled    = true;
+  confirmAddTaskBtn.textContent = 'Oluşturuluyor…';
+  try {
+    await householdService.createTask({
+      title,
+      emission_category: category,
+      target_pct:        pct,
+      assigned_to:       taskModalAssignee?.value || undefined,
+      due_date:          taskModalDueDate?.value  || undefined,
+    });
+    addTaskModal.style.display = 'none';
+    showToast('Başarılı', 'Hane görevi oluşturuldu.', 'success');
+  } catch (err) {
+    showToast('Hata', err.message, 'error');
+  } finally {
+    confirmAddTaskBtn.disabled    = false;
+    confirmAddTaskBtn.textContent = 'Görevi Oluştur';
+  }
+});
