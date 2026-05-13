@@ -335,6 +335,17 @@ const createTask = async (householdId, adminId, { title, description, assigned_t
     let baselinePeriod = null, baselineAmount = null, targetAmount = null;
 
     if (cleanCategory && cleanPct !== null && !isNaN(cleanPct) && cleanPct > 0 && cleanPct < 100) {
+        const { rows: [rcRow] } = await pool.query(
+            `SELECT COUNT(er.id)::int AS cnt
+             FROM emission_records er
+             JOIN household_members hm ON hm.user_id = er.user_id
+             WHERE hm.household_id = $1`,
+            [householdId]
+        );
+        if (rcRow.cnt === 0) {
+            _fail(400, 'Takipli görev oluşturmak için önce en az bir emisyon kaydı girmelisiniz.');
+        }
+
         const now = new Date();
         const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         baselinePeriod = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}`;
@@ -355,8 +366,16 @@ const createTask = async (householdId, adminId, { title, description, assigned_t
         }
 
         const { rows: [bRow] } = await pool.query(bQuery, bParams);
-        baselineAmount = parseFloat(bRow.baseline);
-        targetAmount   = parseFloat((baselineAmount * (1 - cleanPct / 100)).toFixed(2));
+        const rawBaseline = parseFloat(bRow.baseline);
+
+        if (rawBaseline > 0) {
+            // Previous month data exists — compute targets now
+            baselineAmount = rawBaseline;
+            targetAmount   = parseFloat((baselineAmount * (1 - cleanPct / 100)).toFixed(2));
+        }
+        // rawBaseline === 0: no previous data yet. Task is created with
+        // baseline_amount = NULL, target_amount = NULL.
+        // _addProgressToTasks will return 'no_baseline' at runtime.
     }
 
     const { rows: [task] } = await pool.query(
@@ -384,7 +403,8 @@ const createTask = async (householdId, adminId, { title, description, assigned_t
  *   progress_status — 'on_track' | 'at_risk' | 'off_track' (prorated by day-of-month)
  */
 const _addProgressToTasks = async (tasks, householdId) => {
-    const trackingTasks = tasks.filter(t => t.emission_category && t.target_amount != null);
+    // Include all emission-tracked tasks, even those without a baseline yet
+    const trackingTasks = tasks.filter(t => t.emission_category);
     if (!trackingTasks.length) return tasks;
 
     const { rows: emRows } = await pool.query(
@@ -407,6 +427,7 @@ const _addProgressToTasks = async (tasks, householdId) => {
     });
 
     const now = new Date();
+    const todayStr    = now.toISOString().split('T')[0];
     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     const daysElapsed  = now.getDate();
 
@@ -417,13 +438,40 @@ const _addProgressToTasks = async (tasks, householdId) => {
             ? (catData.byUser[t.assigned_to] || 0)
             : catData.total;
 
-        const target     = parseFloat(t.target_amount);
-        const expectedMax = target * (daysElapsed / daysInMonth);
+        // No baseline/target yet — still show current data but skip target logic
+        if (t.target_amount == null) {
+            progressById[t.id] = {
+                current_amount:  parseFloat(current.toFixed(2)),
+                progress_status: 'no_baseline',
+            };
+            return;
+        }
+
+        const target   = parseFloat(t.target_amount);
+        const baseline = t.baseline_amount != null ? parseFloat(t.baseline_amount) : null;
+
+        // Normalize due_date to a comparable YYYY-MM-DD string
+        const dueStr = t.due_date
+            ? (t.due_date instanceof Date
+                ? t.due_date.toISOString().split('T')[0]
+                : String(t.due_date).split('T')[0])
+            : null;
+        const deadlinePassed = dueStr && dueStr < todayStr;
 
         let progress_status;
-        if (current <= expectedMax)          progress_status = 'on_track';
-        else if (current <= expectedMax * 1.15) progress_status = 'at_risk';
-        else                                 progress_status = 'off_track';
+        if (current === 0 && baseline !== null && baseline > 0) {
+            // No emission data entered yet this month — not the same as achieving the target
+            progress_status = 'no_data';
+        } else if (current <= target) {
+            progress_status = 'successful';
+        } else if (deadlinePassed) {
+            progress_status = 'failed';
+        } else {
+            const expectedMax = target * (daysElapsed / daysInMonth);
+            if (current <= expectedMax)              progress_status = 'on_track';
+            else if (current <= expectedMax * 1.15)  progress_status = 'at_risk';
+            else                                     progress_status = 'off_track';
+        }
 
         progressById[t.id] = {
             current_amount:  parseFloat(current.toFixed(2)),
@@ -574,103 +622,76 @@ const getComments = async (emissionRecordId, householdId, userId, memberRole) =>
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Compares this household against others with a similar number of members (±1).
- * Returns aggregated stats only — never exposes other households' identities.
- *
- * percentile: what percentage of similar households emit MORE per member than
- * this one (higher = you're greener than most, same convention as the
- * individual comparison feature).
+ * Returns internal household comparison data:
+ *   - Per-member emissions for the current month
+ *   - Current vs previous month totals
+ *   - Task status summary
+ * No cross-household data is used.
  */
 const getHouseholdComparison = async (householdId) => {
-    // Step 1 — current household stats
-    const { rows: [memberRow] } = await pool.query(
-        `SELECT COUNT(*)::int AS member_count
-         FROM household_members
-         WHERE household_id = $1`,
-        [householdId]
-    );
-    const memberCount = memberRow.member_count;
-
-    const { rows: [emRow] } = await pool.query(
-        `SELECT COALESCE(SUM(er.amount), 0)::float AS total_emissions
-         FROM household_members hm
-         LEFT JOIN emission_records er ON er.user_id = hm.user_id
-         WHERE hm.household_id = $1`,
-        [householdId]
-    );
-    const currentTotal     = parseFloat(emRow.total_emissions);
-    const currentPerMember = memberCount > 0 ? currentTotal / memberCount : 0;
-
-    // Step 2 — aggregate stats for similar households (same size ±1, excluding self)
-    const minSize = Math.max(1, memberCount - 1);
-    const maxSize = memberCount + 1;
-
-    const { rows: [agg] } = await pool.query(
-        `SELECT
-            COUNT(sub.household_id)::int         AS similar_count,
-            AVG(sub.per_member)::float           AS avg_per_member,
-            MIN(sub.per_member)::float           AS min_per_member,
-            MAX(sub.per_member)::float           AS max_per_member,
-            -- households that emit MORE per member than this one
-            COUNT(CASE WHEN sub.per_member > $4 THEN 1 END)::int AS count_with_higher
-         FROM (
-             SELECT
-                 hm.household_id,
-                 COUNT(hm.user_id)                              AS member_count,
-                 COALESCE(SUM(er.amount), 0)
-                     / NULLIF(COUNT(hm.user_id), 0)::float     AS per_member
+    const [memberRes, currRes, prevRes, taskRes] = await Promise.all([
+        pool.query(
+            `SELECT u.name, u.id AS user_id,
+                    COALESCE(SUM(er.amount), 0)::float AS current_month_emissions
              FROM household_members hm
+             JOIN users u ON u.id = hm.user_id
              LEFT JOIN emission_records er ON er.user_id = hm.user_id
-             WHERE hm.household_id != $3
-             GROUP BY hm.household_id
-             HAVING COUNT(hm.user_id) BETWEEN $1 AND $2
-         ) sub`,
-        [minSize, maxSize, householdId, currentPerMember]
-    );
+                 AND TO_CHAR(er.date, 'YYYY-MM') = TO_CHAR(NOW(), 'YYYY-MM')
+             WHERE hm.household_id = $1
+             GROUP BY u.id, u.name
+             ORDER BY current_month_emissions DESC`,
+            [householdId]
+        ),
+        pool.query(
+            `SELECT COALESCE(SUM(er.amount), 0)::float AS total
+             FROM household_members hm
+             JOIN emission_records er ON er.user_id = hm.user_id
+             WHERE hm.household_id = $1
+               AND TO_CHAR(er.date, 'YYYY-MM') = TO_CHAR(NOW(), 'YYYY-MM')`,
+            [householdId]
+        ),
+        pool.query(
+            `SELECT COALESCE(SUM(er.amount), 0)::float AS total
+             FROM household_members hm
+             JOIN emission_records er ON er.user_id = hm.user_id
+             WHERE hm.household_id = $1
+               AND TO_CHAR(er.date, 'YYYY-MM') = TO_CHAR(NOW() - INTERVAL '1 month', 'YYYY-MM')`,
+            [householdId]
+        ),
+        pool.query(
+            `SELECT status, COUNT(*)::int AS count
+             FROM household_tasks
+             WHERE household_id = $1
+             GROUP BY status`,
+            [householdId]
+        ),
+    ]);
 
-    const similarCount = agg.similar_count ?? 0;
-    const percentile   = similarCount > 0
-        ? Math.round((agg.count_with_higher / similarCount) * 100)
+    const currentTotal  = parseFloat(currRes.rows[0].total);
+    const previousTotal = parseFloat(prevRes.rows[0].total);
+
+    const monthChangePct = previousTotal > 0
+        ? parseFloat(((currentTotal - previousTotal) / previousTotal * 100).toFixed(1))
         : null;
 
-    // Badge — same conventions as individual comparison
-    let badge = null, badgeDescription = null;
-    if (percentile !== null) {
-        if (percentile >= 80) {
-            badge            = 'Çok iyi';
-            badgeDescription = 'Benzer büyüklükteki haneler arasında düşük emisyon grubundasınız.';
-        } else if (percentile >= 50) {
-            badge            = 'İyi';
-            badgeDescription = 'Ortalamanın altında karbon salımı yapıyorsunuz.';
-        } else {
-            badge            = 'Geliştirilebilir';
-            badgeDescription = 'Karbon ayak izinizi azaltmak için iyileştirme alanlarınız var.';
-        }
-    }
+    const taskMap = {};
+    taskRes.rows.forEach(r => { taskMap[r.status] = r.count; });
+
+    const hasData = memberRes.rows.some(m => m.current_month_emissions > 0)
+        || currentTotal > 0
+        || previousTotal > 0;
 
     return {
-        your_household: {
-            member_count:       memberCount,
-            total_emissions:    parseFloat(currentTotal.toFixed(2)),
-            emissions_per_member: parseFloat(currentPerMember.toFixed(2)),
+        comparison_available: hasData,
+        member_breakdown:     memberRes.rows,
+        current_month_total:  parseFloat(currentTotal.toFixed(2)),
+        previous_month_total: parseFloat(previousTotal.toFixed(2)),
+        month_change_pct:     monthChangePct,
+        task_stats: {
+            pending:     taskMap['pending']     || 0,
+            in_progress: taskMap['in_progress'] || 0,
+            completed:   taskMap['completed']   || 0,
         },
-        similar_households: {
-            count:               similarCount,
-            size_range:          `${minSize}–${maxSize} üye`,
-            avg_per_member:      agg.avg_per_member   != null ? parseFloat(agg.avg_per_member.toFixed(2))   : null,
-            min_per_member:      agg.min_per_member   != null ? parseFloat(agg.min_per_member.toFixed(2))   : null,
-            max_per_member:      agg.max_per_member   != null ? parseFloat(agg.max_per_member.toFixed(2))   : null,
-            count_with_higher:   agg.count_with_higher ?? 0,
-        },
-        percentile,
-        badge,
-        badgeDescription,
-        comparison_available: similarCount > 0,
-        message: similarCount === 0
-            ? 'Karşılaştırma için yeterli benzer hane verisi bulunmuyor.'
-            : percentile === null
-                ? null
-                : `Benzer büyüklükteki hanelerin %${percentile}'inden daha az karbon salımı yapıyorsunuz.`,
     };
 };
 

@@ -12,6 +12,7 @@ const individualComparisonRoutes = require('./routes/individualComparisonRoutes'
 const whatIfSimulationRoutes     = require('./routes/whatIfSimulationRoutes');
 const settingsRoutes             = require('./routes/settingsRoutes');
 const householdRoutes            = require('./routes/householdRoutes');
+const companyRoutes              = require('./routes/companyRoutes');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -35,6 +36,7 @@ app.use('/api/individual-comparison',  individualComparisonRoutes);
 app.use('/api/what-if-simulation',    whatIfSimulationRoutes);
 app.use('/api/settings',              settingsRoutes);
 app.use('/api/households',            householdRoutes);
+app.use('/api/company',               companyRoutes);
 
 // Sağlık kontrolü (Health check) — sunucunun çalıştığını teyit etmek için yararlıdır
 app.get('/health', (req, res) => {

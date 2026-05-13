@@ -6,14 +6,18 @@ const user = renderLayout({ activeNav: 'nav-household', title: 'Hane Görevleri'
 if (!user) throw new Error('redirect');
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
-const taskTitleEl    = document.getElementById('taskTitle');
-const taskDescEl     = document.getElementById('taskDesc');
-const taskAssigneeEl = document.getElementById('taskAssignee');
-const taskDueDateEl  = document.getElementById('taskDueDate');
-const taskReductEl   = document.getElementById('taskReduction');
-const createTaskBtn  = document.getElementById('createTaskBtn');
-const tasksContainer = document.getElementById('tasksContainer');
-const taskCountEl    = document.getElementById('taskCountEl');
+const taskTitleEl     = document.getElementById('taskTitle');
+const taskDescEl      = document.getElementById('taskDesc');
+const taskAssigneeEl  = document.getElementById('taskAssignee');
+const taskDueDateEl   = document.getElementById('taskDueDate');
+const taskReductEl    = document.getElementById('taskReduction');
+const taskEmCatEl     = document.getElementById('taskEmCat');
+const taskTargetPctEl = document.getElementById('taskTargetPct');
+const createTaskBtn      = document.getElementById('createTaskBtn');
+const tasksContainer     = document.getElementById('tasksContainer');
+const taskCountEl        = document.getElementById('taskCountEl');
+const noRecordsModal     = document.getElementById('noRecordsModal');
+const noRecordsVazgecBtn = document.getElementById('noRecordsVazgecBtn');
 
 // ── Status helpers ────────────────────────────────────────────────────────────
 const STATUS_LABELS  = { pending: 'Bekliyor', in_progress: 'Devam Ediyor', completed: 'Tamamlandı' };
@@ -21,6 +25,16 @@ const STATUS_CLASSES = { pending: 'pending',  in_progress: 'in-progress',  compl
 const STATUS_OPTIONS = Object.entries(STATUS_LABELS)
   .map(([v, l]) => `<option value="${v}">${l}</option>`)
   .join('');
+
+// ── No-records modal ──────────────────────────────────────────────────────────
+function showNoRecordsModal() {
+  if (noRecordsModal) noRecordsModal.style.display = 'flex';
+}
+function hideNoRecordsModal() {
+  if (noRecordsModal) noRecordsModal.style.display = 'none';
+}
+noRecordsVazgecBtn?.addEventListener('click', hideNoRecordsModal);
+noRecordsModal?.addEventListener('click', e => { if (e.target === noRecordsModal) hideNoRecordsModal(); });
 
 // ── Admin guard ───────────────────────────────────────────────────────────────
 async function guardAdmin() {
@@ -85,8 +99,24 @@ function renderTasks(tasks) {
   });
 }
 
-const PROG_COLORS = { on_track: 'var(--color-primary)', at_risk: '#f59e0b', off_track: 'var(--color-error)' };
-const PROG_LABELS = { on_track: 'Yolunda', at_risk: 'Risk Altında', off_track: 'Geride' };
+const PROG_COLORS = {
+  on_track:   'var(--color-primary)',
+  at_risk:    '#f59e0b',
+  off_track:  'var(--color-error)',
+  successful: '#16a34a',
+  failed:     'var(--color-error)',
+  no_data:     'var(--color-text-muted)',
+  no_baseline: '#9ca3af',
+};
+const PROG_LABELS = {
+  on_track:    'Yolunda',
+  at_risk:     'Risk Altında',
+  off_track:   'Geride',
+  successful:  'Başarılı',
+  failed:      'Başarısız',
+  no_data:     'Veri Bekleniyor',
+  no_baseline: 'Başlangıç Verisi Bekleniyor',
+};
 
 function taskRow(t) {
   const desc = t.description
@@ -103,26 +133,66 @@ function taskRow(t) {
 
   // Progress cell for emission-tracked tasks
   let progressCell = '<span style="color:var(--color-text-muted);font-size:12px;">—</span>';
-  if (t.emission_category && t.target_amount != null) {
-    if (t.current_amount != null) {
-      const current = parseFloat(t.current_amount);
-      const target  = parseFloat(t.target_amount);
-      const barPct  = target > 0 ? Math.min(100, Math.round(current / target * 100)) : 100;
-      const color   = PROG_COLORS[t.progress_status] || 'var(--color-text-muted)';
-      const label   = PROG_LABELS[t.progress_status]  || '';
+  if (t.emission_category) {
+    const catMeta = `<div style="font-size:11px;color:var(--color-text-muted);margin-top:3px;">${t.emission_category}${t.target_pct ? ' · %' + t.target_pct + ' hedef' : ''}</div>`;
+
+    if (t.target_amount == null) {
+      // Baseline not yet available (no previous month data when task was created)
+      const color   = PROG_COLORS['no_baseline'];
+      const current = t.current_amount != null ? parseFloat(t.current_amount) : null;
+      const currentHtml = current != null
+        ? `<div style="font-size:12px;margin-bottom:4px;">Güncel: <strong>${current.toFixed(1)} kg CO₂e</strong></div>`
+        : '';
       progressCell = `
-        <div>
-          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;">
-            <span style="color:var(--color-text-muted);">${current.toFixed(1)} / ${target.toFixed(1)} kg</span>
-            <span style="font-weight:700;color:${color};">${label}</span>
-          </div>
-          <div style="background:var(--color-border);border-radius:99px;height:4px;">
-            <div style="width:${barPct}%;background:${color};height:100%;border-radius:99px;"></div>
-          </div>
-          <div style="font-size:11px;color:var(--color-text-muted);margin-top:2px;">${t.target_pct}% hedef · ${t.emission_category}</div>
+        <div style="min-width:190px;">
+          ${currentHtml}
+          <span style="font-size:11px;font-weight:700;color:${color};padding:2px 8px;border-radius:99px;background:${color}20;">Başlangıç Verisi Bekleniyor</span>
+          ${catMeta}
         </div>`;
     } else {
-      progressCell = `<span style="font-size:12px;color:var(--color-text-muted);">${t.target_pct}% hedef<br><span style="font-size:11px;">${t.emission_category}</span></span>`;
+      // Full tracking: baseline + target available
+      const target   = parseFloat(t.target_amount);
+      const baseline = t.baseline_amount != null ? parseFloat(t.baseline_amount) : null;
+      const current  = t.current_amount  != null ? parseFloat(t.current_amount)  : null;
+      const color    = PROG_COLORS[t.progress_status] || 'var(--color-text-muted)';
+      const label    = PROG_LABELS[t.progress_status] || 'Bekliyor';
+
+      // Progress bar: reduction progress from baseline toward target (higher = better)
+      let barPct = 0;
+      if (current != null && baseline != null && baseline > target) {
+        barPct = Math.max(0, Math.min(100, Math.round((baseline - current) / (baseline - target) * 100)));
+      } else if (current != null && target > 0) {
+        barPct = current <= target ? 100 : Math.max(0, Math.round((1 - (current - target) / target) * 50));
+      }
+
+      let reductionPctHtml = '';
+      if (current != null && baseline != null && baseline > 0) {
+        const achieved = Math.round((baseline - current) / baseline * 100);
+        reductionPctHtml = `<div style="font-size:11px;color:var(--color-text-muted);">İlerleme: <strong>${achieved}%</strong></div>`;
+      }
+
+      const baselineHtml = baseline != null
+        ? `<div style="font-size:12px;">Başlangıç: <strong>${baseline.toFixed(1)} kg CO₂e</strong></div>`
+        : '';
+      const targetHtml  = `<div style="font-size:12px;">Hedef: <strong>${target.toFixed(1)} kg CO₂e</strong></div>`;
+      const currentHtml = current != null
+        ? `<div style="font-size:12px;">Güncel: <strong>${current.toFixed(1)} kg CO₂e</strong></div>`
+        : `<div style="font-size:12px;color:var(--color-text-muted);">Güncel veri bekleniyor</div>`;
+
+      progressCell = `
+        <div style="min-width:190px;">
+          ${baselineHtml}
+          ${targetHtml}
+          ${currentHtml}
+          ${reductionPctHtml}
+          <div style="margin:5px 0 4px;">
+            <div style="background:var(--color-border);border-radius:99px;height:5px;">
+              <div style="width:${barPct}%;background:${color};height:100%;border-radius:99px;transition:width 0.3s;"></div>
+            </div>
+          </div>
+          <span style="font-size:11px;font-weight:700;color:${color};padding:2px 8px;border-radius:99px;background:${color}20;">${label}</span>
+          ${catMeta}
+        </div>`;
     }
   }
 
@@ -192,12 +262,32 @@ createTaskBtn?.addEventListener('click', async () => {
     return;
   }
 
+  const emCat    = taskEmCatEl?.value     || '';
+  const targetPct = taskTargetPctEl?.value || '';
+
+  // Emission tracking: both fields required together or both empty
+  if ((emCat && !targetPct) || (!emCat && targetPct)) {
+    showToast('Hata', 'Emisyon kategorisi ve azaltım hedefi birlikte girilmelidir.', 'error');
+    (emCat ? taskTargetPctEl : taskEmCatEl)?.focus();
+    return;
+  }
+  if (targetPct) {
+    const pct = parseFloat(targetPct);
+    if (isNaN(pct) || pct < 1 || pct > 99) {
+      showToast('Hata', 'Azaltım hedefi 1 ile 99 arasında olmalıdır.', 'error');
+      taskTargetPctEl?.focus();
+      return;
+    }
+  }
+
   const payload = {
     title,
-    description:      taskDescEl?.value.trim()     || undefined,
-    assigned_to:      taskAssigneeEl?.value         || undefined,
-    due_date:         taskDueDateEl?.value          || undefined,
-    target_reduction: taskReductEl?.value           || undefined,
+    description:       taskDescEl?.value.trim()  || undefined,
+    assigned_to:       taskAssigneeEl?.value      || undefined,
+    due_date:          taskDueDateEl?.value       || undefined,
+    target_reduction:  taskReductEl?.value        || undefined,
+    emission_category: emCat                      || undefined,
+    target_pct:        targetPct                  || undefined,
   };
 
   createTaskBtn.disabled    = true;
@@ -207,15 +297,21 @@ createTaskBtn?.addEventListener('click', async () => {
     showToast('Başarılı', 'Görev oluşturuldu.', 'success');
 
     // Reset form
-    taskTitleEl.value   = '';
-    taskDescEl.value    = '';
-    taskDueDateEl.value = '';
-    taskReductEl.value  = '';
-    taskAssigneeEl.value = '';
+    taskTitleEl.value      = '';
+    taskDescEl.value       = '';
+    taskDueDateEl.value    = '';
+    taskReductEl.value     = '';
+    taskAssigneeEl.value   = '';
+    taskEmCatEl.value      = '';
+    taskTargetPctEl.value  = '';
 
     await loadTasks();
   } catch (err) {
-    showToast('Hata', err.message, 'error');
+    if (err.message?.includes('en az bir emisyon kaydı')) {
+      showNoRecordsModal();
+    } else {
+      showToast('Hata', err.message, 'error');
+    }
   } finally {
     createTaskBtn.disabled    = false;
     createTaskBtn.textContent = 'Görev Oluştur';
@@ -224,6 +320,9 @@ createTaskBtn?.addEventListener('click', async () => {
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 (async () => {
+  // Prevent selecting past dates in the due-date picker
+  if (taskDueDateEl) taskDueDateEl.min = new Date().toISOString().split('T')[0];
+
   try {
     await guardAdmin();
     await Promise.all([loadMembers(), loadTasks()]);

@@ -179,6 +179,14 @@ const createTask = async (req, res) => {
         return res.status(400).json({ success: false, message: 'due_date YYYY-MM-DD formatında olmalıdır.' });
     }
 
+    // Reject past dates
+    if (taskData.due_date) {
+        const today = new Date().toISOString().split('T')[0];
+        if (taskData.due_date < today) {
+            return res.status(400).json({ success: false, message: 'Geçmiş tarihe görev oluşturulamaz.' });
+        }
+    }
+
     try {
         const task = await svc.createTask(req.membership.household_id, req.user.id, taskData);
         return ok(res, { task }, 'Görev başarıyla oluşturuldu.', 201);

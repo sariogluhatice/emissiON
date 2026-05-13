@@ -2,6 +2,7 @@ import { emissionService } from "./api/emissionService.js";
 import { TokenManager } from "./api/tokenManager.js";
 import { renderLayout } from "./layout.js";
 import { showToast } from "./utils/uiUtils.js";
+import { companyService } from "./api/companyService.js";
 
 // Edit mode: check for ?edit=<id> URL param
 const _urlParams = new URLSearchParams(window.location.search);
@@ -13,6 +14,11 @@ const user = renderLayout({
   title: isEditMode ? "Kaydı Düzenle" : "Yeni Kayıt Ekle",
 });
 if (!user) throw new Error("redirect");
+
+if (user.role === 'company') {
+  const _cbamCard = document.getElementById('cardCbam');
+  if (_cbamCard) _cbamCard.style.display = '';
+}
 
 // ── Data model ────────────────────────────────────────────────────────────────
 // inputType: 'quantity' → quantity required, unit shown
@@ -210,7 +216,9 @@ const GROQ_CATEGORY_MAP = {
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const cardManual = document.getElementById("cardManual");
 const cardVisual = document.getElementById("cardVisual");
+const cardCbam   = document.getElementById("cardCbam");
 const uploadSection = document.getElementById("uploadSection");
+const cbamSection   = document.getElementById("cbamSection");
 const uploadZone = document.getElementById("uploadZone");
 const fileInput = document.getElementById("fileInput");
 const scanStatus = document.getElementById("scanStatus");
@@ -285,12 +293,20 @@ if (isEditMode) {
 // ── Method switching ──────────────────────────────────────────────────────────
 cardManual.addEventListener("click", () => setMethod("manual"));
 cardVisual.addEventListener("click", () => setMethod("visual"));
+cardCbam?.addEventListener("click", () => setMethod("cbam"));
 
 function setMethod(m) {
   currentMethod = m;
   cardManual.classList.toggle("active", m === "manual");
   cardVisual.classList.toggle("active", m === "visual");
+  cardCbam?.classList.toggle("active", m === "cbam");
   uploadSection.style.display = m === "visual" ? "block" : "none";
+  const upperRow = document.querySelector(".upper-row");
+  const debugCol = document.querySelector(".debug-col");
+  if (upperRow) upperRow.style.display = m === "cbam" ? "none" : "";
+  if (debugCol) debugCol.style.display = m === "cbam" ? "none" : "";
+  if (cbamSection) cbamSection.style.display = m === "cbam" ? "block" : "none";
+  if (m === "cbam" && cePeriodEl?.value) cbamLoadPeriodEmissions(cePeriodEl.value);
   updateDebug();
 }
 
@@ -991,7 +1007,7 @@ entryForm.addEventListener("submit", async (e) => {
 });
 
 // ── Clear ─────────────────────────────────────────────────────────────────────
-clearBtn.addEventListener("click", () => {
+clearBtn?.addEventListener("click", () => {
   categoryEl.value = "";
   activityEl.innerHTML = '<option value="">Önce kategori seçin…</option>';
   originEl.value = "";
@@ -1043,4 +1059,195 @@ function fileToBase64(file) {
     reader.onerror = () => reject(new Error("Dosya okunamadı."));
     reader.readAsDataURL(file);
   });
+}
+
+// ── CBAM declaration form (company users only) ────────────────────────────────
+
+const CBAM_RISK_THRESHOLDS = { medium: 10000, high: 50000, critical: 200000 };
+const CBAM_RISK_LABELS = { low: 'Düşük', medium: 'Orta', high: 'Yüksek', critical: 'Kritik' };
+const CBAM_RISK_COLORS = { low: '#16a34a', medium: '#f59e0b', high: '#dc2626', critical: '#7c3aed' };
+
+function cbamClientRisk(cost) {
+  if (cost < CBAM_RISK_THRESHOLDS.medium)   return 'low';
+  if (cost < CBAM_RISK_THRESHOLDS.high)     return 'medium';
+  if (cost < CBAM_RISK_THRESHOLDS.critical) return 'high';
+  return 'critical';
+}
+
+let cbamPeriodState = {
+  total_kg: null, monthly_prod_tons: null, carbon_price_default: null,
+  auto_factor: null, has_records: false,
+};
+
+const ceCategoryEl         = document.getElementById('ceCategory');
+const cePeriodEl           = document.getElementById('cePeriod');
+const ceExportAmountEl     = document.getElementById('ceExportAmount');
+const ceDestinationEl      = document.getElementById('ceDestinationRegion');
+const ceDeclPaidPriceEl    = document.getElementById('ceDeclPaidPrice');
+const ceEmissionFactorEl   = document.getElementById('ceEmissionFactor');
+const ceCarbonPriceEl      = document.getElementById('ceCarbonPrice');
+const ceNotesEl            = document.getElementById('ceNotes');
+const ceSaveBtnEl          = document.getElementById('ceSaveBtn');
+const ceEmissionsInfoEl    = document.getElementById('ceEmissionsInfo');
+const ceEmissionsInfoContent = document.getElementById('ceEmissionsInfoContent');
+const ceFactorSourceBadge  = document.getElementById('ceFactorSourceBadge');
+const previewFactorEl      = document.getElementById('previewFactor');
+const previewEmissionEl    = document.getElementById('previewEmission');
+const previewCostEl        = document.getElementById('previewCost');
+const previewRiskEl        = document.getElementById('previewRisk');
+
+async function cbamLoadPeriodEmissions(period) {
+  if (!period) {
+    if (ceEmissionsInfoEl) ceEmissionsInfoEl.style.display = 'none';
+    cbamPeriodState = { total_kg: null, monthly_prod_tons: null, carbon_price_default: null, auto_factor: null, has_records: false };
+    cbamUpdatePreview();
+    return;
+  }
+
+  if (ceEmissionsInfoEl)    ceEmissionsInfoEl.style.display = 'block';
+  if (ceEmissionsInfoContent) ceEmissionsInfoContent.innerHTML = '<span style="color:var(--color-text-muted);">Yükleniyor…</span>';
+
+  try {
+    const res  = await companyService.getPeriodEmissions(period);
+    const data = res.data || {};
+
+    const totalKg     = parseFloat(data.total_kg  ?? 0);
+    const monthlyTons = data.monthly_prod_tons ? parseFloat(data.monthly_prod_tons) : null;
+    const cpDefault   = data.carbon_price_default ? parseFloat(data.carbon_price_default) : null;
+    const hasRecords  = totalKg > 0;
+
+    let autoFactor = null;
+    if (hasRecords) {
+      const exportAmt = parseFloat(ceExportAmountEl?.value);
+      const denom     = monthlyTons ?? (Number.isFinite(exportAmt) && exportAmt > 0 ? exportAmt : null);
+      if (denom && denom > 0) autoFactor = totalKg / 1000 / denom;
+    }
+
+    cbamPeriodState = { total_kg: totalKg, monthly_prod_tons: monthlyTons, carbon_price_default: cpDefault, auto_factor: autoFactor, has_records: hasRecords };
+
+    const [y, m] = period.split('-');
+    const label  = new Date(parseInt(y), parseInt(m) - 1, 1).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long' });
+    let html = `<div style="font-weight:700;margin-bottom:6px;">${label} emisyon verileri:</div>`;
+
+    if (hasRecords) {
+      ceEmissionsInfoEl.style.borderColor = '#16a34a60';
+      ceEmissionsInfoEl.style.background  = '#16a34a08';
+      html += `<div style="color:#16a34a;font-weight:600;">✓ ${(totalKg / 1000).toFixed(4)} tCO₂e bulundu</div>`;
+      if (monthlyTons) html += `<div style="color:var(--color-text-muted);">Aylık üretim: ${monthlyTons.toLocaleString('tr-TR', {maximumFractionDigits:2})} ton</div>`;
+      if (autoFactor !== null) html += `<div>Tahmini faktör: <strong>${autoFactor.toFixed(6)} tCO₂/ton</strong></div>`;
+    } else {
+      ceEmissionsInfoEl.style.borderColor = '#f59e0b60';
+      ceEmissionsInfoEl.style.background  = '#f59e0b08';
+      html += `<div style="color:#f59e0b;font-weight:600;">⚠ Bu dönemde emisyon kaydı bulunamadı</div>`;
+      html += `<div style="color:var(--color-text-muted);">Manuel faktör girmeniz gereklidir.</div>`;
+    }
+    if (cpDefault !== null) html += `<div style="color:var(--color-text-muted);">Karbon fiyatı: <strong>€${cpDefault.toFixed(2)}</strong></div>`;
+    if (ceEmissionsInfoContent) ceEmissionsInfoContent.innerHTML = html;
+  } catch {
+    if (ceEmissionsInfoContent) ceEmissionsInfoContent.innerHTML = '<span style="color:var(--color-error);">⚠ Dönem bilgisi yüklenemedi.</span>';
+  }
+
+  cbamUpdatePreview();
+}
+
+function cbamUpdatePreview() {
+  const manualFactor = parseFloat(ceEmissionFactorEl?.value);
+  const effectiveFactor = (Number.isFinite(manualFactor) && manualFactor > 0)
+    ? manualFactor
+    : cbamPeriodState.auto_factor;
+
+  if (cbamPeriodState.has_records && !cbamPeriodState.monthly_prod_tons) {
+    const amt = parseFloat(ceExportAmountEl?.value);
+    if (Number.isFinite(amt) && amt > 0) cbamPeriodState.auto_factor = cbamPeriodState.total_kg / 1000 / amt;
+  }
+
+  const amount  = parseFloat(ceExportAmountEl?.value) || 0;
+  const ef      = effectiveFactor ?? 0;
+  const manualPrice = parseFloat(ceCarbonPriceEl?.value);
+  const price   = (Number.isFinite(manualPrice) && manualPrice >= 0)
+    ? manualPrice
+    : (cbamPeriodState.carbon_price_default ?? 0);
+  const paid    = parseFloat(ceDeclPaidPriceEl?.value) || 0;
+
+  const totalEm = amount * ef;
+  const netP    = Math.max(0, price - paid);
+  const cost    = totalEm * netP;
+  const isManualFactor = Number.isFinite(manualFactor) && manualFactor > 0;
+
+  if (ceFactorSourceBadge) {
+    ceFactorSourceBadge.innerHTML = ef > 0
+      ? (isManualFactor
+          ? '<span style="color:#f59e0b;font-weight:700;">✎ Manuel faktör</span>'
+          : '<span style="color:#16a34a;font-weight:700;">⟳ Emisyon kayıtlarından türetildi</span>')
+      : '';
+  }
+
+  if (totalEm > 0 && ef > 0) {
+    if (previewFactorEl)   previewFactorEl.textContent   = ef.toFixed(6);
+    if (previewEmissionEl) previewEmissionEl.textContent = totalEm.toFixed(4);
+    if (previewCostEl)     previewCostEl.textContent     = '€' + cost.toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    const risk = cbamClientRisk(cost);
+    if (previewRiskEl) { previewRiskEl.textContent = CBAM_RISK_LABELS[risk]; previewRiskEl.style.color = CBAM_RISK_COLORS[risk]; }
+  } else {
+    if (previewFactorEl)   previewFactorEl.textContent   = ef > 0 ? ef.toFixed(6) : '—';
+    if (previewEmissionEl) previewEmissionEl.textContent = '—';
+    if (previewCostEl)     previewCostEl.textContent     = '—';
+    if (previewRiskEl)   { previewRiskEl.textContent = '—'; previewRiskEl.style.color = ''; }
+  }
+}
+
+cePeriodEl?.addEventListener('change', () => cbamLoadPeriodEmissions(cePeriodEl.value));
+[ceExportAmountEl, ceDeclPaidPriceEl, ceEmissionFactorEl, ceCarbonPriceEl].forEach(el => {
+  el?.addEventListener('input', cbamUpdatePreview);
+});
+
+ceSaveBtnEl?.addEventListener('click', async () => {
+  const category  = ceCategoryEl?.value;
+  const period    = cePeriodEl?.value;
+  const exportAmt = ceExportAmountEl?.value;
+
+  if (!category) { showToast('Hata', 'CBAM kategorisi seçilmelidir.', 'error'); ceCategoryEl?.focus(); return; }
+  if (!period)   { showToast('Hata', 'Dönem seçilmelidir.', 'error'); cePeriodEl?.focus(); return; }
+  if (!exportAmt || parseFloat(exportAmt) <= 0) {
+    showToast('Hata', 'İhracat miktarı pozitif olmalıdır.', 'error'); ceExportAmountEl?.focus(); return;
+  }
+
+  const manualFactor = ceEmissionFactorEl?.value.trim();
+  if (manualFactor && (isNaN(parseFloat(manualFactor)) || parseFloat(manualFactor) <= 0)) {
+    showToast('Hata', 'Manuel emisyon faktörü pozitif olmalıdır.', 'error'); ceEmissionFactorEl?.focus(); return;
+  }
+  const manualPrice = ceCarbonPriceEl?.value.trim();
+  if (manualPrice && (isNaN(parseFloat(manualPrice)) || parseFloat(manualPrice) < 0)) {
+    showToast('Hata', 'Manuel karbon fiyatı sıfır veya pozitif olmalıdır.', 'error'); ceCarbonPriceEl?.focus(); return;
+  }
+
+  ceSaveBtnEl.disabled    = true;
+  ceSaveBtnEl.textContent = 'Hesaplanıyor…';
+
+  try {
+    await companyService.createEntry({
+      export_category:    category,
+      period_start:       period + '-01',
+      export_amount:      exportAmt,
+      destination_region: ceDestinationEl?.value.trim() || undefined,
+      paid_carbon_price:  ceDeclPaidPriceEl?.value || '0',
+      emission_factor:    manualFactor || undefined,
+      carbon_price:       manualPrice  || undefined,
+      notes:              ceNotesEl?.value.trim() || undefined,
+    });
+
+    showToast('Başarılı', 'CBAM beyanı kaydedildi ve Emisyon Takibi\'ne eklendi.', 'success');
+    setTimeout(() => { window.location.href = 'company-cbam.html'; }, 1200);
+  } catch (err) {
+    showToast('Hata', err.message, 'error');
+    ceSaveBtnEl.disabled    = false;
+    ceSaveBtnEl.textContent = 'Hesapla ve Kaydet';
+  }
+});
+
+// Init CBAM period when section first becomes visible
+if (cePeriodEl) {
+  const now = new Date();
+  cePeriodEl.max   = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  cePeriodEl.value = cePeriodEl.max;
 }

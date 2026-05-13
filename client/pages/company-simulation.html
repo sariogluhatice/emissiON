@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CBAM Simülasyonu – emissiON</title>
+    <link rel="stylesheet" href="../css/main.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar"></aside>
+
+      <div class="main-content">
+        <header class="topbar" id="topbar"></header>
+
+        <main class="page-body">
+          <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <h1>CBAM Senaryo Simülasyonu</h1>
+              <p>Üretim değişimi, verimlilik iyileştirmesi veya farklı karbon fiyatı senaryolarında tahmini vergi yükümlülüğünüzü hesaplayın.</p>
+            </div>
+            <a href="company.html" class="btn-secondary" style="white-space:nowrap;">← Şirket Paneli</a>
+          </div>
+
+          <!-- No emission records notice -->
+          <div id="csNoDataNotice" style="display:none;">
+            <div class="content-card glass-card" style="text-align:center;padding:40px 24px;">
+              <div style="font-size:48px;margin-bottom:16px;">📊</div>
+              <h2 style="font-size:18px;font-weight:700;margin-bottom:8px;">Henüz emisyon kaydı yok</h2>
+              <p style="color:var(--color-text-muted);font-size:14px;margin:0 0 24px;">
+                Simülasyon için önce operasyonel emisyon kayıtlarınızı (elektrik, gaz, ulaşım vb.) girmeniz gerekmektedir.
+              </p>
+              <a href="add-entry.html" class="btn-primary">Yeni Kayıt Ekle</a>
+            </div>
+          </div>
+
+          <!-- Simulator (shown when data exists) -->
+          <div id="csSimulatorSection">
+
+            <!-- Baseline info bar -->
+            <div id="csBaselineBar" class="content-card glass-card"
+                 style="margin-bottom:var(--spacing-lg);padding:14px 20px;
+                        display:flex;gap:32px;flex-wrap:wrap;align-items:center;">
+              <div>
+                <span style="font-size:11px;color:var(--color-text-muted);text-transform:uppercase;
+                             letter-spacing:0.5px;">Toplam Operasyonel Emisyon</span>
+                <div style="font-size:20px;font-weight:800;" id="csBaselineEmission">—</div>
+                <div style="font-size:11px;color:var(--color-text-muted);">tCO₂</div>
+              </div>
+              <div style="width:1px;background:var(--color-border);align-self:stretch;"></div>
+              <div style="font-size:12px;color:var(--color-text-muted);flex:1;max-width:400px;line-height:1.6;">
+                Emisyon azaltım veya karbon fiyatı değişikliklerini simüle edin.
+                Tüm operasyonel emisyon kayıtlarınız baz alınır.
+              </div>
+            </div>
+
+            <!-- Two-column: Inputs + Live preview -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--spacing-lg);margin-bottom:var(--spacing-lg);">
+
+              <!-- Left: Scenario inputs -->
+              <div class="content-card glass-card">
+                <div class="content-card-header">
+                  <span class="content-card-title">Senaryo Parametreleri</span>
+                </div>
+
+                <div style="display:flex;flex-direction:column;gap:16px;">
+
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label" for="csScenarioName">
+                      Senaryo Adı
+                      <span style="color:var(--color-text-muted);font-weight:400;">— İsteğe Bağlı</span>
+                    </label>
+                    <input class="input" type="text" id="csScenarioName"
+                           placeholder="Örn: Optimize Senaryosu" maxlength="200" />
+                  </div>
+
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label" for="csCarbonPrice">
+                      AB ETS Karbon Fiyatı (€/tCO₂) <span style="color:var(--color-error)">*</span>
+                    </label>
+                    <input class="input" type="number" id="csCarbonPrice"
+                           placeholder="Örn: 65" min="0" step="0.01" />
+                    <span style="font-size:11px;color:var(--color-text-muted);margin-top:4px;display:block;">
+                      EU ETS piyasasındaki güncel veya senaryo karbon fiyatı
+                    </span>
+                  </div>
+
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label" for="csPaidPrice">
+                      Ödenen Karbon Vergisi (€/tCO₂)
+                      <span style="color:var(--color-text-muted);font-weight:400;">— İsteğe Bağlı</span>
+                    </label>
+                    <input class="input" type="number" id="csPaidPrice"
+                           placeholder="0" min="0" step="0.01" value="0" />
+                    <span style="font-size:11px;color:var(--color-text-muted);margin-top:4px;display:block;">
+                      Menşe ülkede ödenen karbon vergisi — CBAM'dan mahsup edilir
+                    </span>
+                  </div>
+
+                  <div style="border-top:1px solid var(--color-border);padding-top:14px;">
+                    <span style="font-size:12px;font-weight:600;color:var(--color-text-muted);
+                                 text-transform:uppercase;letter-spacing:0.5px;">
+                      Emisyon Değişim Senaryosu
+                    </span>
+                  </div>
+
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label" for="csExportChangePct">
+                      Üretim / Hacim Değişimi (%)
+                    </label>
+                    <input class="input" type="number" id="csExportChangePct"
+                           placeholder="0" min="-99" max="200" step="1" value="0" />
+                    <span style="font-size:11px;color:var(--color-text-muted);margin-top:4px;display:block;">
+                      Üretim hacmi değişimi — negatif = azalış, pozitif = artış (örn: −20 → %20 daha az emisyon)
+                    </span>
+                  </div>
+
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label" for="csFactorChangePct">
+                      Emisyon Yoğunluğu Değişimi (%)
+                    </label>
+                    <input class="input" type="number" id="csFactorChangePct"
+                           placeholder="0" min="-99" max="200" step="1" value="0" />
+                    <span style="font-size:11px;color:var(--color-text-muted);margin-top:4px;display:block;">
+                      Verimlilik / teknoloji iyileştirmesi — negatif = daha az emisyon yoğunluğu
+                    </span>
+                  </div>
+
+                  <button class="btn-primary" id="csRunBtn" style="margin-top:4px;">
+                    Simüle Et ve Kaydet
+                  </button>
+
+                </div>
+              </div>
+
+              <!-- Right: Live preview -->
+              <div class="content-card glass-card" style="display:flex;flex-direction:column;">
+                <div class="content-card-header">
+                  <span class="content-card-title">Canlı Önizleme</span>
+                  <span style="font-size:12px;color:var(--color-text-muted);">Anlık güncellenir</span>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;">
+
+                  <div class="glass-card stat-card" style="padding:16px;">
+                    <div class="stat-label">Tahmini Emisyon</div>
+                    <div class="stat-value" id="csPreviewEmission" style="font-size:20px;">—</div>
+                    <div class="stat-unit">tCO₂</div>
+                  </div>
+
+                  <div class="glass-card stat-card" style="padding:16px;">
+                    <div class="stat-label">Tahmini CBAM Maliyeti</div>
+                    <div class="stat-value" id="csPreviewCost" style="font-size:20px;">—</div>
+                    <div class="stat-unit">€</div>
+                  </div>
+
+                  <div class="glass-card stat-card" style="padding:16px;">
+                    <div class="stat-label">Emisyon Değişimi</div>
+                    <div class="stat-value" id="csPreviewEmChange" style="font-size:20px;">—</div>
+                    <div class="stat-unit">tCO₂</div>
+                  </div>
+
+                  <div class="glass-card stat-card" style="padding:16px;">
+                    <div class="stat-label">Risk Seviyesi</div>
+                    <div id="csPreviewRisk" style="font-size:18px;font-weight:800;margin:6px 0 4px;">—</div>
+                    <div class="stat-unit">değerlendirme</div>
+                  </div>
+
+                </div>
+
+                <!-- Net price + change detail -->
+                <div id="csPreviewDetail"
+                     style="margin-top:14px;padding:12px 14px;background:var(--color-surface);
+                            border:1px solid var(--color-border);border-radius:var(--radius-md);
+                            font-size:12px;color:var(--color-text-muted);line-height:1.8;display:none;">
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Saved simulations table -->
+            <div class="content-card glass-card">
+              <div class="content-card-header">
+                <span class="content-card-title">Kayıtlı Senaryolar</span>
+                <span id="csSimCountEl" style="font-size:13px;color:var(--color-text-muted);"></span>
+              </div>
+              <div id="csSimsContainer">
+                <div class="hh-loading">Yükleniyor…</div>
+              </div>
+            </div>
+
+          </div>
+          <!-- end #csSimulatorSection -->
+
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="../js/company-simulation.js"></script>
+  </body>
+</html>

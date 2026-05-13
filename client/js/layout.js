@@ -17,6 +17,18 @@ const NAV_ITEMS = [
         icon:  SVG('<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'),
     },
     {
+        id:    'nav-company',
+        href:  'company.html',
+        label: 'Şirket Paneli',
+        icon:  SVG('<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>'),
+        subItems: [
+            { href: 'company-cbam.html',       label: 'CBAM / Vergi Hesabı' },
+            { href: 'company-tasks.html',      label: 'Şirket Görevleri' },
+            { href: 'company-simulation.html', label: 'Simülasyon' },
+            { href: 'company-profile.html',    label: 'Profili Düzenle' },
+        ],
+    },
+    {
         id:    'nav-emissions',
         href:  'emissions.html',
         label: 'Emisyon Takibi',
@@ -72,17 +84,36 @@ export function renderLayout({ activeNav, title }) {
     // ── Sidebar ───────────────────────────────────────────────────────────────
     const sidebarEl = document.getElementById('sidebar');
     if (sidebarEl) {
-        const visibleItems = NAV_ITEMS.filter(
-            item => item.id !== 'nav-household' || user.role === 'household'
-        );
+        const visibleItems = NAV_ITEMS.filter(item => {
+            if (item.id === 'nav-household') return user.role === 'household';
+            if (item.id === 'nav-company')   return user.role === 'company';
+            return true;
+        });
+
+        const currentPage = window.location.pathname.split('/').pop() || '';
+
+        const renderNavItem = (item) => {
+            const { id, href, label, icon, subItems } = item;
+            const isActive = id === activeNav;
+            const itemHtml = `
+                <a href="${href}" class="nav-item${isActive ? ' active' : ''}" id="${id}">
+                    ${icon}
+                    ${label}
+                </a>`;
+            if (subItems && isActive && user.role === 'company') {
+                const subHtml = subItems.map(sub => {
+                    const isSubActive = currentPage === sub.href;
+                    return `<a href="${sub.href}" class="nav-subitem${isSubActive ? ' nav-subitem--active' : ''}">${sub.label}</a>`;
+                }).join('');
+                return itemHtml + `<div class="nav-subitems">${subHtml}</div>`;
+            }
+            return itemHtml;
+        };
+
         sidebarEl.innerHTML = `
             <div class="sidebar-brand">emissiON</div>
             <nav class="sidebar-nav">
-                ${visibleItems.map(({ id, href, label, icon }) => `
-                    <a href="${href}" class="nav-item${id === activeNav ? ' active' : ''}" id="${id}">
-                        ${icon}
-                        ${label}
-                    </a>`).join('')}
+                ${visibleItems.map(renderNavItem).join('')}
             </nav>
             <div class="sidebar-footer">
                 <button class="btn-logout" id="logoutBtn">Oturumu Kapat</button>

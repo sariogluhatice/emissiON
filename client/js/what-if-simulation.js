@@ -474,6 +474,19 @@ if (getAiRoadmapBtn && aiPlannerContent && aiPlannerSteps) {
   });
 }
 
+// ── No-records modal ──────────────────────────────────────────────────────────
+const noRecordsModal     = document.getElementById('noRecordsModal');
+const noRecordsVazgecBtn = document.getElementById('noRecordsVazgecBtn');
+
+function showNoRecordsModal() {
+  if (noRecordsModal) noRecordsModal.style.display = 'flex';
+}
+function hideNoRecordsModal() {
+  if (noRecordsModal) noRecordsModal.style.display = 'none';
+}
+noRecordsVazgecBtn?.addEventListener('click', hideNoRecordsModal);
+noRecordsModal?.addEventListener('click', e => { if (e.target === noRecordsModal) hideNoRecordsModal(); });
+
 // ── Add as Household Task modal ───────────────────────────────────────────────
 const addTaskModal       = document.getElementById('addTaskModal');
 const cancelAddTaskBtn   = document.getElementById('cancelAddTaskBtn');
@@ -562,7 +575,12 @@ confirmAddTaskBtn?.addEventListener('click', async () => {
     addTaskModal.style.display = 'none';
     showToast('Başarılı', 'Hane görevi oluşturuldu.', 'success');
   } catch (err) {
-    showToast('Hata', err.message, 'error');
+    if (err.message?.includes('en az bir emisyon kaydı')) {
+      if (addTaskModal) addTaskModal.style.display = 'none';
+      showNoRecordsModal();
+    } else {
+      showToast('Hata', err.message, 'error');
+    }
   } finally {
     confirmAddTaskBtn.disabled    = false;
     confirmAddTaskBtn.textContent = 'Görevi Oluştur';

@@ -201,17 +201,31 @@ function renderRecentTasks(tasks, isAdmin) {
     // Progress bar for emission-tracked tasks
     let progressHtml = '';
     if (t.emission_category && t.target_amount != null && t.current_amount != null) {
+      const PROG_COLORS = {
+        on_track: 'var(--color-primary)', at_risk: '#f59e0b', off_track: 'var(--color-error)',
+        successful: '#16a34a', failed: 'var(--color-error)',
+        no_data: 'var(--color-text-muted)', no_baseline: '#9ca3af',
+      };
+      const PROG_LABELS = {
+        on_track: 'Yolunda', at_risk: 'Risk Altında', off_track: 'Geride',
+        successful: 'Başarılı', failed: 'Başarısız',
+        no_data: 'Veri Bekleniyor', no_baseline: 'Başlangıç Verisi Bekleniyor',
+      };
       const current  = parseFloat(t.current_amount);
       const target   = parseFloat(t.target_amount);
-      const barPct   = target > 0 ? Math.min(100, Math.round(current / target * 100)) : 100;
-      const PROG_COLORS  = { on_track: 'var(--color-primary)', at_risk: '#f59e0b', off_track: 'var(--color-error)' };
-      const PROG_LABELS  = { on_track: 'Yolunda', at_risk: 'Risk Altında', off_track: 'Geride' };
-      const color = PROG_COLORS[t.progress_status] || 'var(--color-border)';
-      const badge = PROG_LABELS[t.progress_status] || '';
+      const baseline = t.baseline_amount != null ? parseFloat(t.baseline_amount) : null;
+      const color    = PROG_COLORS[t.progress_status] || 'var(--color-border)';
+      const badge    = PROG_LABELS[t.progress_status] || '';
+      let barPct = 0;
+      if (baseline != null && baseline > target) {
+        barPct = Math.max(0, Math.min(100, Math.round((baseline - current) / (baseline - target) * 100)));
+      } else if (target > 0) {
+        barPct = current <= target ? 100 : 0;
+      }
       progressHtml = `
         <div style="margin-top:6px;">
           <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--color-text-muted);margin-bottom:3px;">
-            <span>${current.toFixed(1)} / ${target.toFixed(1)} kg CO₂e</span>
+            <span>Güncel: ${current.toFixed(1)} kg / Hedef: ${target.toFixed(1)} kg CO₂e</span>
             <span style="font-weight:700;color:${color};">${badge}</span>
           </div>
           <div style="background:var(--color-border);border-radius:99px;height:4px;">
@@ -253,42 +267,76 @@ function renderRecentTasks(tasks, isAdmin) {
   });
 }
 
-// ── Comparison section ────────────────────────────────────────────────────────
+// ── Comparison section (hane içi) ────────────────────────────────────────────
 function renderComparison(comp) {
   if (!comparisonEl) return;
 
-  if (!comp.comparison_available) {
-    comparisonEl.innerHTML = `<div class="hh-empty"><div class="hh-empty-icon">📈</div><p>${comp.message}</p></div>`;
+  if (!comp || !comp.comparison_available) {
+    comparisonEl.innerHTML = `<div class="hh-empty"><div class="hh-empty-icon">📈</div><p>Hane içi karşılaştırma için yeterli veri bulunmuyor.</p></div>`;
     return;
   }
 
-  const pct   = comp.percentile ?? 0;
-  const badge = comp.badge ?? '';
+  const { member_breakdown, current_month_total, previous_month_total, month_change_pct, task_stats } = comp;
+
+  const changeColor = month_change_pct == null ? 'var(--color-text-muted)'
+    : month_change_pct < 0 ? '#16a34a'
+    : 'var(--color-error)';
+  const changeSign  = month_change_pct != null && month_change_pct > 0 ? '+' : '';
+  const changeDisp  = month_change_pct != null ? `${changeSign}${month_change_pct}%` : '—';
+
+  const maxEm = member_breakdown.length
+    ? Math.max(...member_breakdown.map(m => m.current_month_emissions), 0.01)
+    : 1;
+
+  const memberRows = member_breakdown.map(m => {
+    const pct = Math.round(m.current_month_emissions / maxEm * 100);
+    return `
+      <div style="display:flex;align-items:center;gap:10px;padding:5px 0;">
+        <span style="font-size:13px;min-width:88px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.name ?? 'Üye'}</span>
+        <div style="flex:1;background:var(--color-border);border-radius:99px;height:6px;">
+          <div style="width:${pct}%;background:var(--color-primary);height:100%;border-radius:99px;"></div>
+        </div>
+        <span style="font-size:12px;color:var(--color-text-muted);min-width:58px;text-align:right;">${m.current_month_emissions.toFixed(1)} kg</span>
+      </div>`;
+  }).join('');
+
+  const totalTasks = (task_stats.pending || 0) + (task_stats.in_progress || 0) + (task_stats.completed || 0);
+  const completedPct = totalTasks > 0 ? Math.round(task_stats.completed / totalTasks * 100) : 0;
+
+  const taskHtml = totalTasks > 0 ? `
+    <div style="margin-top:14px;">
+      <div style="font-size:11px;font-weight:600;color:var(--color-text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Görev Durumu</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <span style="font-size:12px;padding:3px 10px;border-radius:20px;background:var(--color-border);color:var(--color-text-muted);">${task_stats.pending} Bekliyor</span>
+        <span style="font-size:12px;padding:3px 10px;border-radius:20px;background:#dbeafe;color:#1d4ed8;">${task_stats.in_progress} Devam Ediyor</span>
+        <span style="font-size:12px;padding:3px 10px;border-radius:20px;background:#dcfce7;color:#16a34a;">${task_stats.completed} Tamamlandı · %${completedPct}</span>
+      </div>
+    </div>` : '';
 
   comparisonEl.innerHTML = `
-    <p style="font-size:13px;color:var(--color-text-muted);margin:0 0 12px;">
-      ${comp.message ?? ''}
-    </p>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-      <span style="font-size:28px;font-weight:800;color:var(--color-text);">${pct}%</span>
-      <span style="font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;
-        background:var(--color-success-soft);color:var(--color-primary-dark);">${badge}</span>
-    </div>
-    <div class="hh-percentile-bar-track">
-      <div class="hh-percentile-bar-fill" style="width:${pct}%"></div>
-    </div>
-    <div class="hh-compare-grid">
-      <div class="hh-compare-cell">
-        <div class="hh-compare-cell-label">Sizin Ortalamanız</div>
-        <div class="hh-compare-cell-value">${comp.your_household.emissions_per_member.toFixed(1)}</div>
-        <div class="hh-compare-cell-unit">kg CO₂e / kişi</div>
+    <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:100px;background:rgba(0,0,0,0.03);border-radius:8px;padding:10px 12px;">
+        <div style="font-size:11px;color:var(--color-text-muted);margin-bottom:3px;">Bu Ay</div>
+        <div style="font-size:20px;font-weight:700;">${current_month_total.toFixed(1)}</div>
+        <div style="font-size:11px;color:var(--color-text-muted);">kg CO₂e</div>
       </div>
-      <div class="hh-compare-cell">
-        <div class="hh-compare-cell-label">Benzer Haneler Ort.</div>
-        <div class="hh-compare-cell-value">${comp.similar_households.avg_per_member?.toFixed(1) ?? '—'}</div>
-        <div class="hh-compare-cell-unit">kg CO₂e / kişi · ${comp.similar_households.count} hane</div>
+      <div style="flex:1;min-width:100px;background:rgba(0,0,0,0.03);border-radius:8px;padding:10px 12px;">
+        <div style="font-size:11px;color:var(--color-text-muted);margin-bottom:3px;">Geçen Ay</div>
+        <div style="font-size:20px;font-weight:700;">${previous_month_total.toFixed(1)}</div>
+        <div style="font-size:11px;color:var(--color-text-muted);">kg CO₂e</div>
       </div>
-    </div>`;
+      <div style="flex:1;min-width:100px;background:rgba(0,0,0,0.03);border-radius:8px;padding:10px 12px;">
+        <div style="font-size:11px;color:var(--color-text-muted);margin-bottom:3px;">Değişim</div>
+        <div style="font-size:20px;font-weight:700;color:${changeColor};">${changeDisp}</div>
+        <div style="font-size:11px;color:${changeColor};">${month_change_pct == null ? 'Veri yok' : month_change_pct < 0 ? 'Azaldı' : month_change_pct === 0 ? 'Değişim yok' : 'Arttı'}</div>
+      </div>
+    </div>
+    ${member_breakdown.length ? `
+    <div style="margin-bottom:4px;">
+      <div style="font-size:11px;font-weight:600;color:var(--color-text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Bu Ay Üye Bazında</div>
+      ${memberRows}
+    </div>` : ''}
+    ${taskHtml}`;
 }
 
 // ── Create household ──────────────────────────────────────────────────────────

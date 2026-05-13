@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Şirket Profili – emissiON</title>
+    <link rel="stylesheet" href="../css/main.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar"></aside>
+
+      <div class="main-content">
+        <header class="topbar" id="topbar"></header>
+
+        <main class="page-body">
+          <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <h1>Şirket Profili</h1>
+              <p>CBAM hesaplamaları ve emisyon takibi için şirket bilgilerini girin.</p>
+            </div>
+            <a href="company.html" class="btn-secondary" style="white-space:nowrap;">← Şirket Paneli</a>
+          </div>
+
+          <div class="content-card glass-card">
+            <div class="content-card-header">
+              <span class="content-card-title">Şirket Bilgileri</span>
+            </div>
+
+            <div class="hh-task-form-grid">
+
+              <!-- Şirket Adı -->
+              <div class="form-group full-width">
+                <label class="form-label" for="cpCompanyName">
+                  Şirket Adı <span style="color:var(--color-error)">*</span>
+                </label>
+                <input class="input" type="text" id="cpCompanyName"
+                       placeholder="Örn: Örnek Demir Çelik A.Ş." maxlength="150" />
+              </div>
+
+              <!-- CBAM Sektörü -->
+              <div class="form-group">
+                <label class="form-label" for="cpCbamSector">
+                  CBAM Sektörü <span style="color:var(--color-error)">*</span>
+                </label>
+                <select class="input" id="cpCbamSector">
+                  <option value="">— Seçin</option>
+                  <option value="iron_steel">🏗️ Demir ve Çelik</option>
+                  <option value="aluminium">⚙️ Alüminyum</option>
+                  <option value="cement">🏢 Çimento</option>
+                  <option value="fertiliser">🌱 Gübre</option>
+                  <option value="hydrogen">⚗️ Hidrojen</option>
+                  <option value="electricity">⚡ Elektrik</option>
+                  <option value="other">📦 Diğer</option>
+                </select>
+                <span style="font-size:11px;color:var(--color-text-muted);margin-top:4px;display:block;">
+                  AB CBAM kapsamındaki sektör
+                </span>
+              </div>
+
+              <!-- AB'ye İhracat -->
+              <div class="form-group">
+                <label class="form-label" for="cpExportsToEu">AB'ye İhracat Yapıyor mu?</label>
+                <select class="input" id="cpExportsToEu">
+                  <option value="false">Hayır / Henüz Değil</option>
+                  <option value="true">Evet</option>
+                </select>
+              </div>
+
+              <!-- Ülke -->
+              <div class="form-group">
+                <label class="form-label" for="cpCountry">Ülke</label>
+                <input class="input" type="text" id="cpCountry"
+                       placeholder="Örn: Türkiye" maxlength="100" />
+              </div>
+
+              <!-- Yıllık Üretim -->
+              <div class="form-group">
+                <label class="form-label" for="cpAnnualProduction">
+                  Yıllık Üretim Miktarı (ton)
+                  <span style="color:var(--color-text-muted);font-weight:400;">— İsteğe Bağlı</span>
+                </label>
+                <input class="input" type="number" id="cpAnnualProduction"
+                       placeholder="Örn: 50000" min="0.01" step="0.01" />
+              </div>
+
+              <!-- Varsayılan Karbon Fiyatı -->
+              <div class="form-group">
+                <label class="form-label" for="cpCarbonPrice">
+                  Varsayılan AB ETS Karbon Fiyatı (€/tCO₂)
+                  <span style="color:var(--color-text-muted);font-weight:400;">— İsteğe Bağlı</span>
+                </label>
+                <input class="input" type="number" id="cpCarbonPrice"
+                       placeholder="Örn: 65" min="0" step="0.01" />
+                <span style="font-size:11px;color:var(--color-text-muted);margin-top:4px;display:block;">
+                  Boş bırakırsanız sistem varsayılanı (€65/tCO₂) kullanılır
+                </span>
+              </div>
+
+              <!-- Kaydet -->
+              <div class="form-group full-width" style="display:flex;justify-content:flex-end;gap:12px;margin-top:8px;">
+                <a href="company.html" class="btn-secondary">Vazgeç</a>
+                <button class="btn-primary" id="cpSaveBtn">Profili Kaydet</button>
+              </div>
+
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="../js/company-profile.js"></script>
+  </body>
+</html>

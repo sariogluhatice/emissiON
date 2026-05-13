@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Şirket Paneli – emissiON</title>
+    <link rel="stylesheet" href="../css/main.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar"></aside>
+
+      <div class="main-content">
+        <header class="topbar" id="topbar"></header>
+
+        <main class="page-body">
+          <div class="page-header">
+            <h1>Şirket Paneli</h1>
+            <p>CBAM maliyetlerinizi hesaplayın, emisyon azaltım görevlerinizi yönetin.</p>
+          </div>
+
+          <!-- Loading state -->
+          <div id="cpLoadingState" class="hh-loading">Yükleniyor…</div>
+
+          <!-- No profile: onboarding prompt -->
+          <div id="cpNoProfileState" style="display:none;">
+            <div class="content-card glass-card" style="text-align:center;padding:40px 24px;">
+              <div style="font-size:48px;margin-bottom:16px;">🏭</div>
+              <h2 style="font-size:20px;font-weight:700;margin-bottom:8px;">Henüz şirket profili oluşturulmadı</h2>
+              <p style="color:var(--color-text-muted);font-size:14px;margin:0 0 24px;">
+                CBAM hesaplamaları ve emisyon takibi için önce şirket bilgilerinizi girin.
+              </p>
+              <a href="company-profile.html" class="btn-primary">Profili Oluştur</a>
+            </div>
+          </div>
+
+          <!-- Has profile: dashboard -->
+          <div id="cpDashboardState" style="display:none;">
+
+            <!-- Soft prompt when profile is incomplete (no cbam_sector) -->
+            <div id="cpProfileBanner" style="display:none;margin-bottom:var(--spacing-lg);
+                 padding:12px 16px;background:#f59e0b12;border:1px solid #f59e0b40;
+                 border-radius:var(--radius-md);font-size:13px;
+                 display:flex;align-items:center;gap:12px;">
+              <span>⚠</span>
+              <span>Şirket profiliniz eksik — CBAM sektörü ve yıllık üretim girilirse analizler daha doğru olur.</span>
+              <a href="company-profile.html" style="margin-left:auto;white-space:nowrap;font-weight:700;color:#f59e0b;">Profili Tamamla →</a>
+            </div>
+
+            <!-- Company name + sector badge -->
+            <div class="hh-header">
+              <h2 id="cpCompanyNameEl">—</h2>
+              <span class="hh-role-badge" id="cpSectorBadge">—</span>
+            </div>
+
+            <!-- Quick links -->
+            <div class="hh-admin-links">
+              <a href="company-profile.html" class="hh-admin-link">
+                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Profili Düzenle
+              </a>
+              <a href="company-cbam.html" class="hh-admin-link">
+                <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                CBAM Hesabı
+              </a>
+              <a href="company-tasks.html" class="hh-admin-link">
+                <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                Görevler
+              </a>
+              <a href="company-simulation.html" class="hh-admin-link">
+                <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                Simülasyon
+              </a>
+            </div>
+
+            <!-- Stat cards -->
+            <div class="card-grid">
+              <div class="glass-card stat-card">
+                <div class="stat-label">Toplam Emisyon</div>
+                <div class="stat-value" id="cpStatEmission">—</div>
+                <div class="stat-unit">tCO₂</div>
+              </div>
+              <div class="glass-card stat-card">
+                <div class="stat-label">Tahmini CBAM Maliyeti</div>
+                <div class="stat-value" id="cpStatCost">—</div>
+                <div class="stat-unit">€</div>
+              </div>
+              <div class="glass-card stat-card">
+                <div class="stat-label">Risk Seviyesi</div>
+                <div class="stat-value" id="cpStatRisk">—</div>
+                <div class="stat-unit">değerlendirme</div>
+              </div>
+              <div class="glass-card stat-card">
+                <div class="stat-label">Uyum Skoru</div>
+                <div class="stat-value" id="cpStatScore">—</div>
+                <div class="stat-unit">/ 100</div>
+              </div>
+            </div>
+
+            <!-- Row 2: Trend chart + Category breakdown -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--spacing-lg);margin-top:var(--spacing-lg);">
+
+              <div class="content-card glass-card">
+                <div class="content-card-header">
+                  <span class="content-card-title">Aylık Vergi Tahmini</span>
+                  <span style="font-size:12px;color:var(--color-text-muted);">Son 6 ay</span>
+                </div>
+                <div id="cpTrendEmpty" class="hh-empty" style="display:none;">
+                  <div class="hh-empty-icon">📊</div>
+                  <p>Henüz emisyon kaydı yok. <a href="add-entry.html" style="color:var(--color-primary);">Kayıt ekleyin.</a></p>
+                </div>
+                <div style="height:220px;position:relative;">
+                  <canvas id="cpTrendChart"></canvas>
+                </div>
+              </div>
+
+              <div class="content-card glass-card">
+                <div class="content-card-header">
+                  <span class="content-card-title">Kategori Dağılımı</span>
+                </div>
+                <div id="cpCategoriesContainer">
+                  <div class="hh-empty">
+                    <div class="hh-empty-icon">📦</div>
+                    <p>Henüz kayıt yok.</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Row 3: Highest risk + Carbon Price Sensitivity -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--spacing-lg);margin-top:var(--spacing-lg);">
+
+              <div class="content-card glass-card">
+                <div class="content-card-header">
+                  <span class="content-card-title" id="cpHighestRiskTitle">En Yüksek Emisyon Kaynağı</span>
+                </div>
+                <div id="cpHighestRiskContainer">
+                  <div class="hh-empty">
+                    <div class="hh-empty-icon">🎯</div>
+                    <p>Henüz kayıt yok.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="content-card glass-card">
+                <div class="content-card-header">
+                  <span class="content-card-title">Karbon Fiyatı Duyarlılığı</span>
+                  <span style="font-size:12px;color:var(--color-text-muted);">Toplam gömülü emisyon bazında</span>
+                </div>
+                <div id="cpSensitivityContainer">
+                  <div class="hh-empty">
+                    <div class="hh-empty-icon">📈</div>
+                    <p>Hesaplama için önce CBAM kaydı ekleyin.</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+          <!-- end #cpDashboardState -->
+
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="../js/company.js"></script>
+  </body>
+</html>

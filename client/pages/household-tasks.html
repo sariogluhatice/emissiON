@@ -56,6 +56,35 @@
                 <input class="input" type="number" id="taskReduction" placeholder="Örn: 15" min="0.01" step="0.01" />
               </div>
 
+              <!-- ── Emisyon Takibi (isteğe bağlı) ───────────────────── -->
+              <div class="form-group full-width" style="border-top:1px solid var(--color-border);padding-top:14px;margin-top:4px;">
+                <span style="font-size:12px;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.5px;">Emisyon Takibi <span style="font-weight:400;text-transform:none;letter-spacing:0;">— İsteğe Bağlı</span></span>
+                <p style="margin:4px 0 0;font-size:12px;color:var(--color-text-muted);line-height:1.5;">
+                  Kategori ve hedef seçilirse sistem, önceki ayı başlangıç değeri olarak alır ve bu ayın verilerine göre ilerlemeyi otomatik hesaplar.
+                </p>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="taskEmCat">Emisyon Kategorisi</label>
+                <select class="input" id="taskEmCat">
+                  <option value="">— Seçin</option>
+                  <option value="energy">⚡ Enerji</option>
+                  <option value="water">💧 Su</option>
+                  <option value="gas">🔥 Doğalgaz</option>
+                  <option value="transport">🚗 Ulaşım</option>
+                  <option value="food">🍽️ Gıda</option>
+                  <option value="shopping">🛍️ Alışveriş</option>
+                  <option value="waste">🗑️ Atık</option>
+                  <option value="materials">📦 Malzeme</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="taskTargetPct">Azaltım Hedefi (%)</label>
+                <input class="input" type="number" id="taskTargetPct" placeholder="Örn: 20" min="1" max="99" step="1" />
+                <span style="font-size:11px;color:var(--color-text-muted);margin-top:4px;display:block;">Önceki aya göre yüzde azaltım (1–99)</span>
+              </div>
+
               <div class="form-group" style="display:flex;align-items:flex-end;">
                 <button class="btn-primary" id="createTaskBtn" style="width:100%;">Görev Oluştur</button>
               </div>
@@ -75,6 +104,20 @@
           </div>
 
         </main>
+      </div>
+    </div>
+
+    <!-- ── No-records modal ───────────────────────────────────────── -->
+    <div id="noRecordsModal" class="modal-backdrop" style="display:none;">
+      <div class="modal-box glass-card" style="max-width:440px;width:100%;">
+        <h2 class="modal-title">Önce Emisyon Kaydı Girmelisin</h2>
+        <p class="modal-body">
+          Bu görev emisyon verilerine göre takip edilir. Henüz kayıt bulunmadığı için önce tüketim/emisyon kaydı eklemelisin.
+        </p>
+        <div class="modal-actions">
+          <button class="btn-secondary" id="noRecordsVazgecBtn">Vazgeç</button>
+          <a href="add-entry.html" class="btn-primary">Kayıt Ekle</a>
+        </div>
       </div>
     </div>
 
