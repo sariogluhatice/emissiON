@@ -125,6 +125,21 @@
               </div>
             </div>
 
+            <!-- Goal Progress Bar (shown when monthly_target set) -->
+            <div id="hhGoalProgressCard" class="content-card glass-card" style="display:none; margin-bottom:var(--spacing-lg); padding:20px 24px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <span style="font-size:14px;font-weight:700;color:var(--color-text);">Aylık Hedef İlerlemesi</span>
+                <span id="hhGoalPct" style="font-size:13px;font-weight:800;color:var(--color-primary);">0%</span>
+              </div>
+              <div class="hh-goal-bar-track">
+                <div class="hh-goal-bar-fill safe" id="hhGoalBarFill" style="width:0%"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--color-text-muted);">
+                <span id="hhGoalUsed">0 kg kullanıldı</span>
+                <span id="hhGoalTarget">Hedef: — kg</span>
+              </div>
+            </div>
+
             <!-- Monthly trend + Category breakdown -->
             <div class="hh-dashboard-grid">
 
@@ -163,13 +178,25 @@
 
               <div class="content-card glass-card">
                 <div class="content-card-header">
-                  <span class="content-card-title">Hane İçi Karşılaştırma</span>
+                  <span class="content-card-title">Bu Ay Lider Tablosu</span>
+                  <span style="font-size:11px;background:var(--color-primary-soft);color:var(--color-primary);padding:3px 10px;border-radius:12px;font-weight:700;border:1px solid rgba(91,173,142,0.2);">Hane Rekabeti</span>
                 </div>
-                <div id="comparisonSection">
+                <div id="hhLeaderboard" style="padding:0 24px 16px;">
                   <div class="hh-loading" style="padding:24px 0">Yükleniyor…</div>
                 </div>
               </div>
 
+            </div>
+
+            <!-- Activity Feed -->
+            <div class="content-card glass-card" style="margin-top:var(--spacing-lg);">
+              <div class="content-card-header">
+                <span class="content-card-title">Hane Aktivite Akışı</span>
+                <span style="font-size:11px;color:var(--color-text-muted);">Son 10 işlem</span>
+              </div>
+              <div id="hhActivityFeed" class="hh-activity-feed" style="padding:0 24px 16px;">
+                <div class="hh-loading" style="padding:24px 0">Yükleniyor…</div>
+              </div>
             </div>
 
           </div>

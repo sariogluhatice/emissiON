@@ -267,6 +267,93 @@ function renderRecentTasks(tasks, isAdmin) {
   });
 }
 
+// ── Goal Progress Bar ─────────────────────────────────────────────────────────
+function renderGoalProgress(household, currentMonthTotal) {
+  const card = document.getElementById('hhGoalProgressCard');
+  if (!card || !household.monthly_target) return;
+
+  const target  = parseFloat(household.monthly_target);
+  const used    = currentMonthTotal ?? 0;
+  const pct     = Math.min(100, Math.round((used / target) * 100));
+  const fill    = document.getElementById('hhGoalBarFill');
+  const pctEl   = document.getElementById('hhGoalPct');
+  const usedEl  = document.getElementById('hhGoalUsed');
+  const targetEl = document.getElementById('hhGoalTarget');
+
+  card.style.display = '';
+  if (pctEl)   pctEl.textContent   = `${pct}%`;
+  if (usedEl)  usedEl.textContent  = `${used.toFixed(1)} kg kullanıldı`;
+  if (targetEl) targetEl.textContent = `Hedef: ${target.toFixed(0)} kg`;
+  if (fill) {
+    requestAnimationFrame(() => { fill.style.width = `${pct}%`; });
+    fill.className = `hh-goal-bar-fill ${pct >= 100 ? 'over' : pct >= 80 ? 'warn' : 'safe'}`;
+  }
+}
+
+// ── Leaderboard (bu ay) ───────────────────────────────────────────────────────
+function renderLeaderboard(memberBreakdown) {
+  const container = document.getElementById('hhLeaderboard');
+  if (!container) return;
+
+  if (!memberBreakdown?.length) {
+    container.innerHTML = '<div class="hh-empty"><p>Yeterli veri yok.</p></div>';
+    return;
+  }
+
+  const sorted = [...memberBreakdown].sort((a, b) => a.current_month_emissions - b.current_month_emissions);
+  const max    = Math.max(...sorted.map(m => m.current_month_emissions), 0.01);
+  const medals = ['🥇', '🥈', '🥉'];
+
+  container.innerHTML = sorted.map((m, i) => {
+    const pct = Math.round((m.current_month_emissions / max) * 100);
+    const isYou = m.is_current_user;
+    return `
+      <div class="hh-leaderboard-row${isYou ? ' hh-lb-row-you' : ''}">
+        <span class="hh-lb-rank">${medals[i] ?? `#${i+1}`}</span>
+        <span class="hh-lb-name">${m.name ?? 'Üye'}${isYou ? ' <span style="font-size:10px;color:var(--color-primary);font-weight:500;">(Sen)</span>' : ''}</span>
+        <div class="hh-lb-bar-wrap">
+          <div class="hh-lb-bar" style="width:${pct}%"></div>
+        </div>
+        <span class="hh-lb-amount">${m.current_month_emissions.toFixed(1)} kg</span>
+      </div>`;
+  }).join('');
+}
+
+// ── Activity Feed ─────────────────────────────────────────────────────────────
+function renderActivityFeed(memberBreakdown) {
+  const container = document.getElementById('hhActivityFeed');
+  if (!container) return;
+
+  if (!memberBreakdown?.length) {
+    container.innerHTML = '<div class="hh-empty"><p>Bu ay henüz aktivite yok.</p></div>';
+    return;
+  }
+
+  const sorted = [...memberBreakdown]
+    .filter(m => m.current_month_emissions > 0)
+    .sort((a, b) => b.current_month_emissions - a.current_month_emissions);
+
+  if (!sorted.length) {
+    container.innerHTML = '<div class="hh-empty"><p>Bu ay henüz kayıt yok.</p></div>';
+    return;
+  }
+
+  container.innerHTML = sorted.map(m => {
+    const initials = (m.name ?? '?').charAt(0).toUpperCase();
+    const isYou    = m.is_current_user;
+    return `
+      <div class="hh-activity-item">
+        <div class="hh-activity-avatar" style="${isYou ? 'background:var(--color-secondary);' : ''}">${initials}</div>
+        <div class="hh-activity-desc">
+          <span class="hh-activity-name">${m.name ?? 'Üye'}</span>
+          ${isYou ? ' <span style="font-size:11px;color:var(--color-text-muted)">(sen)</span>' : ''}
+          <span style="color:var(--color-text-muted)"> bu ay toplam</span>
+        </div>
+        <span class="hh-activity-amount">${m.current_month_emissions.toFixed(1)} kg CO₂</span>
+      </div>`;
+  }).join('');
+}
+
 // ── Comparison section (hane içi) ────────────────────────────────────────────
 function renderComparison(comp) {
   if (!comparisonEl) return;
@@ -463,9 +550,21 @@ async function init() {
     }
 
     if (compResult.status === 'fulfilled') {
-      renderComparison(compResult.value.data?.comparison);
+      const comp = compResult.value.data?.comparison;
+      renderComparison(comp);
+      if (comp?.member_breakdown) {
+        renderLeaderboard(comp.member_breakdown);
+        renderActivityFeed(comp.member_breakdown);
+      }
+      if (comp?.current_month_total != null) {
+        renderGoalProgress(household, comp.current_month_total);
+      }
     } else {
       comparisonEl.innerHTML = `<div class="hh-empty"><p>Karşılaştırma yüklenemedi.</p></div>`;
+      const lb = document.getElementById('hhLeaderboard');
+      if (lb) lb.innerHTML = '<div class="hh-empty"><p>Yüklenemedi.</p></div>';
+      const af = document.getElementById('hhActivityFeed');
+      if (af) af.innerHTML = '<div class="hh-empty"><p>Yüklenemedi.</p></div>';
     }
 
   } catch (err) {

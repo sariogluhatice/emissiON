@@ -35,7 +35,38 @@
         <header class="topbar" id="topbar"></header>
 
         <main class="page-body">
-          <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <!-- Gamification Banner (streak + XP + level) -->
+          <div id="gamBanner" style="display:none; margin-bottom:20px;">
+            <div class="gam-banner-card glass-card">
+              <div class="gam-streak-block">
+                <span class="gam-fire">🔥</span>
+                <div>
+                  <div class="gam-streak-num" id="gamStreakNum">0</div>
+                  <div class="gam-streak-label" id="gamStreakLabel">Günlük Seri</div>
+                </div>
+              </div>
+              <div class="gam-xp-block">
+                <div class="gam-level-row">
+                  <span class="gam-level-badge" id="gamLevel">Seviye 1</span>
+                  <span class="gam-xp-text" id="gamXpText">0 XP</span>
+                </div>
+                <div class="gam-xp-bar-track">
+                  <div class="gam-xp-bar-fill" id="gamXpFill" style="width:0%"></div>
+                </div>
+                <div class="gam-xp-next" id="gamXpNext"></div>
+              </div>
+              <div class="gam-badges-block" id="gamTopBadges"></div>
+            </div>
+          </div>
+
+          <!-- Daily reminder: shown when user hasn't logged today -->
+          <div id="dailyReminder" class="daily-reminder-bar" style="display:none;">
+            <span class="daily-reminder-icon">📅</span>
+            <span class="daily-reminder-text">Bugün henüz emisyon kaydı girmedin — serisini koru!</span>
+            <a href="add-entry.html" class="btn-primary daily-reminder-btn">Kayıt Ekle →</a>
+          </div>
+
+          <div class="page-header">
             <div>
               <h1>Tekrar hoş geldin, <span id="welcomeName">Kullanıcı</span>!</h1>
               <p>
@@ -204,6 +235,15 @@
               </p>
             </div>
           </div>
+          <!-- Badges showcase -->
+          <div id="badgesCard" class="content-card glass-card" style="display:none; margin-bottom:32px;">
+            <div class="content-card-header">
+              <span class="content-card-title">🏅 Rozetlerim</span>
+              <span id="badgesEarnedCount" style="font-size:12px;color:var(--color-text-muted);margin-left:auto;"></span>
+            </div>
+            <div id="badgesList" style="display:flex;flex-wrap:wrap;gap:12px;padding:0 24px 24px;"></div>
+          </div>
+
         </main>
       </div>
     </div>

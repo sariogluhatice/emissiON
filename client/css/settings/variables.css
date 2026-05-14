@@ -114,6 +114,91 @@
   --chart-coral:              #FDA4AF;
 }
 
+/* ── Dark Mode Token Overrides ───────────────────────────── */
+[data-theme="dark"] {
+  /* Backgrounds */
+  --color-bg:                  #0E1117;
+  --color-bg-main:             #0E1117;
+  --color-bg-gradient-start:   #0E1117;
+  --color-bg-gradient-end:     #111827;
+  --color-bg-soft-green:       #0D1F18;
+  --color-bg-soft-blue:        #0D1629;
+
+  /* Surfaces */
+  --color-surface:             #161B22;
+  --color-surface-soft:        rgba(22, 27, 34, 0.97);
+  --color-surface-green:       #132019;
+  --color-surface-blue:        #111825;
+  --color-surface-muted:       #1C2128;
+
+  /* Primary (greens pop well on dark) */
+  --color-primary:             #5BAD8E;
+  --color-primary-hover:       #6DCBA7;
+  --color-primary-soft:        rgba(91, 173, 142, 0.15);
+  --color-primary-dark:        #7ADACE;
+  --color-brand:               #5BAD8E;
+  --color-brand-hover:         #6DCBA7;
+  --color-brand-text:          #7ADACE;
+
+  /* Secondary */
+  --color-secondary:           #7BC8E8;
+  --color-secondary-hover:     #93D4EF;
+  --color-secondary-soft:      rgba(123, 200, 232, 0.14);
+
+  /* Accents unchanged — they work on dark */
+  --color-accent-teal:         #7ADACE;
+  --color-accent-yellow:       #F8D98A;
+  --color-accent-purple:       #C4B4F5;
+  --color-accent-coral:        #F5A8B0;
+
+  /* Status */
+  --color-success:             #5BAD8E;
+  --color-success-soft:        rgba(91, 173, 142, 0.14);
+  --color-warning:             #F5C87A;
+  --color-warning-soft:        rgba(245, 200, 122, 0.12);
+  --color-error:               #F4918A;
+  --color-error-soft:          rgba(244, 145, 138, 0.12);
+  --color-danger:              #F4918A;
+  --color-danger-soft:         rgba(244, 145, 138, 0.12);
+  --color-info:                #7BC8E8;
+  --color-info-soft:           rgba(123, 200, 232, 0.12);
+
+  /* Text */
+  --color-text:                #C9D6D0;
+  --color-text-main:           #C9D6D0;
+  --color-text-strong:         #E6F0EB;
+  --color-text-muted:          #6B8A7E;
+  --color-text-soft:           #3E5C51;
+  --color-text-inverse:        #0E1117;
+  --color-placeholder:         #3E5C51;
+
+  /* Borders */
+  --color-border:              #243530;
+  --color-border-blue:         #1F2E40;
+  --color-border-soft:         rgba(91, 173, 142, 0.09);
+
+  /* Shadows */
+  --shadow-card:               0 8px 24px rgba(0, 0, 0, 0.40);
+  --shadow-card-hover:         0 16px 36px rgba(0, 0, 0, 0.55);
+  --shadow-soft-green:         0 0 32px rgba(91, 173, 142, 0.07);
+  --shadow-soft-blue:          0 0 32px rgba(123, 200, 232, 0.07);
+
+  /* Legacy tokens */
+  --glass-bg:                  rgba(22, 27, 34, 0.97);
+  --glass-border:              #243530;
+  --card-shadow:               0 8px 24px rgba(0, 0, 0, 0.40);
+  --neon-glow:                 0 0 20px rgba(91, 173, 142, 0.09);
+  --navbar-bg-dark:            rgba(22, 27, 34, 0.99);
+  --card-bg-dark:              rgba(22, 27, 34, 0.97);
+  --sidebar-bg:                #161B22;
+
+  /* Gradients */
+  --gradient-page:             linear-gradient(135deg, #0E1117 0%, #111827 100%);
+  --gradient-primary:          linear-gradient(135deg, #1C4234 0%, #172640 100%);
+  --gradient-primary-soft:     linear-gradient(135deg, rgba(91,173,142,0.07) 0%, rgba(123,200,232,0.07) 100%);
+  --gradient-card-soft:        linear-gradient(145deg, rgba(22,27,34,0.99), rgba(19,32,25,0.85));
+}
+
 /* Modal ve Özel Bileşenler İçin Helper Değişkenler */
 .modal-box,
 .glass-card {

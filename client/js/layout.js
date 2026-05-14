@@ -1,4 +1,7 @@
 import { getCurrentUser, logout } from './utils/uiUtils.js';
+import { ThemeManager } from './utils/themeManager.js';
+
+ThemeManager.init();
 
 // ── Icon helpers ────────────────────────────────────────────────────────────
 
@@ -261,6 +264,17 @@ export function renderLayout({ activeNav, title }) {
         topbarEl.innerHTML = `
             <span class="topbar-title">${title}</span>
             <div class="topbar-user">
+                <div class="topbar-streak-widget" id="topbarStreakWidget" style="display:none;">
+                    <span class="streak-fire-icon">🔥</span>
+                    <span class="streak-count-label" id="topbarStreakCount">0</span>
+                </div>
+                <div class="topbar-xp-widget" id="topbarXpWidget" style="display:none;" title="Seviye ilerlemen">
+                    <span class="xp-level-badge" id="topbarLevel">Sv.1</span>
+                    <div class="topbar-xp-bar">
+                        <div class="topbar-xp-fill" id="topbarXpFill" style="width:0%"></div>
+                    </div>
+                </div>
+                <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Tema değiştir"></button>
                 <div class="notification-wrapper">
                     <button class="notification-btn" id="notificationBtn" aria-label="Bildirimler">
                         ${bellIcon}
@@ -275,6 +289,11 @@ export function renderLayout({ activeNav, title }) {
                     <span id="userName" class="userName">${displayName}</span>
                 </a>
             </div>`;
+
+        // Theme toggle
+        const themeBtn = document.getElementById('themeToggleBtn');
+        ThemeManager._updateToggleIcon(ThemeManager.theme);
+        themeBtn?.addEventListener('click', () => ThemeManager.toggle());
 
         // Notification toggle
         const notifBtn      = document.getElementById('notificationBtn');
@@ -315,5 +334,33 @@ export function renderLayout({ activeNav, title }) {
         });
     }
 
+    // Load gamification stats into topbar (non-blocking)
+    _loadTopbarGamification();
+
     return user;
+}
+
+async function _loadTopbarGamification() {
+    try {
+        const { ApiClient } = await import('./api/apiClient.js');
+        const client = new ApiClient();
+        const res = await client.get('/gamification/stats');
+        const stats = res?.data;
+        if (!stats) return;
+
+        const tbStreak = document.getElementById('topbarStreakWidget');
+        const tbCount  = document.getElementById('topbarStreakCount');
+        if (tbStreak && stats.current_streak > 0) {
+            tbStreak.style.display = 'flex';
+            if (tbCount) tbCount.textContent = stats.current_streak;
+        }
+        const tbXp    = document.getElementById('topbarXpWidget');
+        const tbLevel = document.getElementById('topbarLevel');
+        const tbFill  = document.getElementById('topbarXpFill');
+        if (tbXp) {
+            tbXp.style.display = 'flex';
+            if (tbLevel) tbLevel.textContent = `Sv.${stats.level}`;
+            if (tbFill)  requestAnimationFrame(() => { tbFill.style.width = `${stats.level_progress_pct}%`; });
+        }
+    } catch { /* non-critical */ }
 }

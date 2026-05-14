@@ -55,6 +55,9 @@ router.get('/cbam/entries',        ctrl.getCbamEntries);
 // POST /api/company/cbam/entries     — create entry + compute CBAM cost + risk level
 router.post('/cbam/entries',       ctrl.createCbamEntry);
 
+// PATCH  /api/company/cbam/entries/:id — update mutable fields (paid_price, notes, etc.)
+router.patch('/cbam/entries/:id',  ctrl.updateCbamEntry);
+
 // DELETE /api/company/cbam/entries/:id — delete own entry (ownership enforced in service)
 router.delete('/cbam/entries/:id', ctrl.deleteCbamEntry);
 

@@ -4,7 +4,6 @@ const pool = require('../config/db');
 // INTERNAL HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Throws a shaped error that the controller can turn into an HTTP response.
 const _fail = (status, message) => {
     const err = new Error(message);
     err.status = status;
@@ -40,14 +39,49 @@ const EMISSION_CATEGORIES = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
+// CONFIG CACHE — 5-minute in-memory TTL
+// Admin changes are reflected within one cache window; avoids a DB round-trip
+// on every createCbamEntry / getDashboard call.
+// ─────────────────────────────────────────────────────────────────────────────
+
+let _configCache    = null;
+let _configCacheAt  = 0;
+const CONFIG_TTL_MS = 5 * 60 * 1000;
+
+const _getConfig = async () => {
+    const now = Date.now();
+    if (_configCache && now - _configCacheAt < CONFIG_TTL_MS) return _configCache;
+
+    const { rows } = await pool.query(
+        'SELECT config_key, config_value FROM admin_cbam_config'
+    );
+    const cfg = {};
+    rows.forEach(r => { cfg[r.config_key] = parseFloat(r.config_value); });
+    _configCache = {
+        carbon_price_default:    cfg.carbon_price_default    ?? 65,
+        risk_threshold_medium:   cfg.risk_threshold_medium   ?? 10000,
+        risk_threshold_high:     cfg.risk_threshold_high     ?? 50000,
+        risk_threshold_critical: cfg.risk_threshold_critical ?? 200000,
+    };
+    _configCacheAt = now;
+    return _configCache;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RISK LEVEL COMPUTATION  (pure — no DB)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const _computeRiskLevel = (cbamCost, config) => {
+    if (cbamCost < config.risk_threshold_medium)   return 'low';
+    if (cbamCost < config.risk_threshold_high)     return 'medium';
+    if (cbamCost < config.risk_threshold_critical) return 'high';
+    return 'critical';
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 1. GET COMPANY PROFILE
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Returns the company_profiles row for a user, or null if not yet created.
- * The row contains both onboarding fields (company_name, industry, …) and
- * the CBAM fields added in migration_012 (cbam_sector, exports_to_eu, …).
- */
 const getCompanyProfile = async (userId) => {
     const { rows } = await pool.query(
         'SELECT * FROM company_profiles WHERE user_id = $1',
@@ -60,14 +94,6 @@ const getCompanyProfile = async (userId) => {
 // 2. UPSERT COMPANY PROFILE
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Creates or updates the CBAM section of the company profile.
- * Only the CBAM-specific fields (migration_012 columns) are written here;
- * onboarding fields (industry, employee_count_range, …) are managed by the
- * existing onboarding flow and left untouched.
- *
- * Uses ON CONFLICT (user_id) DO UPDATE — safe because user_id is UNIQUE.
- */
 const upsertCompanyProfile = async (userId, {
     company_name,
     cbam_sector,
@@ -118,60 +144,9 @@ const upsertCompanyProfile = async (userId, {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 3. CONFIG LOADER
+// 3. CBAM SUMMARY  (primary — derived from emission_records)
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Loads the four admin-controlled thresholds from admin_cbam_config.
- * Falls back to seeded defaults so the app works even if the table is empty.
- * Called once per createCbamEntry — no in-process cache intentionally,
- * so admin changes are reflected on the very next entry creation.
- */
-const _getConfig = async () => {
-    const { rows } = await pool.query(
-        'SELECT config_key, config_value FROM admin_cbam_config'
-    );
-    const cfg = {};
-    rows.forEach(r => { cfg[r.config_key] = parseFloat(r.config_value); });
-    return {
-        carbon_price_default:    cfg.carbon_price_default    ?? 65,
-        risk_threshold_medium:   cfg.risk_threshold_medium   ?? 10000,
-        risk_threshold_high:     cfg.risk_threshold_high     ?? 50000,
-        risk_threshold_critical: cfg.risk_threshold_critical ?? 200000,
-    };
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 4. RISK LEVEL COMPUTATION  (pure — no DB)
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Returns 'low' | 'medium' | 'high' | 'critical' based on estimated CBAM cost
- * and the thresholds fetched from admin_cbam_config.
- */
-const _computeRiskLevel = (cbamCost, config) => {
-    if (cbamCost < config.risk_threshold_medium)   return 'low';
-    if (cbamCost < config.risk_threshold_high)     return 'medium';
-    if (cbamCost < config.risk_threshold_critical) return 'high';
-    return 'critical';
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 5. CBAM SUMMARY  (primary — derived from emission_records)
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Calculates the CBAM / carbon tax estimate directly from the company's
- * existing emission_records.  This is the primary analysis layer; cbam_entries
- * are supplementary export declarations on top of this.
- *
- * Formula:
- *   total_tco2      = SUM(emission_records.amount) / 1000
- *   estimated_tax   = total_tco2 * carbon_price_default
- *
- * Returns trend (last 6 months) and category breakdown so the frontend
- * can render a full analysis without extra requests.
- */
 const getCbamSummary = async (userId) => {
     const [emissionRes, trendRes, categoryRes, config] = await Promise.all([
         pool.query(
@@ -241,15 +216,9 @@ const getCbamSummary = async (userId) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 6. PERIOD EMISSIONS LOOKUP  (feed the manual CBAM form live preview)
+// 4. PERIOD EMISSIONS LOOKUP
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Returns the total operational emissions (kg CO₂e) logged in emission_records
- * for the given YYYY-MM period, plus the monthly production figure from the
- * company profile.  The frontend uses these to compute the auto emission factor
- * before the form is saved.
- */
 const getPeriodEmissions = async (userId, periodStr) => {
     const [emRes, profile, config] = await Promise.all([
         pool.query(
@@ -275,34 +244,18 @@ const getPeriodEmissions = async (userId, periodStr) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 6. CREATE CBAM ENTRY
+// 5. CREATE CBAM ENTRY
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Creates a CBAM entry.  Emission factor and carbon price are both optional:
- *
- * emission_factor — if omitted, auto-derived from the user's emission_records
- *   for the period.  Allocation:
- *     if company profile has annual_production:
- *       factor = (period_emission_kg / 1000) / (annual_production / 12)   tCO₂/ton
- *     else (fallback):
- *       factor = (period_emission_kg / 1000) / export_amount              tCO₂/ton
- *   Fails with a clear message if no records exist and no manual value given.
- *
- * carbon_price — if omitted, defaults to admin_cbam_config.carbon_price_default.
- *
- * Computed columns (total_embedded_emission, estimated_cbam_cost, risk_level)
- * are stored at insertion time and never change — historical records are
- * immutable regardless of future config or profile updates.
- */
 const createCbamEntry = async (userId, {
     product_name,
     export_category,
     export_amount,
-    emission_factor,       // undefined / null → auto-derive
-    carbon_price,          // undefined / null → admin config default
+    emission_factor,
+    carbon_price,
     paid_carbon_price,
     period_start,
+    period_end,
     destination_region,
     notes,
 }) => {
@@ -318,7 +271,6 @@ const createCbamEntry = async (userId, {
     if (!Number.isFinite(paidPrice) || paidPrice < 0)
         _fail(400, 'Ödenen karbon vergisi sıfır veya pozitif olmalıdır.');
 
-    // Load config once — used for both carbon price default and risk level
     const config = await _getConfig();
 
     // ── Carbon price ──────────────────────────────────────────────────────────
@@ -346,8 +298,7 @@ const createCbamEntry = async (userId, {
             _fail(400, 'Emisyon faktörü pozitif bir sayı olmalıdır.');
         finalFactor = manualFactor;
     } else {
-        // Auto-derive from emission_records
-        const periodStr = period_start.slice(0, 7); // 'YYYY-MM'
+        const periodStr = period_start.slice(0, 7);
         const { rows: [emRow] } = await pool.query(
             `SELECT COALESCE(SUM(amount), 0)::float AS total_kg
              FROM emission_records
@@ -363,7 +314,7 @@ const createCbamEntry = async (userId, {
         sourceEmissionTotal = parseFloat(totalKg.toFixed(4));
         const profile     = await getCompanyProfile(userId);
         const annualProd  = profile?.annual_production ? parseFloat(profile.annual_production) : null;
-        const denominator = annualProd ? annualProd / 12 : amount;  // fallback: attribute all to export
+        const denominator = annualProd ? annualProd / 12 : amount;
 
         finalFactor = parseFloat((totalKg / 1000 / denominator).toFixed(6));
 
@@ -379,14 +330,16 @@ const createCbamEntry = async (userId, {
     const estimatedCbamCost     = parseFloat((totalEmbeddedEmission * netPrice).toFixed(2));
     const riskLevel             = _computeRiskLevel(estimatedCbamCost, config);
 
-    // ── Transaction: create emission_record + cbam_entry atomically ───────────
+    // Warn when paid price exceeds carbon price — net becomes 0 but may be unintentional
+    let warning = null;
+    if (paidPrice > finalPrice) {
+        warning = `Ödenen karbon fiyatı (€${paidPrice.toFixed(2)}) AB ETS fiyatından (€${finalPrice.toFixed(2)}) yüksek. Net CBAM yükümlülüğü 0 olarak hesaplanmıştır.`;
+    }
+
     const dbClient = await pool.connect();
     try {
         await dbClient.query('BEGIN');
 
-        // 1. Create a linked emission_records row so the declaration appears in
-        //    Emisyon Takibi, dashboard, and earth visualisation.
-        //    amount stored in kg CO₂e; total_embedded_emission is in tCO₂.
         const { rows: [emRecord] } = await dbClient.query(
             `INSERT INTO emission_records (user_id, source, amount, date, category)
              VALUES ($1, $2, $3, $4, 'other')
@@ -399,15 +352,14 @@ const createCbamEntry = async (userId, {
             ]
         );
 
-        // 2. Create cbam_entry linked to the new emission_record.
         const { rows: [entry] } = await dbClient.query(
             `INSERT INTO cbam_entries
                  (user_id, product_name, export_category, export_amount, emission_factor,
-                  carbon_price, paid_carbon_price, period_start,
+                  carbon_price, paid_carbon_price, period_start, period_end,
                   total_embedded_emission, estimated_cbam_cost, risk_level,
                   destination_region, source_emission_total, emission_factor_source, notes,
                   emission_record_id)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
              RETURNING *`,
             [
                 userId,
@@ -418,6 +370,7 @@ const createCbamEntry = async (userId, {
                 finalPrice,
                 paidPrice,
                 period_start,
+                period_end || null,
                 totalEmbeddedEmission,
                 estimatedCbamCost,
                 riskLevel,
@@ -430,7 +383,7 @@ const createCbamEntry = async (userId, {
         );
 
         await dbClient.query('COMMIT');
-        return entry;
+        return { ...entry, warning };
     } catch (err) {
         await dbClient.query('ROLLBACK').catch(() => {});
         throw err;
@@ -440,31 +393,112 @@ const createCbamEntry = async (userId, {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 6. GET CBAM ENTRIES
+// 6. UPDATE CBAM ENTRY  (PATCH — mutable fields only)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Returns all CBAM entries for the user, newest period first.
+ * Updates the editable fields of an existing CBAM entry.
+ * Immutable computed fields (total_embedded_emission, emission_factor) are
+ * preserved.  Re-computes estimated_cbam_cost and risk_level when
+ * paid_carbon_price changes.
  */
-const getCbamEntries = async (userId) => {
-    const { rows } = await pool.query(
-        `SELECT * FROM cbam_entries
-         WHERE user_id = $1
-         ORDER BY period_start DESC, created_at DESC`,
-        [userId]
+const updateCbamEntry = async (userId, entryId, {
+    product_name,
+    notes,
+    destination_region,
+    period_end,
+    paid_carbon_price,
+}) => {
+    const { rows: [existing] } = await pool.query(
+        'SELECT * FROM cbam_entries WHERE id = $1 AND user_id = $2',
+        [entryId, userId]
     );
-    return rows;
+    if (!existing) _fail(404, 'Kayıt bulunamadı.');
+
+    const newPaid = paid_carbon_price != null
+        ? parseFloat(paid_carbon_price)
+        : parseFloat(existing.paid_carbon_price);
+
+    if (!Number.isFinite(newPaid) || newPaid < 0)
+        _fail(400, 'Ödenen karbon vergisi sıfır veya pozitif olmalıdır.');
+
+    const carbonPrice  = parseFloat(existing.carbon_price);
+    const netPrice     = Math.max(0, carbonPrice - newPaid);
+    const newCbamCost  = parseFloat((parseFloat(existing.total_embedded_emission) * netPrice).toFixed(2));
+    const config       = await _getConfig();
+    const newRisk      = _computeRiskLevel(newCbamCost, config);
+
+    let warning = null;
+    if (newPaid > carbonPrice) {
+        warning = `Ödenen karbon fiyatı (€${newPaid.toFixed(2)}) AB ETS fiyatından (€${carbonPrice.toFixed(2)}) yüksek. Net CBAM yükümlülüğü 0 olarak hesaplanmıştır.`;
+    }
+
+    const val = (v, fallback) =>
+        v !== undefined
+            ? (typeof v === 'string' ? v.trim() || null : v ?? null)
+            : fallback;
+
+    const { rows: [entry] } = await pool.query(
+        `UPDATE cbam_entries
+         SET product_name        = $1,
+             notes               = $2,
+             destination_region  = $3,
+             period_end          = $4,
+             paid_carbon_price   = $5,
+             estimated_cbam_cost = $6,
+             risk_level          = $7
+         WHERE id = $8 AND user_id = $9
+         RETURNING *`,
+        [
+            val(product_name,      existing.product_name),
+            val(notes,             existing.notes),
+            val(destination_region, existing.destination_region),
+            period_end !== undefined ? (period_end || null) : existing.period_end,
+            newPaid,
+            newCbamCost,
+            newRisk,
+            entryId,
+            userId,
+        ]
+    );
+
+    return { ...entry, warning };
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 7. DELETE CBAM ENTRY
+// 7. GET CBAM ENTRIES  (paginated)
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Deletes a CBAM entry and its linked emission_records row (if any).
- * Uses a transaction so both deletes succeed or both are rolled back.
- * Ownership enforced on both rows via user_id.
- */
+const getCbamEntries = async (userId, { page = 1, limit = 20 } = {}) => {
+    const safeLimit  = Math.min(Math.max(parseInt(limit,  10) || 20, 1), 100);
+    const safePage   = Math.max(parseInt(page, 10) || 1, 1);
+    const offset     = (safePage - 1) * safeLimit;
+
+    const [entriesRes, countRes] = await Promise.all([
+        pool.query(
+            `SELECT * FROM cbam_entries WHERE user_id = $1
+             ORDER BY period_start DESC, created_at DESC
+             LIMIT $2 OFFSET $3`,
+            [userId, safeLimit, offset]
+        ),
+        pool.query(
+            'SELECT COUNT(*)::int AS total FROM cbam_entries WHERE user_id = $1',
+            [userId]
+        ),
+    ]);
+
+    return {
+        entries: entriesRes.rows,
+        total:   countRes.rows[0].total,
+        page:    safePage,
+        limit:   safeLimit,
+    };
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 8. DELETE CBAM ENTRY
+// ─────────────────────────────────────────────────────────────────────────────
+
 const deleteCbamEntry = async (userId, entryId) => {
     const dbClient = await pool.connect();
     try {
@@ -500,17 +534,9 @@ const deleteCbamEntry = async (userId, entryId) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 8. COMPANY TASKS
+// 9. COMPANY TASKS
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Creates a company task.
- * If emission_category + target_reduction_pct are both provided, the service
- * snapshots the baseline from the most recent cbam_entries period for that
- * category and computes target_emission = baseline × (1 − pct/100).
- * If no CBAM data exists yet for the category, both stored as NULL and the
- * frontend will show "no_baseline" status.
- */
 const createCompanyTask = async (userId, {
     title,
     description,
@@ -541,7 +567,6 @@ const createCompanyTask = async (userId, {
     let targetEmission   = null;
 
     if (cleanCategory && cleanPct !== null) {
-        // Snapshot: total emissions (tCO₂) for this category from emission_records
         const { rows: [bRow] } = await pool.query(
             `SELECT COALESCE(SUM(amount), 0)::float AS baseline_kg
              FROM emission_records
@@ -576,11 +601,6 @@ const createCompanyTask = async (userId, {
     return task;
 };
 
-/**
- * Adds live progress data to emission-tracked tasks.
- * "Current" = total embedded emission for the category in its most recent period.
- * Batch query — no N+1 regardless of task count.
- */
 const _addProgressToCompanyTasks = async (tasks, userId) => {
     const trackingTasks = tasks.filter(t => t.emission_category);
     if (!trackingTasks.length) return tasks;
@@ -627,9 +647,6 @@ const _addProgressToCompanyTasks = async (tasks, userId) => {
     return tasks.map(t => ({ ...t, ...(progressById[t.id] || {}) }));
 };
 
-/**
- * Returns all tasks for the user, newest first, with live progress data injected.
- */
 const getCompanyTasks = async (userId) => {
     const { rows } = await pool.query(
         `SELECT * FROM company_tasks
@@ -640,10 +657,6 @@ const getCompanyTasks = async (userId) => {
     return _addProgressToCompanyTasks(rows, userId);
 };
 
-/**
- * Updates the status of a task owned by the user.
- * Ownership enforced by the WHERE clause — returns 404 if not owner.
- */
 const updateCompanyTaskStatus = async (userId, taskId, status) => {
     const VALID = ['pending', 'in_progress', 'completed'];
     if (!VALID.includes(status)) {
@@ -662,19 +675,18 @@ const updateCompanyTaskStatus = async (userId, taskId, status) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 9. DASHBOARD
+// 10. DASHBOARD
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Company dashboard — primary source is emission_records.
- * Aggregates real operational emissions and derives the CBAM cost estimate.
- * cbam_entries (export declarations) are kept as a supplementary reference
- * for the "highest declared entry" card only.
- *
- * Response shape is intentionally preserved so company.js needs minimal changes.
+ * Compliance score factors (all bounded to [5, 100]):
+ *   1. Risk penalty     — low:0, medium:−20, high:−45, critical:−75
+ *   2. Data coverage    — <3 months: −10, <6 months: −5
+ *   3. Task completion  — >75% done: +5; >50%: +2; <25% with ≥3 tasks: −5
+ *   4. Paid-carbon decl — any paid_carbon_price > 0 entry present: +5
  */
 const getDashboard = async (userId) => {
-    const [emissionRes, trendRes, categoryRes, config, topEntryRes] = await Promise.all([
+    const [emissionRes, trendRes, categoryRes, config, topEntryRes, taskStatsRes, paidDeclRes] = await Promise.all([
         pool.query(
             `SELECT COALESCE(SUM(amount), 0)::float AS total_kg,
                     COUNT(*)::int AS record_count
@@ -706,6 +718,18 @@ const getDashboard = async (userId) => {
              ORDER BY estimated_cbam_cost DESC LIMIT 1`,
             [userId]
         ),
+        pool.query(
+            `SELECT
+                 COUNT(*)::int                                           AS total_tasks,
+                 COUNT(*) FILTER (WHERE status = 'completed')::int      AS completed_tasks
+             FROM company_tasks WHERE user_id = $1`,
+            [userId]
+        ),
+        pool.query(
+            `SELECT COUNT(*)::int AS cnt
+             FROM cbam_entries WHERE user_id = $1 AND paid_carbon_price > 0`,
+            [userId]
+        ),
     ]);
 
     const totalKg     = parseFloat(emissionRes.rows[0].total_kg);
@@ -717,18 +741,33 @@ const getDashboard = async (userId) => {
     const riskCounts = { low: 0, medium: 0, high: 0, critical: 0 };
     if (riskCounts[dominantRisk] !== undefined) riskCounts[dominantRisk]++;
 
-    // Compliance score: risk-level-based (emission_records aggregate, not per-entry counts)
-    const COMPLIANCE_SCORE_MAP = { low: 95, medium: 70, high: 45, critical: 15 };
-    const complianceScore = COMPLIANCE_SCORE_MAP[dominantRisk] ?? 100;
+    // ── Compliance score: multi-factor ────────────────────────────────────────
+    const RISK_PENALTY = { low: 0, medium: -20, high: -45, critical: -75 };
+    let score = 100 + (RISK_PENALTY[dominantRisk] ?? 0);
 
-    // Trend — field names kept identical to old shape so company.js chart requires no changes
+    const monthsOfData  = trendRes.rows.length;
+    if (monthsOfData < 3) score -= 10;
+    else if (monthsOfData < 6) score -= 5;
+
+    const totalTasks     = taskStatsRes.rows[0].total_tasks;
+    const completedTasks = taskStatsRes.rows[0].completed_tasks;
+    if (totalTasks > 0) {
+        const completionRate = completedTasks / totalTasks;
+        if      (completionRate >= 0.75)              score += 5;
+        else if (completionRate >= 0.5)               score += 2;
+        else if (completionRate < 0.25 && totalTasks >= 3) score -= 5;
+    }
+
+    if (paidDeclRes.rows[0].cnt > 0) score += 5;
+
+    const complianceScore = Math.max(5, Math.min(100, Math.round(score)));
+
     const trend = [...trendRes.rows].reverse().map(r => ({
         period:    r.period,
         cbam_cost: parseFloat((r.total_kg / 1000 * carbonPrice).toFixed(2)),
         emission:  parseFloat((r.total_kg / 1000).toFixed(4)),
     }));
 
-    // Categories — field "export_category" kept for backward compat with company.js renderCategories
     const categories = categoryRes.rows.map(r => ({
         export_category: r.category,
         emission:        parseFloat((r.total_kg / 1000).toFixed(4)),
@@ -746,26 +785,15 @@ const getDashboard = async (userId) => {
         trend,
         categories,
         highest_risk_entry:  topEntryRes.rows[0] ?? null,
-        top_emission_source: categories[0] ?? null,   // highest-kg emission_records category
+        top_emission_source: categories[0] ?? null,
         carbon_price_used:   carbonPrice,
     };
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 10. WHAT-IF SIMULATION
+// 11. WHAT-IF SIMULATION
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Computes a CBAM what-if scenario and saves it.
- *
- * Formula applied to the user's total embedded emission:
- *   projected_emission = baseline × (1 + export_pct/100) × (1 + factor_pct/100)
- *   net_price          = MAX(0, carbon_price − paid_price)
- *   projected_cost     = projected_emission × net_price
- *
- * All stored values use the snapshot at call time — historical saves are
- * immutable regardless of future cbam_entries changes.
- */
 const runSimulation = async (userId, {
     scenario_name,
     carbon_price,
@@ -773,7 +801,6 @@ const runSimulation = async (userId, {
     emission_factor_change_pct,
     paid_price,
 }) => {
-    // Baseline: total operational emissions from emission_records (converted to tCO₂)
     const { rows: [summary] } = await pool.query(
         `SELECT COALESCE(SUM(amount), 0)::float AS total_kg FROM emission_records WHERE user_id = $1`,
         [userId]
@@ -817,20 +844,35 @@ const runSimulation = async (userId, {
     return simulation;
 };
 
-/**
- * Returns the 20 most recent saved simulations for the user.
- * pg driver automatically parses JSONB columns to JS objects.
- */
-const getSavedSimulations = async (userId) => {
-    const { rows } = await pool.query(
-        `SELECT id, name, inputs, results, created_at
-         FROM company_simulations
-         WHERE user_id = $1
-         ORDER BY created_at DESC
-         LIMIT 20`,
-        [userId]
-    );
-    return rows;
+// ─────────────────────────────────────────────────────────────────────────────
+// 12. GET SAVED SIMULATIONS  (paginated)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const getSavedSimulations = async (userId, { page = 1, limit = 20 } = {}) => {
+    const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
+    const safePage  = Math.max(parseInt(page,  10) || 1, 1);
+    const offset    = (safePage - 1) * safeLimit;
+
+    const [simsRes, countRes] = await Promise.all([
+        pool.query(
+            `SELECT id, name, inputs, results, created_at
+             FROM company_simulations WHERE user_id = $1
+             ORDER BY created_at DESC
+             LIMIT $2 OFFSET $3`,
+            [userId, safeLimit, offset]
+        ),
+        pool.query(
+            'SELECT COUNT(*)::int AS total FROM company_simulations WHERE user_id = $1',
+            [userId]
+        ),
+    ]);
+
+    return {
+        simulations: simsRes.rows,
+        total:       countRes.rows[0].total,
+        page:        safePage,
+        limit:       safeLimit,
+    };
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -843,6 +885,7 @@ module.exports = {
     getPeriodEmissions,
     getCbamSummary,
     createCbamEntry,
+    updateCbamEntry,
     getCbamEntries,
     deleteCbamEntry,
     createCompanyTask,

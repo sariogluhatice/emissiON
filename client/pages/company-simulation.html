@@ -14,12 +14,12 @@
         <header class="topbar" id="topbar"></header>
 
         <main class="page-body">
-          <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div class="page-header">
             <div>
               <h1>CBAM Senaryo Simülasyonu</h1>
               <p>Üretim değişimi, verimlilik iyileştirmesi veya farklı karbon fiyatı senaryolarında tahmini vergi yükümlülüğünüzü hesaplayın.</p>
             </div>
-            <a href="company.html" class="btn-secondary" style="white-space:nowrap;">← Şirket Paneli</a>
+            <a href="company.html" class="btn-secondary btn-nowrap">← Şirket Paneli</a>
           </div>
 
           <!-- No emission records notice -->
@@ -175,6 +175,14 @@
                             font-size:12px;color:var(--color-text-muted);line-height:1.8;display:none;">
                 </div>
 
+              </div>
+            </div>
+
+            <!-- Comparison chart (rendered by JS when sims exist) -->
+            <div class="content-card glass-card" id="csComparisonChart" style="display:none;margin-bottom:var(--spacing-lg);">
+              <div class="content-card-header">
+                <span class="content-card-title">Senaryo Karşılaştırması</span>
+                <span style="font-size:12px;color:var(--color-text-muted);">Kayıtlı senaryolar</span>
               </div>
             </div>
 

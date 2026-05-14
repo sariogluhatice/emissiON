@@ -175,9 +175,17 @@ textarea::placeholder {
   border-radius: 14px;
 }
 
-/* Hide any theme toggle UI project-wide */
-#themeToggle {
-  display: none !important;
+/* XP gain float animation */
+@keyframes xpFloat {
+  0%   { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  60%  { opacity: 1; transform: translate(-50%, -48px) scale(1.1); }
+  100% { opacity: 0; transform: translate(-50%, -80px) scale(0.9); }
+}
+
+/* Level-up pulse */
+@keyframes levelPulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.08); }
 }
 
 /* Soft glow for image cards */

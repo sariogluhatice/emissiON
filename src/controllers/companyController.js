@@ -1,7 +1,7 @@
 const svc = require('../services/companyService');
 
 // ─────────────────────────────────────────────────────────────────────────────
-// RESPONSE HELPERS  (identical pattern to householdController)
+// RESPONSE HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 
 const ok = (res, data, message = 'Başarılı.', status = 200) =>
@@ -21,30 +21,29 @@ const handle = (res, err) => {
 
 const str = (v) => (typeof v === 'string' ? v.trim() : null);
 
-// Returns a positive float or null.
 const posFloat = (v) => {
     const n = parseFloat(v);
     return Number.isFinite(n) && n > 0 ? n : null;
 };
 
-// Returns a non-negative float (0 is valid) or null.
 const nonNegFloat = (v) => {
     if (v === undefined || v === null || v === '') return null;
     const n = parseFloat(v);
     return Number.isFinite(n) && n >= 0 ? n : null;
 };
 
-// Returns a YYYY-MM-DD string or null.
 const dateStr = (v) => {
     const s = str(v);
     return s && /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : null;
 };
 
+const posInt = (v, def = 1) => {
+    const n = parseInt(v, 10);
+    return Number.isFinite(n) && n > 0 ? n : def;
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. GET /api/company/profile
-//    Returns the company profile (CBAM fields + onboarding fields).
-//    Returns null data if the user has never saved a profile — the frontend
-//    uses this to decide whether to show the onboarding form.
 // ─────────────────────────────────────────────────────────────────────────────
 const getCompanyProfile = async (req, res) => {
     try {
@@ -60,8 +59,6 @@ const getCompanyProfile = async (req, res) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 2. PUT /api/company/profile
-//    Creates or updates the company profile (CBAM section only).
-//    company_name is optional — keeps the value from onboarding if not sent.
 // ─────────────────────────────────────────────────────────────────────────────
 const upsertCompanyProfile = async (req, res) => {
     const {
@@ -73,7 +70,6 @@ const upsertCompanyProfile = async (req, res) => {
         default_carbon_price,
     } = req.body;
 
-    // Reject unrecognised cbam_sector values before hitting the service
     if (cbam_sector !== undefined && cbam_sector !== null && cbam_sector !== '') {
         const clean = str(cbam_sector);
         if (!clean || !svc.CBAM_SECTORS.includes(clean)) {
@@ -84,7 +80,6 @@ const upsertCompanyProfile = async (req, res) => {
         }
     }
 
-    // Reject negative/zero values passed for annual_production
     if (annual_production !== undefined && annual_production !== null && annual_production !== '') {
         if (!posFloat(annual_production)) {
             return res.status(400).json({
@@ -111,8 +106,6 @@ const upsertCompanyProfile = async (req, res) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 3. GET /api/company/cbam/summary
-//    Derives CBAM tax estimate from the company's emission_records.
-//    Primary analysis endpoint — no cbam_entries required.
 // ─────────────────────────────────────────────────────────────────────────────
 const getCbamSummary = async (req, res) => {
     try {
@@ -125,8 +118,6 @@ const getCbamSummary = async (req, res) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 4. GET /api/company/cbam/period-emissions
-//    Returns emission totals + monthly production + carbon price default for
-//    a given period (YYYY-MM), used by the CBAM form to auto-derive factors.
 // ─────────────────────────────────────────────────────────────────────────────
 const getPeriodEmissions = async (req, res) => {
     const period = str(req.query.period);
@@ -142,16 +133,12 @@ const getPeriodEmissions = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 4. POST /api/company/cbam/entries
-//    Validates inputs, delegates formula + risk computation to service.
-//    emission_factor is optional — omit to auto-derive from emission_records.
-//    carbon_price is optional — omit to use admin_cbam_config default.
+// 5. POST /api/company/cbam/entries
 // ─────────────────────────────────────────────────────────────────────────────
 const createCbamEntry = async (req, res) => {
     const exportCat   = str(req.body.export_category);
     const exportAmt   = posFloat(req.body.export_amount);
     const period      = dateStr(req.body.period_start);
-    // paid_carbon_price defaults to 0 when absent
     const paidPrice   = nonNegFloat(req.body.paid_carbon_price) ?? 0;
 
     if (!exportCat || !svc.CBAM_SECTORS.includes(exportCat)) {
@@ -164,13 +151,11 @@ const createCbamEntry = async (req, res) => {
         return res.status(400).json({ success: false, message: 'Dönem tarihi YYYY-MM-DD formatında olmalıdır.' });
     }
 
-    // Reject future periods (period_start > today)
     const today = new Date().toISOString().split('T')[0];
     if (period > today) {
         return res.status(400).json({ success: false, message: 'Gelecek döneme kayıt eklenemez.' });
     }
 
-    // emission_factor: positive float if provided, otherwise null → service auto-derives
     const rawFactor = req.body.emission_factor;
     let emFactor = null;
     if (rawFactor !== undefined && rawFactor !== null && rawFactor !== '') {
@@ -180,7 +165,6 @@ const createCbamEntry = async (req, res) => {
         }
     }
 
-    // carbon_price: non-negative float if provided, otherwise null → service uses admin default
     const rawPrice = req.body.carbon_price;
     let carbonPrice = null;
     if (rawPrice !== undefined && rawPrice !== null && rawPrice !== '') {
@@ -190,38 +174,96 @@ const createCbamEntry = async (req, res) => {
         }
     }
 
+    // period_end: optional, must be >= period_start when provided
+    const periodEnd = dateStr(req.body.period_end);
+    if (periodEnd && periodEnd < period) {
+        return res.status(400).json({ success: false, message: 'Dönem bitiş tarihi, başlangıç tarihinden önce olamaz.' });
+    }
+
+    // Sanitize free-text fields: cap at reasonable lengths
+    const rawNotes = str(req.body.notes);
+    if (rawNotes && rawNotes.length > 2000) {
+        return res.status(400).json({ success: false, message: 'Notlar en fazla 2000 karakter olabilir.' });
+    }
+
     try {
         const entry = await svc.createCbamEntry(req.user.id, {
-            product_name:      str(req.body.product_name) || null,
-            export_category:   exportCat,
-            export_amount:     exportAmt,
-            emission_factor:   emFactor,
-            carbon_price:      carbonPrice,
-            paid_carbon_price: paidPrice,
-            period_start:      period,
+            product_name:       str(req.body.product_name) || null,
+            export_category:    exportCat,
+            export_amount:      exportAmt,
+            emission_factor:    emFactor,
+            carbon_price:       carbonPrice,
+            paid_carbon_price:  paidPrice,
+            period_start:       period,
+            period_end:         periodEnd,
             destination_region: str(req.body.destination_region) || null,
-            notes:             str(req.body.notes),
+            notes:              rawNotes,
         });
-        return ok(res, { entry }, 'CBAM kaydı oluşturuldu.', 201);
+
+        const { warning, ...entryData } = entry;
+        return ok(res, { entry: entryData, warning: warning ?? null }, 'CBAM kaydı oluşturuldu.', 201);
     } catch (err) {
         return handle(res, err);
     }
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 5. GET /api/company/cbam/entries
+// 6. PATCH /api/company/cbam/entries/:id
+// ─────────────────────────────────────────────────────────────────────────────
+const updateCbamEntry = async (req, res) => {
+    const entryId = parseInt(req.params.id, 10);
+    if (!Number.isFinite(entryId) || entryId <= 0) {
+        return res.status(400).json({ success: false, message: 'Geçersiz kayıt kimliği.' });
+    }
+
+    const paidPrice = req.body.paid_carbon_price !== undefined
+        ? nonNegFloat(req.body.paid_carbon_price)
+        : undefined;
+
+    if (paidPrice === null) {
+        return res.status(400).json({ success: false, message: 'Ödenen karbon fiyatı sıfır veya pozitif bir sayı olmalıdır.' });
+    }
+
+    const periodEnd = req.body.period_end !== undefined ? dateStr(req.body.period_end) : undefined;
+
+    const rawNotes = req.body.notes !== undefined ? str(req.body.notes) : undefined;
+    if (rawNotes !== undefined && rawNotes && rawNotes.length > 2000) {
+        return res.status(400).json({ success: false, message: 'Notlar en fazla 2000 karakter olabilir.' });
+    }
+
+    try {
+        const entry = await svc.updateCbamEntry(req.user.id, entryId, {
+            product_name:       req.body.product_name       !== undefined ? str(req.body.product_name)       : undefined,
+            notes:              rawNotes,
+            destination_region: req.body.destination_region !== undefined ? str(req.body.destination_region) : undefined,
+            period_end:         periodEnd,
+            paid_carbon_price:  paidPrice,
+        });
+
+        const { warning, ...entryData } = entry;
+        return ok(res, { entry: entryData, warning: warning ?? null }, 'Kayıt güncellendi.');
+    } catch (err) {
+        return handle(res, err);
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 7. GET /api/company/cbam/entries
 // ─────────────────────────────────────────────────────────────────────────────
 const getCbamEntries = async (req, res) => {
     try {
-        const entries = await svc.getCbamEntries(req.user.id);
-        return ok(res, { entries });
+        const result = await svc.getCbamEntries(req.user.id, {
+            page:  posInt(req.query.page,  1),
+            limit: posInt(req.query.limit, 20),
+        });
+        return ok(res, result);
     } catch (err) {
         return handle(res, err);
     }
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 6. DELETE /api/company/cbam/entries/:id
+// 8. DELETE /api/company/cbam/entries/:id
 // ─────────────────────────────────────────────────────────────────────────────
 const deleteCbamEntry = async (req, res) => {
     const entryId = parseInt(req.params.id, 10);
@@ -238,7 +280,7 @@ const deleteCbamEntry = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 7. GET  /api/company/tasks
+// 9. GET  /api/company/tasks
 // ─────────────────────────────────────────────────────────────────────────────
 const getCompanyTasks = async (req, res) => {
     try {
@@ -250,7 +292,7 @@ const getCompanyTasks = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 8. POST /api/company/tasks
+// 10. POST /api/company/tasks
 // ─────────────────────────────────────────────────────────────────────────────
 const createCompanyTask = async (req, res) => {
     const cleanTitle = str(req.body.title);
@@ -260,7 +302,6 @@ const createCompanyTask = async (req, res) => {
 
     const { target_reduction_pct, due_date } = req.body;
 
-    // Validate pct if provided
     if (target_reduction_pct !== undefined && target_reduction_pct !== null && target_reduction_pct !== '') {
         const pct = parseFloat(target_reduction_pct);
         if (!Number.isFinite(pct) || pct <= 0 || pct >= 100) {
@@ -283,7 +324,7 @@ const createCompanyTask = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 9. PATCH /api/company/tasks/:id/status
+// 11. PATCH /api/company/tasks/:id/status
 // ─────────────────────────────────────────────────────────────────────────────
 const updateCompanyTaskStatus = async (req, res) => {
     const taskId = parseInt(req.params.id, 10);
@@ -305,7 +346,7 @@ const updateCompanyTaskStatus = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 10. POST /api/company/simulate
+// 12. POST /api/company/simulate
 // ─────────────────────────────────────────────────────────────────────────────
 const runSimulation = async (req, res) => {
     const carbonPrice = nonNegFloat(req.body.carbon_price);
@@ -326,9 +367,14 @@ const runSimulation = async (req, res) => {
         return res.status(400).json({ success: false, message: 'Emisyon faktörü değişimi geçerli bir sayı olmalıdır.' });
     }
 
+    const rawName = str(req.body.scenario_name);
+    if (rawName && rawName.length > 500) {
+        return res.status(400).json({ success: false, message: 'Senaryo adı en fazla 500 karakter olabilir.' });
+    }
+
     try {
         const simulation = await svc.runSimulation(req.user.id, {
-            scenario_name:             str(req.body.scenario_name) || null,
+            scenario_name:             rawName || null,
             carbon_price:              carbonPrice,
             export_change_pct:         exportPct,
             emission_factor_change_pct: factorPct,
@@ -341,19 +387,22 @@ const runSimulation = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 11. GET /api/company/simulate/saved
+// 13. GET /api/company/simulate/saved
 // ─────────────────────────────────────────────────────────────────────────────
 const getSavedSimulations = async (req, res) => {
     try {
-        const simulations = await svc.getSavedSimulations(req.user.id);
-        return ok(res, { simulations });
+        const result = await svc.getSavedSimulations(req.user.id, {
+            page:  posInt(req.query.page,  1),
+            limit: posInt(req.query.limit, 20),
+        });
+        return ok(res, result);
     } catch (err) {
         return handle(res, err);
     }
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 12. GET /api/company/dashboard
+// 14. GET /api/company/dashboard
 // ─────────────────────────────────────────────────────────────────────────────
 const getCompanyDashboard = async (req, res) => {
     try {
@@ -373,6 +422,7 @@ module.exports = {
     getCbamSummary,
     getPeriodEmissions,
     createCbamEntry,
+    updateCbamEntry,
     getCbamEntries,
     deleteCbamEntry,
     getCompanyTasks,

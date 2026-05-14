@@ -41,13 +41,13 @@ const simsContainer    = document.getElementById('csSimsContainer');
 const simCountEl       = document.getElementById('csSimCountEl');
 
 // ── State ─────────────────────────────────────────────────────────────────────
-let baselineEmission = 0;   // loaded from dashboard on boot
+let baselineEmission = 0;
+let currentPage  = 1;
+const PAGE_LIMIT = 20;
 
 // ── Display constants ─────────────────────────────────────────────────────────
 const RISK_LABELS = { low: 'Düşük', medium: 'Orta', high: 'Yüksek', critical: 'Kritik' };
 const RISK_COLORS = { low: '#16a34a', medium: '#f59e0b', high: '#dc2626', critical: '#7c3aed' };
-
-// Client-side mirrors of admin_cbam_config seeds (server is authoritative on save)
 const RISK_THRESHOLDS = { medium: 10000, high: 50000, critical: 200000 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -124,9 +124,74 @@ function updatePreview() {
     el?.addEventListener('input', updatePreview);
 });
 
+// ── Comparison bar chart ──────────────────────────────────────────────────────
+function renderComparisonChart(sims) {
+    const container = document.getElementById('csComparisonChart');
+    if (!container) return;
+
+    if (!sims.length) {
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'block';
+
+    const costs      = sims.map(s => parseFloat(s.results?.projected_cost ?? 0));
+    const emissions  = sims.map(s => parseFloat(s.results?.projected_emission ?? 0));
+    const maxCost    = Math.max(...costs, 1);
+    const maxEmission = Math.max(...emissions, 1);
+    const names      = sims.map((s, i) => s.name || `Senaryo #${s.id}`);
+
+    const costBars = sims.map((s, i) => {
+        const cost    = costs[i];
+        const risk    = s.results?.projected_risk || 'low';
+        const color   = RISK_COLORS[risk] || '#9ca3af';
+        const pct     = (cost / maxCost * 100).toFixed(1);
+        const nameShort = names[i].length > 20 ? names[i].slice(0, 18) + '…' : names[i];
+        return `
+          <div class="cs-bar-row">
+            <span class="cs-bar-label" title="${names[i]}">${nameShort}</span>
+            <div class="cs-bar-track">
+              <div class="cs-bar-fill" style="width:${pct}%;background:${color};"></div>
+            </div>
+            <span class="cs-bar-value">${fmtEur(cost)}</span>
+          </div>`;
+    }).join('');
+
+    const emBars = sims.map((s, i) => {
+        const em      = emissions[i];
+        const pct     = (em / maxEmission * 100).toFixed(1);
+        const change  = s.results?.emission_change_pct ?? 0;
+        const color   = change <= 0 ? '#16a34a' : '#dc2626';
+        const nameShort = names[i].length > 20 ? names[i].slice(0, 18) + '…' : names[i];
+        return `
+          <div class="cs-bar-row">
+            <span class="cs-bar-label" title="${names[i]}">${nameShort}</span>
+            <div class="cs-bar-track">
+              <div class="cs-bar-fill" style="width:${pct}%;background:${color};"></div>
+            </div>
+            <span class="cs-bar-value">${fmtNum(em, 2)} tCO₂</span>
+          </div>`;
+    }).join('');
+
+    container.innerHTML = `
+      <div class="cs-comparison-grid">
+        <div>
+          <div class="cs-chart-title">Tahmini CBAM Maliyeti</div>
+          ${costBars}
+        </div>
+        <div>
+          <div class="cs-chart-title">Tahmini Emisyon</div>
+          ${emBars}
+        </div>
+      </div>`;
+}
+
 // ── Render saved simulations ──────────────────────────────────────────────────
-function renderSimulations(sims) {
-    if (simCountEl) simCountEl.textContent = `${sims.length} senaryo`;
+function renderSimulations(sims, total, page, limit) {
+    if (simCountEl) simCountEl.textContent = `${total} senaryo`;
+
+    renderComparisonChart(sims);
 
     if (!sims.length) {
         simsContainer.innerHTML = `
@@ -136,6 +201,14 @@ function renderSimulations(sims) {
           </div>`;
         return;
     }
+
+    const totalPages = Math.ceil(total / limit);
+    const paginationHtml = totalPages > 1 ? `
+      <div class="ce-pagination">
+        <button class="btn-secondary cs-prev-btn" ${page <= 1 ? 'disabled' : ''}>← Önceki</button>
+        <span class="ce-page-info">${page} / ${totalPages} sayfa</span>
+        <button class="btn-secondary cs-next-btn" ${page >= totalPages ? 'disabled' : ''}>Sonraki →</button>
+      </div>` : '';
 
     simsContainer.innerHTML = `
       <div style="overflow-x:auto;">
@@ -156,7 +229,16 @@ function renderSimulations(sims) {
             ${sims.map(simRow).join('')}
           </tbody>
         </table>
-      </div>`;
+      </div>
+      ${paginationHtml}`;
+
+    simsContainer.querySelector('.cs-prev-btn')?.addEventListener('click', () => {
+        if (currentPage > 1) { currentPage--; loadSimulations(); }
+    });
+
+    simsContainer.querySelector('.cs-next-btn')?.addEventListener('click', () => {
+        if (currentPage < totalPages) { currentPage++; loadSimulations(); }
+    });
 }
 
 function simRow(s) {
@@ -194,8 +276,9 @@ function simRow(s) {
 async function loadSimulations() {
     simsContainer.innerHTML = '<div class="hh-loading">Yükleniyor…</div>';
     try {
-        const res = await companyService.getSavedSimulations();
-        renderSimulations(res.data?.simulations ?? []);
+        const res  = await companyService.getSavedSimulations({ page: currentPage, limit: PAGE_LIMIT });
+        const data = res.data ?? {};
+        renderSimulations(data.simulations ?? [], data.total ?? 0, data.page ?? 1, data.limit ?? PAGE_LIMIT);
     } catch (err) {
         simsContainer.innerHTML = `<div class="hh-empty"><p>Senaryolar yüklenemedi: ${err.message}</p></div>`;
     }
@@ -224,6 +307,7 @@ csRunBtn?.addEventListener('click', async () => {
         showToast('Başarılı', 'Senaryo kaydedildi.', 'success');
 
         if (scenarioNameEl) scenarioNameEl.value = '';
+        currentPage = 1;
         await loadSimulations();
     } catch (err) {
         showToast('Hata', err.message, 'error');
@@ -245,23 +329,19 @@ csRunBtn?.addEventListener('click', async () => {
         baselineEmission = dashboard?.total_emission ?? 0;
 
         if (baselineEmission <= 0) {
-            // total_emission now comes from emission_records
             simulatorSection.style.display = 'none';
             noDataNotice.style.display     = 'block';
             return;
         }
 
-        // Populate baseline bar
         if (baselineEmEl) baselineEmEl.textContent = fmtNum(baselineEmission);
 
-        // Pre-fill carbon price from company profile default
         const cp = profileRes.data?.profile?.default_carbon_price;
         if (cp && carbonPriceEl) carbonPriceEl.value = parseFloat(cp).toFixed(2);
 
         updatePreview();
         await loadSimulations();
     } catch {
-        // On error, keep simulator visible with empty state
         updatePreview();
         await loadSimulations();
     }

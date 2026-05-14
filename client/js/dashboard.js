@@ -1,6 +1,7 @@
-import { emissionService } from './api/emissionService.js';
-import { profileService }  from './api/profileService.js';
-import { renderLayout } from './layout.js';
+import { emissionService }      from './api/emissionService.js';
+import { profileService }        from './api/profileService.js';
+import { gamificationService }   from './api/gamificationService.js';
+import { renderLayout }          from './layout.js';
 import {
   calculateStats,
   categoryEmoji,
@@ -154,10 +155,11 @@ async function initDashboard() {
       }
     }
 
-    // 6. Rozetleri Kontrol Et (Yalnızca Individual)
-    if (user.role === 'individual') {
-      renderBadges(records);
-    }
+    // 6. Gamification & Rozetler
+    try {
+      const gamData = await gamificationService.getStats();
+      if (gamData?.data) renderGamification(gamData.data);
+    } catch (gamErr) { console.warn('[gamification] getStats failed:', gamErr?.message); }
 
     // 7. Hane İçi Görevleri Göster (Yalnızca Household)
     if (user.role === 'household') {
@@ -217,53 +219,74 @@ function calculateCarbonCost(records, role) {
   return totalCost;
 }
 
-// ── Rozet Sistemi ─────────────────────────────────────────────────────────────
-const BADGE_DEFS = [
-  { id: 'first_step',  name: 'İlk Adım',    icon: '🌱', desc: 'Sisteme ilk emisyon kaydını ekledin.', check: (recs) => recs.length >= 1 },
-  { id: 'data_pro',    name: 'Veri Ustası',  icon: '📊', desc: '5\'ten fazla kayıt ekleyerek analizini güçlendirdin.', check: (recs) => recs.length >= 5 },
-  { id: 'green_commute', name: 'Yeşil Yolcu', icon: '🚲', desc: 'Ulaşım kaynaklı emisyonlarını takip ediyorsun.', check: (recs) => recs.some(r => r.source.toLowerCase().includes('ulaşım') || r.source.toLowerCase().includes('transport')) },
-  { id: 'saver',       name: 'Tasarrufçu',  icon: '💰', desc: 'Enerji kullanımında farkındalık yarattın.', check: (recs) => recs.some(r => r.source.toLowerCase().includes('elektrik') || r.source.toLowerCase().includes('enerji')) },
-  { id: 'earth_friend', name: 'Dünya Dostu', icon: '🌍', desc: 'Onboarding sürecini tamamlayıp profilini oluşturdun.', check: () => true }, // Zaten dashboard'daysa tamamlamıştır
-];
-
-function renderBadges(records) {
-  const container = document.getElementById('badgesCard');
-  const list      = document.getElementById('badgesList');
-  if (!container || !list) return;
-
-  container.style.display = 'block';
-  list.innerHTML = '';
-
-  const earned = BADGE_DEFS.filter(b => b.check(records));
-
-  if (earned.length === 0) {
-    list.innerHTML = '<p style="font-size:13px; color:var(--color-text-muted)">Henüz rozet kazanılmadı. Veri ekleyerek başlayın!</p>';
-    return;
+// ── Gamification Widget ───────────────────────────────────────────────────────
+function renderGamification(stats) {
+  // Topbar widgets
+  const tbStreak = document.getElementById('topbarStreakWidget');
+  const tbCount  = document.getElementById('topbarStreakCount');
+  const tbXp     = document.getElementById('topbarXpWidget');
+  const tbLevel  = document.getElementById('topbarLevel');
+  const tbFill   = document.getElementById('topbarXpFill');
+  if (tbStreak && stats.current_streak > 0) {
+    tbStreak.style.display = 'flex';
+    if (tbCount) tbCount.textContent = stats.current_streak;
+  }
+  if (tbXp) {
+    tbXp.style.display = 'flex';
+    if (tbLevel) tbLevel.textContent = `Sv.${stats.level}`;
+    if (tbFill)  tbFill.style.width  = `${stats.level_progress_pct}%`;
   }
 
-  earned.forEach(b => {
-    const el = document.createElement('div');
-    el.className = 'badge-item';
-    el.style = `
-      flex: 0 0 auto;
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: 12px;
-      padding: 16px;
-      width: 120px;
-      text-align: center;
-      transition: transform 0.3s ease;
-      cursor: help;
-    `;
-    el.title = b.desc;
-    el.innerHTML = `
-      <div style="font-size: 32px; margin-bottom: 8px;">${b.icon}</div>
-      <div style="font-size: 12px; font-weight: 600; color: #F59E0B;">${b.name}</div>
-    `;
-    el.onmouseover = () => el.style.transform = 'translateY(-5px)';
-    el.onmouseout  = () => el.style.transform = 'translateY(0)';
-    list.appendChild(el);
-  });
+  // Banner
+  const banner = document.getElementById('gamBanner');
+  if (banner) {
+    banner.style.display = '';
+    const streakNum   = document.getElementById('gamStreakNum');
+    const streakLabel = document.getElementById('gamStreakLabel');
+    const levelEl     = document.getElementById('gamLevel');
+    const xpText      = document.getElementById('gamXpText');
+    const xpFill      = document.getElementById('gamXpFill');
+    const xpNext      = document.getElementById('gamXpNext');
+    if (streakNum)   streakNum.textContent   = stats.current_streak;
+    if (streakLabel) streakLabel.textContent = stats.current_streak === 1 ? 'Günlük Seri' : 'Günlük Seri';
+    if (levelEl)     levelEl.textContent     = `Seviye ${stats.level}`;
+    if (xpText)      xpText.textContent      = `${stats.total_xp} XP`;
+    if (xpFill)      { requestAnimationFrame(() => { xpFill.style.width = `${stats.level_progress_pct}%`; }); }
+    if (xpNext && stats.xp_to_next_level > 0) xpNext.textContent = `Sonraki seviyeye ${stats.xp_to_next_level} XP`;
+  }
+
+  // Daily reminder
+  const reminder = document.getElementById('dailyReminder');
+  if (reminder) {
+    // Show reminder only if streak > 0 (has used app) but hasn't logged today yet.
+    // Detect by checking if current_streak stayed same as last session — approximate:
+    // show if streak > 0 and we have no "logged today" signal (we'll check localStorage).
+    const todayKey = `gam_logged_${new Date().toISOString().slice(0,10)}`;
+    const loggedToday = localStorage.getItem(todayKey) === '1';
+    if (!loggedToday && stats.current_streak > 0) {
+      reminder.style.display = 'flex';
+    }
+  }
+
+  // Badges
+  const badgesCard   = document.getElementById('badgesCard');
+  const badgesList   = document.getElementById('badgesList');
+  const badgesCount  = document.getElementById('badgesEarnedCount');
+  if (badgesCard && badgesList && stats.badge_defs) {
+    badgesCard.style.display = '';
+    const earned   = stats.badge_defs.filter(b => b.earned);
+    const unearned = stats.badge_defs.filter(b => !b.earned);
+    if (badgesCount) badgesCount.textContent = `${earned.length} / ${stats.badge_defs.length} kazanıldı`;
+    badgesList.innerHTML = '';
+    [...earned, ...unearned].forEach(b => {
+      const el = document.createElement('div');
+      el.className = `badge-item${b.earned ? ' badge-earned' : ' badge-locked'}`;
+      el.innerHTML = `
+        <div class="badge-icon">${b.icon}</div>
+        <div class="badge-name">${b.name}</div>`;
+      badgesList.appendChild(el);
+    });
+  }
 }
 
 // Silme İşlemi

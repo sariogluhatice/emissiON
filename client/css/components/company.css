@@ -1,0 +1,231 @@
+/* ============================================================
+   COMPONENTS / COMPANY — şirket modülü için paylaşılan stiller:
+   form yardımcı sınıfları, CBAM düzenleme modalı, sayfalama,
+   ve simülasyon karşılaştırma grafiği.
+   ============================================================ */
+
+/* ── Utility helpers (used across multiple pages) ─────────── */
+
+.btn-nowrap   { white-space: nowrap; }
+.btn-block    { width: 100%; }
+.mb-lg        { margin-bottom: var(--spacing-lg); }
+
+/* Required asterisk in labels */
+.required-mark { color: var(--color-error); }
+
+/* "(— İsteğe Bağlı)" label suffix */
+.label-optional {
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
+/* Textarea that only resizes vertically */
+.textarea-resize-v { resize: vertical; }
+
+/* Section divider inside a form (e.g. "Emisyon Takibi" block) */
+.form-section {
+  border-top: 1px solid var(--color-border);
+  padding-top: 14px;
+  margin-top: 4px;
+}
+
+/* Uppercase micro-label for a form section */
+.form-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+}
+
+/* Short descriptive text below a section title */
+.form-section-desc {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+/* Small helper text below an input */
+.field-hint {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+  display: block;
+}
+
+/* form-group variant — aligns button to bottom of the cell */
+.form-group-end {
+  display: flex;
+  align-items: flex-end;
+}
+
+/* Muted secondary text, 13 px — for counters in card headers */
+.text-sm-muted {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+/* ── Pagination bar (entries + simulations) ───────────────── */
+
+.ce-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px 0 4px;
+  border-top: 1px solid var(--color-border);
+  margin-top: 12px;
+}
+
+.ce-page-info {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  min-width: 80px;
+  text-align: center;
+}
+
+/* ── Edit modal (CBAM entry) ──────────────────────────────── */
+
+#ceEditModal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.ce-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.ce-modal-box {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.ce-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.ce-modal-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-brand-text);
+}
+
+.ce-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  font-size: 16px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s, background 0.15s;
+}
+
+.ce-modal-close:hover {
+  color: var(--color-brand-text);
+  background: var(--color-border);
+}
+
+.ce-modal-body {
+  padding: 20px;
+  flex: 1;
+}
+
+.ce-modal-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 14px 20px;
+  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.ce-modal-warning {
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: #fef3c720;
+  border: 1px solid #f59e0b60;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  color: #92400e;
+  line-height: 1.5;
+}
+
+/* ── Simulation comparison chart ─────────────────────────── */
+
+.cs-comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--spacing-lg);
+  padding: 4px 0;
+}
+
+.cs-chart-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.cs-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.cs-bar-label {
+  width: 110px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cs-bar-track {
+  flex: 1;
+  background: var(--color-border);
+  border-radius: 99px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.cs-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+
+.cs-bar-value {
+  font-size: 12px;
+  font-weight: 600;
+  width: 80px;
+  text-align: right;
+  flex-shrink: 0;
+}

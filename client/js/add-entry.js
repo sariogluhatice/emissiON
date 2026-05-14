@@ -1,8 +1,10 @@
-import { emissionService } from "./api/emissionService.js";
-import { TokenManager } from "./api/tokenManager.js";
-import { renderLayout } from "./layout.js";
-import { showToast } from "./utils/uiUtils.js";
-import { companyService } from "./api/companyService.js";
+import { emissionService }    from "./api/emissionService.js";
+import { TokenManager }        from "./api/tokenManager.js";
+import { renderLayout }        from "./layout.js";
+import { showToast }           from "./utils/uiUtils.js";
+import { companyService }      from "./api/companyService.js";
+import { gamificationService } from "./api/gamificationService.js";
+import { triggerConfetti, showXpGain, showLevelUp, showBadgeUnlock } from "./utils/confetti.js";
 
 // Edit mode: check for ?edit=<id> URL param
 const _urlParams = new URLSearchParams(window.location.search);
@@ -994,11 +996,31 @@ entryForm.addEventListener("submit", async (e) => {
     } else {
       await emissionService.create(payload);
       showToast("Kaydedildi!", "Emisyon kaydı oluşturuldu.", "success");
+
+      // Mark today as logged (for daily reminder suppression)
+      const todayKey = `gam_logged_${new Date().toISOString().slice(0,10)}`;
+      localStorage.setItem(todayKey, '1');
+
+      // Award XP and show celebrations
+      try {
+        const gamResult = await gamificationService.processEntry();
+        const gam = gamResult?.data;
+        if (gam && gam.xpGained > 0) {
+          showXpGain(gam.xpGained, saveBtn);
+          if (gam.newBadges?.length > 0) {
+            triggerConfetti();
+            gam.newBadges.forEach(b => showBadgeUnlock(b, showToast));
+          }
+          if (gam.leveledUp) {
+            setTimeout(() => showLevelUp(gam.stats.level), 800);
+          }
+        }
+      } catch (gamErr) { console.warn('[gamification] processEntry failed:', gamErr?.message); }
     }
 
     setTimeout(() => {
       window.location.href = "emissions.html";
-    }, 1200);
+    }, 1800);
   } catch (err) {
     showToast("Kayıt Hatası", err.message || "Kayıt yapılamadı.", "error");
     saveBtn.disabled = false;

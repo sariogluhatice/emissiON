@@ -206,6 +206,55 @@ function renderHighestRisk(dashboard) {
       <p>Henüz kayıt yok. <a href="add-entry.html" style="color:var(--color-primary);">Kayıt ekleyin.</a></p></div>`;
 }
 
+// ── Compliance Progress Bar ───────────────────────────────────────────────────
+function renderComplianceBar(score) {
+    const existingBar = document.getElementById('cpComplianceBar');
+    if (existingBar) { existingBar.remove(); }
+
+    const scoreCard = statScore?.closest('.stat-card');
+    if (!scoreCard) return;
+
+    const bar = document.createElement('div');
+    bar.id = 'cpComplianceBar';
+    bar.innerHTML = `
+      <div class="compliance-bar-track" style="margin-top:8px;">
+        <div class="compliance-bar-fill" id="cpCompFill" style="width:0%"></div>
+      </div>
+      <div style="font-size:10px;color:var(--color-text-muted);margin-top:3px;">${
+        score >= 85 ? '✓ İyi Uyum' : score >= 55 ? '⚠ Geliştirilmeli' : '✗ Risk Var'
+      }</div>`;
+    scoreCard.appendChild(bar);
+    requestAnimationFrame(() => {
+        const fill = document.getElementById('cpCompFill');
+        if (fill) fill.style.width = `${score}%`;
+    });
+}
+
+// ── KPI Trend Indicators ──────────────────────────────────────────────────────
+function renderKpiTrends(dashboard) {
+    if (!dashboard.trend?.length) return;
+
+    const trend = dashboard.trend;
+    if (trend.length < 2) return;
+
+    const latest   = parseFloat(trend[trend.length - 1]?.total_cost ?? 0);
+    const previous = parseFloat(trend[trend.length - 2]?.total_cost ?? 0);
+    const pct      = previous > 0 ? ((latest - previous) / previous * 100).toFixed(1) : null;
+
+    if (pct === null) return;
+
+    const up      = parseFloat(pct) > 0;
+    const trendEl = document.createElement('div');
+    trendEl.style.cssText = 'font-size:12px;margin-top:4px;';
+    trendEl.className = up ? 'kpi-trend-up' : 'kpi-trend-down';
+    trendEl.textContent = `${up ? '↑' : '↓'} Geçen aya göre ${Math.abs(pct)}%`;
+
+    const costCard = statCost?.closest('.stat-card');
+    if (costCard && !costCard.querySelector('.kpi-trend-up,.kpi-trend-down')) {
+        costCard.appendChild(trendEl);
+    }
+}
+
 // ── Carbon Price Sensitivity ──────────────────────────────────────────────────
 function renderSensitivity(totalEmbedded) {
     const container = document.getElementById('cpSensitivityContainer');
@@ -264,16 +313,20 @@ function renderDashboard(profile, dashboard) {
     }
 
     if (statScore) {
-        statScore.textContent = dashboard.compliance_score;
-        // Thresholds adjusted for the new risk-based score (max realistic: 95)
-        statScore.style.color = dashboard.compliance_score >= 85 ? '#16a34a'
-                              : dashboard.compliance_score >= 55 ? '#f59e0b'
-                              : '#dc2626';
+        const score = dashboard.compliance_score;
+        statScore.textContent = score;
+        statScore.style.color = score >= 85 ? '#16a34a' : score >= 55 ? '#f59e0b' : '#dc2626';
+
+        // Compliance progress bar
+        renderComplianceBar(score);
     }
+
+    // KPI trend indicators
+    renderKpiTrends(dashboard);
 
     renderTrendChart(dashboard.trend);
     renderCategories(dashboard.categories);
-    renderHighestRisk(dashboard);       // now receives full dashboard
+    renderHighestRisk(dashboard);
     renderSensitivity(dashboard.total_emission);
 
     if (loadingState)   loadingState.style.display   = 'none';
