@@ -1,5 +1,6 @@
 import { companyService } from './api/companyService.js';
 import { renderLayout }   from './layout.js';
+import { getCategoryLabelWithEmoji, CBAM_SECTOR_LABELS, RISK_LABELS, RISK_COLORS } from './utils/labelUtils.js';
 
 const user = renderLayout({ activeNav: 'nav-company', title: 'Şirket Paneli' });
 if (!user) throw new Error('redirect');
@@ -30,33 +31,6 @@ const statCost        = document.getElementById('cpStatCost');
 const statRisk        = document.getElementById('cpStatRisk');
 const statScore       = document.getElementById('cpStatScore');
 
-// ── Display constants ─────────────────────────────────────────────────────────
-// Categories from emission_records (primary source for dashboard)
-const EMISSION_CATEGORY_LABELS = {
-    energy:    '⚡ Enerji (Elektrik)',
-    water:     '💧 Su',
-    gas:       '🔥 Doğalgaz',
-    transport: '🚗 Ulaşım',
-    materials: '📦 Malzeme',
-    waste:     '♻️ Atık',
-    food:      '🍽️ Gıda',
-    shopping:  '🛒 Alışveriş',
-    other:     '📋 Diğer',
-};
-
-// CBAM sector labels kept for the highest_risk_entry card (from cbam_entries)
-const CBAM_SECTOR_LABELS = {
-    iron_steel:  '🏗️ Demir ve Çelik',
-    aluminium:   '⚙️ Alüminyum',
-    cement:      '🏢 Çimento',
-    fertiliser:  '🌱 Gübre',
-    hydrogen:    '⚗️ Hidrojen',
-    electricity: '⚡ Elektrik',
-    other:       '📦 Diğer',
-};
-
-const RISK_LABELS = { low: 'Düşük', medium: 'Orta', high: 'Yüksek', critical: 'Kritik' };
-const RISK_COLORS = { low: '#16a34a', medium: '#f59e0b', high: '#dc2626', critical: '#7c3aed' };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function formatEur(val) {
@@ -138,7 +112,7 @@ function renderCategories(categories) {
 
     container.innerHTML = categories.map(c => {
         const pct   = maxCost > 0 ? (parseFloat(c.cbam_cost) / maxCost) * 100 : 0;
-        const label = EMISSION_CATEGORY_LABELS[c.export_category] || CBAM_SECTOR_LABELS[c.export_category] || c.export_category;
+        const label = CBAM_SECTOR_LABELS[c.export_category] || getCategoryLabelWithEmoji(c.export_category);
         return `
           <div style="margin-bottom:14px;">
             <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
@@ -167,7 +141,7 @@ function renderHighestRisk(dashboard) {
     // Prefer emission_records top source; fall back to cbam declared entry
     if (topSource) {
         if (titleEl) titleEl.textContent = 'En Yüksek Emisyon Kaynağı';
-        const label  = EMISSION_CATEGORY_LABELS[topSource.export_category] || topSource.export_category;
+        const label  = getCategoryLabelWithEmoji(topSource.export_category);
         const pct    = dashboard.total_emission > 0
             ? ((topSource.emission / dashboard.total_emission) * 100).toFixed(1)
             : '—';

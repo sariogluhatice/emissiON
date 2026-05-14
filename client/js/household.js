@@ -1,6 +1,7 @@
 import { householdService } from './api/householdService.js';
 import { renderLayout }     from './layout.js';
-import { showToast, formatDate } from './utils/uiUtils.js';
+import { showToast, formatDate, getTaskStatusLabel, getTaskStatusClass } from './utils/uiUtils.js';
+import { getCategoryLabel } from './utils/labelUtils.js';
 
 const user = renderLayout({ activeNav: 'nav-household', title: 'Hanem' });
 if (!user) throw new Error('redirect');
@@ -57,9 +58,9 @@ const comparisonEl    = document.getElementById('comparisonSection');
 
 let monthlyChartInstance = null;
 
-// ── Status label helpers ──────────────────────────────────────────────────────
-const STATUS_LABELS  = { pending: 'Bekliyor', in_progress: 'Devam Ediyor', completed: 'Tamamlandı' };
-const STATUS_CLASSES = { pending: 'pending',  in_progress: 'in-progress',  completed: 'completed' };
+// ── Status label helpers (delegated to shared uiUtils) ───────────────────────
+const STATUS_LABELS  = { pending: getTaskStatusLabel('pending'), in_progress: getTaskStatusLabel('in_progress'), completed: getTaskStatusLabel('completed'), cancelled: getTaskStatusLabel('cancelled') };
+const STATUS_CLASSES = { pending: getTaskStatusClass('pending'), in_progress: getTaskStatusClass('in_progress'), completed: getTaskStatusClass('completed'), cancelled: getTaskStatusClass('cancelled') };
 
 const CAT_EMOJI = {
   energy: '⚡', electricity: '⚡', water: '💧', gas: '🔥', transport: '🚗',
@@ -157,7 +158,7 @@ function renderCategories(breakdown) {
         <span style="font-size:18px;flex-shrink:0;">${catEmoji(cat.category)}</span>
         <div style="flex:1;min-width:0;">
           <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:var(--color-text);margin-bottom:4px;">
-            <span>${cat.category ?? 'Diğer'}</span>
+            <span>${getCategoryLabel(cat.category)}</span>
             <span>${parseFloat(cat.total_amount).toFixed(1)} kg</span>
           </div>
           <div style="background:var(--color-border);border-radius:99px;height:5px;">
@@ -198,40 +199,58 @@ function renderRecentTasks(tasks, isAdmin) {
          </select>`
       : `<span class="status-badge ${STATUS_CLASSES[t.status] || 'pending'}">${STATUS_LABELS[t.status] || t.status}</span>`;
 
-    // Progress bar for emission-tracked tasks
+    // Progress indicator for emission-tracked tasks
     let progressHtml = '';
-    if (t.emission_category && t.target_amount != null && t.current_amount != null) {
-      const PROG_COLORS = {
-        on_track: 'var(--color-primary)', at_risk: '#f59e0b', off_track: 'var(--color-error)',
-        successful: '#16a34a', failed: 'var(--color-error)',
-        no_data: 'var(--color-text-muted)', no_baseline: '#9ca3af',
-      };
-      const PROG_LABELS = {
-        on_track: 'Yolunda', at_risk: 'Risk Altında', off_track: 'Geride',
-        successful: 'Başarılı', failed: 'Başarısız',
-        no_data: 'Veri Bekleniyor', no_baseline: 'Başlangıç Verisi Bekleniyor',
-      };
-      const current  = parseFloat(t.current_amount);
-      const target   = parseFloat(t.target_amount);
-      const baseline = t.baseline_amount != null ? parseFloat(t.baseline_amount) : null;
-      const color    = PROG_COLORS[t.progress_status] || 'var(--color-border)';
-      const badge    = PROG_LABELS[t.progress_status] || '';
-      let barPct = 0;
-      if (baseline != null && baseline > target) {
-        barPct = Math.max(0, Math.min(100, Math.round((baseline - current) / (baseline - target) * 100)));
-      } else if (target > 0) {
-        barPct = current <= target ? 100 : 0;
+    if (t.emission_category) {
+      if (t.target_amount == null) {
+        progressHtml = `
+          <div style="margin-top:5px;">
+            <span style="font-size:10px;font-weight:700;color:var(--color-error);
+                         padding:2px 7px;border-radius:99px;background:#fef2f2;">
+              🔴 Başlangıç Verisi Eksik
+            </span>
+          </div>`;
+      } else {
+        // Backend returns null for current_amount when no records exist this period
+        const hasCurrent = t.current_amount != null && t.progress_status !== 'no_data';
+        if (!hasCurrent) {
+          progressHtml = `
+            <div style="margin-top:5px;">
+              <span style="font-size:10px;font-weight:700;color:#f59e0b;
+                           padding:2px 7px;border-radius:99px;background:#fffbeb;">
+                🟡 Güncel Veri Bekleniyor
+              </span>
+            </div>`;
+        } else {
+          const PROG_COLORS = {
+            on_track: 'var(--color-primary)', at_risk: '#f59e0b', off_track: 'var(--color-error)',
+            successful: '#16a34a', failed: 'var(--color-error)',
+          };
+          const PROG_LABELS = {
+            on_track: 'İlerliyor', at_risk: 'Risk Altında', off_track: 'Hedeften Uzaklaşıyor',
+            successful: 'Hedefe Ulaşıldı', failed: 'Başarısız',
+          };
+          const current  = parseFloat(t.current_amount);
+          const target   = parseFloat(t.target_amount);
+          const baseline = t.baseline_amount != null ? parseFloat(t.baseline_amount) : null;
+          const color    = PROG_COLORS[t.progress_status] || 'var(--color-border)';
+          const badge    = PROG_LABELS[t.progress_status] || '';
+          let barPct = 0;
+          if (baseline != null && baseline > target) {
+            barPct = Math.max(0, Math.min(100, Math.round((baseline - current) / (baseline - target) * 100)));
+          }
+          progressHtml = `
+            <div style="margin-top:6px;">
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--color-text-muted);margin-bottom:3px;">
+                <span>Güncel: ${current.toFixed(1)} kg / Hedef: ${target.toFixed(1)} kg CO₂e</span>
+                <span style="font-weight:700;color:${color};">${badge}</span>
+              </div>
+              <div style="background:var(--color-border);border-radius:99px;height:4px;">
+                <div style="width:${barPct}%;background:${color};height:100%;border-radius:99px;"></div>
+              </div>
+            </div>`;
+        }
       }
-      progressHtml = `
-        <div style="margin-top:6px;">
-          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--color-text-muted);margin-bottom:3px;">
-            <span>Güncel: ${current.toFixed(1)} kg / Hedef: ${target.toFixed(1)} kg CO₂e</span>
-            <span style="font-weight:700;color:${color};">${badge}</span>
-          </div>
-          <div style="background:var(--color-border);border-radius:99px;height:4px;">
-            <div style="width:${barPct}%;background:${color};height:100%;border-radius:99px;"></div>
-          </div>
-        </div>`;
     }
 
     return `

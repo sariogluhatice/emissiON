@@ -86,6 +86,27 @@
   }
 }
 
+/* ── Settings gear button on identity card ── */
+.profile-settings-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.profile-settings-btn:hover {
+  background: rgba(128, 128, 128, 0.1);
+  color: var(--color-text);
+}
+
 /* ── Identity card (new profile layout) ── */
 .profile-identity-card {
   background: var(--color-surface);
@@ -233,20 +254,20 @@
 }
 
 .profile-field-label {
-  color: var(--color-text-muted);
-  font-weight: 500;
+  color: var(--color-text);
+  font-weight: 600;
   flex-shrink: 0;
 }
 
 .profile-field-value {
-  color: var(--color-brand-text);
-  font-weight: 600;
+  color: var(--color-text-muted);
+  font-weight: 500;
   text-align: right;
   word-break: break-word;
 }
 
 .profile-field-value.not-provided {
-  color: var(--color-placeholder);
+  color: var(--color-text-soft);
   font-weight: 400;
   font-style: italic;
 }
@@ -257,10 +278,7 @@
 }
 
 .settings-layout {
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  gap: var(--spacing-xl);
-  align-items: start;
+  max-width: 720px;
 }
 
 .settings-nav {
@@ -477,45 +495,4 @@
   margin-top: 20px;
 }
 
-/* ── System preferences toggle rows ── */
-.pref-toggle-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: background 0.15s;
-  gap: 12px;
-}
 
-.pref-toggle-row:hover {
-  background: rgba(128, 128, 128, 0.05);
-}
-
-.pref-toggle-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--color-text);
-}
-
-.pref-checkbox {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--color-primary);
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-@media (max-width: 768px) {
-  .settings-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .settings-nav {
-    position: static;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 4px;
-  }
-}

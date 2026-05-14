@@ -1,7 +1,7 @@
 import { emissionService } from './api/emissionService.js';
 import { renderLayout } from './layout.js';
 
-const user = renderLayout({ activeNav: 'nav-insights', title: 'Akıllı AI Analizi' });
+const user = renderLayout({ activeNav: 'nav-insights' });
 if (!user) throw new Error('redirect');
 
 async function loadSmartInsights() {

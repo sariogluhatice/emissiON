@@ -1,6 +1,7 @@
 import { companyService } from './api/companyService.js';
 import { renderLayout }   from './layout.js';
 import { showToast, formatDate } from './utils/uiUtils.js';
+import { getCategoryLabelWithEmoji } from './utils/labelUtils.js';
 
 const user = renderLayout({ activeNav: 'nav-company', title: 'Şirket Görevleri' });
 if (!user) throw new Error('redirect');
@@ -31,18 +32,6 @@ const ctTaskCountEl  = document.getElementById('ctTaskCountEl');
 
 // ── Display constants ─────────────────────────────────────────────────────────
 const STATUS_LABELS  = { pending: 'Bekliyor', in_progress: 'Devam Ediyor', completed: 'Tamamlandı' };
-
-const EMISSION_CATEGORY_LABELS = {
-    energy:    '⚡ Enerji (Elektrik)',
-    water:     '💧 Su',
-    gas:       '🔥 Doğalgaz',
-    transport: '🚗 Ulaşım',
-    materials: '📦 Malzeme',
-    waste:     '♻️ Atık',
-    food:      '🍽️ Gıda',
-    shopping:  '🛒 Alışveriş',
-    other:     '📋 Diğer',
-};
 
 const PROG_COLORS = {
     on_track:    'var(--color-primary)',
@@ -109,7 +98,7 @@ function taskRow(t) {
 
     const dueDate = t.due_date ? formatDate(t.due_date) : '—';
     const category = t.emission_category
-        ? (EMISSION_CATEGORY_LABELS[t.emission_category] || t.emission_category)
+        ? getCategoryLabelWithEmoji(t.emission_category)
         : '—';
 
     const options = Object.entries(STATUS_LABELS).map(([v, l]) =>
@@ -139,7 +128,7 @@ function buildProgressCell(t) {
     }
 
     const pctHint = t.target_reduction_pct
-        ? `<div style="font-size:11px;color:var(--color-text-muted);margin-top:3px;">${EMISSION_CATEGORY_LABELS[t.emission_category] || t.emission_category} · %${parseFloat(t.target_reduction_pct)} hedef</div>`
+        ? `<div style="font-size:11px;color:var(--color-text-muted);margin-top:3px;">${getCategoryLabelWithEmoji(t.emission_category)} · %${parseFloat(t.target_reduction_pct)} hedef</div>`
         : '';
 
     // No baseline stored yet

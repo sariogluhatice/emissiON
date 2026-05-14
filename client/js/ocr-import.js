@@ -44,7 +44,7 @@ const CATEGORY_ACTIVITY = {
 // OCR ham kategori → sistem kategori + activityType dönüşümü
 const OCR_CATEGORY_MAP = {
   electricity: { category: 'energy', activityType: 'electricity' },
-  water:       { category: 'water',  activityType: 'water'       },
+  water:       { category: 'water',  activityType: 'water_usage' },
   natural_gas: { category: 'gas',    activityType: 'natural_gas' },
 };
 

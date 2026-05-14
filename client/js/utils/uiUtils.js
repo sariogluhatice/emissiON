@@ -110,6 +110,22 @@ export function calculateStats(records = []) {
   };
 }
 
+// ── Task workflow status helpers (shared by household.js + household-tasks.js) ─
+const _TASK_STATUS_LABELS = {
+  pending:     'Bekliyor',
+  in_progress: 'Devam Ediyor',
+  completed:   'Tamamlandı',
+  cancelled:   'İptal Edildi',
+};
+const _TASK_STATUS_CLASSES = {
+  pending:     'pending',
+  in_progress: 'in-progress',
+  completed:   'completed',
+  cancelled:   'cancelled',
+};
+export function getTaskStatusLabel(status) { return _TASK_STATUS_LABELS[status]  || status; }
+export function getTaskStatusClass(status) { return _TASK_STATUS_CLASSES[status] || 'pending'; }
+
 /** Modern Toast notification */
 export function showToast(title, message, type = 'success') {
   let container = document.querySelector('.toast-container');

@@ -433,15 +433,22 @@ const _addProgressToTasks = async (tasks, householdId) => {
 
     const progressById = {};
     trackingTasks.forEach(t => {
-        const catData = emMap[t.emission_category] || { total: 0, byUser: {} };
-        const current = t.assigned_to
-            ? (catData.byUser[t.assigned_to] || 0)
-            : catData.total;
+        // Resolve current emission — null means "no records this period" (≠ zero emission)
+        const catData = emMap[t.emission_category];
+        let current;
+        if (!catData) {
+            current = null;
+        } else if (t.assigned_to) {
+            const userAmt = catData.byUser[t.assigned_to];
+            current = userAmt !== undefined ? userAmt : null;
+        } else {
+            current = catData.total;
+        }
 
-        // No baseline/target yet — still show current data but skip target logic
+        // No baseline/target yet — skip target logic, still surface any current data
         if (t.target_amount == null) {
             progressById[t.id] = {
-                current_amount:  parseFloat(current.toFixed(2)),
+                current_amount:  current !== null ? parseFloat(current.toFixed(2)) : null,
                 progress_status: 'no_baseline',
             };
             return;
@@ -459,8 +466,8 @@ const _addProgressToTasks = async (tasks, householdId) => {
         const deadlinePassed = dueStr && dueStr < todayStr;
 
         let progress_status;
-        if (current === 0 && baseline !== null && baseline > 0) {
-            // No emission data entered yet this month — not the same as achieving the target
+        if (current === null) {
+            // No emission records entered yet this period — not the same as achieving target
             progress_status = 'no_data';
         } else if (current <= target) {
             progress_status = 'successful';
@@ -474,7 +481,7 @@ const _addProgressToTasks = async (tasks, householdId) => {
         }
 
         progressById[t.id] = {
-            current_amount:  parseFloat(current.toFixed(2)),
+            current_amount:  current !== null ? parseFloat(current.toFixed(2)) : null,
             progress_status,
         };
     });
@@ -510,7 +517,7 @@ const getTasks = async (householdId) => {
  * are admin-only.
  */
 const updateTaskStatus = async (householdId, taskId, status, userId, memberRole) => {
-    const VALID = ['pending', 'in_progress', 'completed'];
+    const VALID = ['pending', 'in_progress', 'completed', 'cancelled'];
     if (!VALID.includes(status)) _fail(400, `Geçersiz durum. İzin verilenler: ${VALID.join(', ')}.`);
 
     if (memberRole !== 'admin') {

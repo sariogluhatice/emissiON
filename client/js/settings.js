@@ -29,23 +29,6 @@ function forceLogout() {
   window.location.replace('login.html');
 }
 
-// ── Settings nav highlight on scroll ─────────────────────────────────────────
-
-const sections = document.querySelectorAll('.settings-section');
-const navItems = document.querySelectorAll('.settings-nav-item');
-
-const observer = new IntersectionObserver(entries => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      navItems.forEach(a => a.classList.remove('active'));
-      const active = document.querySelector(`.settings-nav-item[href="#${entry.target.id}"]`);
-      if (active) active.classList.add('active');
-    }
-  });
-}, { threshold: 0.4 });
-
-sections.forEach(s => observer.observe(s));
-
 // Handle anchor in URL (e.g. settings.html#carbon-profile)
 if (window.location.hash) {
   const target = document.querySelector(window.location.hash);

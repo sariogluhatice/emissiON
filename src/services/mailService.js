@@ -22,10 +22,10 @@ if (isMailConfigured) {
 
 const sendVerificationEmail = async (email, code) => {
     if (!transporter) {
-        console.warn('--- [MOCK MAIL SERVICE] ---');
+        console.warn('--- [MOCK MAIL: no SMTP configured] ---');
         console.warn(`To: ${email}`);
         console.warn(`Verification Code: ${code}`);
-        console.warn('---------------------------');
+        console.warn('---------------------------------------');
         return;
     }
 
@@ -52,18 +52,20 @@ const sendVerificationEmail = async (email, code) => {
             `,
         });
     } catch (err) {
-        console.error('[sendVerificationEmail] Error:', err.message);
-        // We don't want to crash the whole register process if mail fails
-        // but it's good to know it failed.
+        console.error('[sendVerificationEmail] SMTP send failed:', err.message);
+        console.warn('--- [DEV FALLBACK: use this code manually] ---');
+        console.warn(`To: ${email}`);
+        console.warn(`Verification Code: ${code}`);
+        console.warn('----------------------------------------------');
     }
 };
 
 const sendPasswordResetEmail = async (email, resetLink) => {
     if (!transporter) {
-        console.warn('--- [MOCK MAIL SERVICE] ---');
+        console.warn('--- [MOCK MAIL: no SMTP configured] ---');
         console.warn(`To: ${email}`);
         console.warn(`Reset Link: ${resetLink}`);
-        console.warn('---------------------------');
+        console.warn('---------------------------------------');
         return;
     }
 
@@ -95,7 +97,11 @@ const sendPasswordResetEmail = async (email, resetLink) => {
             `,
         });
     } catch (err) {
-        console.error('[sendPasswordResetEmail] Error:', err.message);
+        console.error('[sendPasswordResetEmail] SMTP send failed:', err.message);
+        console.warn('--- [DEV FALLBACK: open this link manually] ---');
+        console.warn(`To: ${email}`);
+        console.warn(`Reset Link: ${resetLink}`);
+        console.warn('------------------------------------------------');
     }
 };
 
@@ -132,7 +138,11 @@ const sendEmailChangeVerification = async (newEmail, code) => {
             `,
         });
     } catch (err) {
-        console.error('[sendEmailChangeVerification] Error:', err.message);
+        console.error('[sendEmailChangeVerification] SMTP send failed:', err.message);
+        console.warn('--- [DEV FALLBACK: email change code] ---');
+        console.warn(`To: ${newEmail}`);
+        console.warn(`Code: ${code}`);
+        console.warn('-----------------------------------------');
     }
 };
 
@@ -169,7 +179,11 @@ const sendPasswordChangeVerification = async (email, code) => {
             `,
         });
     } catch (err) {
-        console.error('[sendPasswordChangeVerification] Error:', err.message);
+        console.error('[sendPasswordChangeVerification] SMTP send failed:', err.message);
+        console.warn('--- [DEV FALLBACK: password change code] ---');
+        console.warn(`To: ${email}`);
+        console.warn(`Code: ${code}`);
+        console.warn('--------------------------------------------');
     }
 };
 

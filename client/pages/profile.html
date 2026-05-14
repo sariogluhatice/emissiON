@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Profilim – emissiON</title>
+    <title>Profil – emissiON</title>
     <link rel="stylesheet" href="../css/main.css" />
   </head>
   <body>
@@ -14,8 +14,8 @@
         <div class="bg-decorative-element">
           <img
             src="../assets/login-visual.png"
-            alt="Profil"
-            style="opacity: 0.07; filter: blur(30px)"
+            alt="Profil Simülasyonu"
+            style="opacity: 0.1; filter: blur(30px)"
           />
         </div>
 
@@ -23,14 +23,16 @@
 
         <main class="page-body">
           <div class="page-header">
-            <h1>Hesap Merkezi</h1>
-            <p>Profil bilgilerin, güvenlik ayarların ve sistem tercihlerini buradan yönet.</p>
+            <h1>Profilim</h1>
+            <p>Hesap detaylarınız ve kişisel karbon ayak izi simülasyonunuz.</p>
           </div>
 
-          <!-- ── Üst: Kimlik Kartı + Genel Bakış ── -->
-          <div class="profile-grid" style="margin-bottom: 24px;">
-            <!-- Kimlik kartı -->
-            <div class="profile-identity-card glass-card">
+          <div class="profile-grid">
+            <!-- Sol Panel -->
+            <div class="profile-identity-card glass-card" style="position: relative;">
+              <a href="settings.html" class="profile-settings-btn" aria-label="Sistem Ayarları">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              </a>
               <div class="profile-avatar-circle" id="profileAvatar">?</div>
               <div class="profile-name" id="profileName">—</div>
               <div class="profile-email" id="profileEmail">—</div>
@@ -38,193 +40,47 @@
               <div class="profile-since" id="profileSince">—</div>
               <div class="profile-ob-badge" id="obStatusBadge">—</div>
               <div class="profile-identity-actions">
-                <a href="carbon-profile.html" class="btn-secondary" style="width:100%">Karbon Profilini Düzenle</a>
+                <a href="settings.html" class="btn-primary" style="width: 100%; margin-bottom: 8px">Profili Düzenle</a>
+                <a href="carbon-profile.html" class="btn-secondary" style="width: 100%">Karbon Profilini Düzenle</a>
               </div>
             </div>
 
-            <!-- Genel bakış istatistikler -->
+            <!-- Sağ Panel -->
             <div>
-              <div class="content-card glass-card" style="margin-bottom: 0;">
+              <div class="content-card glass-card" style="margin-bottom: 24px">
                 <div class="content-card-header">
                   <span class="content-card-title">Genel Bakış</span>
                 </div>
-                <div class="card-grid" style="margin-bottom: 0;">
-                  <div class="stat-card glass-card" style="border-left: 3px solid var(--color-primary);">
+                <div class="card-grid" style="margin-bottom: 0">
+                  <div class="stat-card glass-card" style="border-left: 3px solid var(--color-primary)">
                     <span class="stat-label">Toplam Emisyon</span>
                     <span class="stat-value" id="profileStatTotal">—</span>
                     <span class="stat-unit">kg CO₂e</span>
                   </div>
-                  <div class="stat-card glass-card" style="border-left: 3px solid var(--color-success);">
+                  <div class="stat-card glass-card" style="border-left: 3px solid var(--color-success)">
                     <span class="stat-label">Bu Ay</span>
                     <span class="stat-value" id="profileStatMonth">—</span>
                     <span class="stat-unit">kg CO₂e</span>
                   </div>
-                  <div class="stat-card glass-card" style="border-left: 3px solid var(--color-text-muted);">
+                  <div class="stat-card glass-card" style="border-left: 3px solid var(--color-text-muted)">
                     <span class="stat-label">Toplam Kayıt</span>
                     <span class="stat-value" id="profileStatEntries">—</span>
                     <span class="stat-unit">kayıt</span>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <!-- ── Profil Bilgileri ── -->
-          <div class="content-card glass-card" id="profile-info" style="margin-bottom: 24px;">
-            <div class="content-card-header">
-              <span class="content-card-title">Profil Bilgileri</span>
-            </div>
-            <form id="editNameForm" novalidate style="max-width: 480px; padding: 0 0 8px;">
-              <div class="form-group">
-                <label class="label" for="editName">Tam Adınız</label>
-                <input class="input" type="text" id="editName" autocomplete="name" placeholder="Adınızı ve soyadınızı girin" />
-              </div>
-              <div class="form-group">
-                <label class="label">E-posta</label>
-                <input class="input" type="email" id="editEmailDisplay" disabled style="opacity:0.6; cursor:not-allowed;" />
-                <span style="font-size:12px; color:var(--color-text-muted); margin-top:4px; display:block;">E-posta değiştirmek için güvenlik doğrulaması gerekir.</span>
-              </div>
-              <p class="api-message" id="editNameMsg"></p>
-              <button type="submit" class="btn-primary" id="saveNameBtn" style="width:auto; padding: 10px 24px;">İsmi Kaydet</button>
-            </form>
-          </div>
-
-          <!-- ── Güvenlik / Şifre Değiştir ── -->
-          <div class="content-card glass-card" id="security" style="margin-bottom: 24px;">
-            <div class="content-card-header">
-              <span class="content-card-title">Güvenlik</span>
-            </div>
-            <form id="changePasswordForm" novalidate style="max-width: 480px; padding: 0 0 8px;">
-              <div class="form-group">
-                <label class="label" for="currentPassword">Mevcut Parola</label>
-                <div class="password-wrapper">
-                  <input class="input" type="password" id="currentPassword" placeholder="Mevcut parolanızı girin" autocomplete="current-password" />
-                  <button type="button" class="password-toggle-btn" data-target="currentPassword" aria-label="Parolayı göster">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  </button>
-                </div>
-                <span class="error-msg" id="currentPasswordError"></span>
-              </div>
-              <div class="form-group">
-                <label class="label" for="newPassword">Yeni Parola</label>
-                <div class="password-wrapper">
-                  <input class="input" type="password" id="newPassword" placeholder="Yeni parola oluşturun" autocomplete="new-password" />
-                  <button type="button" class="password-toggle-btn" data-target="newPassword" aria-label="Parolayı göster">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  </button>
-                </div>
-                <span class="error-msg" id="newPasswordError"></span>
-              </div>
-              <div class="form-group">
-                <label class="label" for="confirmNewPassword">Yeni Parolayı Onayla</label>
-                <div class="password-wrapper">
-                  <input class="input" type="password" id="confirmNewPassword" placeholder="Yeni parolayı onaylayın" autocomplete="new-password" />
-                  <button type="button" class="password-toggle-btn" data-target="confirmNewPassword" aria-label="Parolayı göster">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  </button>
-                </div>
-                <span class="error-msg" id="confirmNewPasswordError"></span>
-              </div>
-              <p class="api-message" id="changePasswordMsg"></p>
-              <button type="submit" class="btn-primary" id="changePasswordBtn" style="width:auto; padding: 10px 24px;">Parolayı Güncelle</button>
-            </form>
-          </div>
-
-          <!-- ── Karbon Profili Bölümü ── -->
-          <div class="content-card glass-card" id="carbon-profile-section" style="margin-bottom: 24px;">
-            <div class="content-card-header">
-              <span class="content-card-title">Karbon Profili</span>
-              <a href="carbon-profile.html" class="profile-retake-link" style="margin-left:auto; font-size:13px; color:var(--color-primary); text-decoration:none; font-weight:600;">Profili Düzenle →</a>
-            </div>
-            <div id="carbonProfileContainer">
-              <div class="content-card" style="text-align:center; padding:40px; opacity:0.6;">
-                Karbon profili verileri yükleniyor…
-              </div>
-            </div>
-          </div>
-
-          <!-- ── Sistem Ayarları ── -->
-          <div class="content-card glass-card" id="system-preferences" style="margin-bottom: 24px;">
-            <div class="content-card-header">
-              <span class="content-card-title">Sistem Ayarları</span>
-            </div>
-
-            <div style="padding: 4px 0 16px; display: flex; flex-direction: column; gap: 24px; max-width: 560px;">
-
-              <!-- Bildirim Tercihleri -->
-              <div>
-                <div style="font-size:13px; font-weight:700; color:var(--color-text); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.06em; opacity:0.7;">Bildirim Tercihleri</div>
-                <div style="display:flex; flex-direction:column; gap:10px;">
-                  <label class="pref-toggle-row">
-                    <span class="pref-toggle-label">Görev Bildirimleri</span>
-                    <input type="checkbox" class="pref-checkbox" data-pref="notif_tasks" id="prefNotifTasks" />
-                  </label>
-                  <label class="pref-toggle-row">
-                    <span class="pref-toggle-label">Hedef Hatırlatmaları</span>
-                    <input type="checkbox" class="pref-checkbox" data-pref="notif_goals" id="prefNotifGoals" />
-                  </label>
-                  <label class="pref-toggle-row">
-                    <span class="pref-toggle-label">Sistem Mesajları</span>
-                    <input type="checkbox" class="pref-checkbox" data-pref="notif_system" id="prefNotifSystem" />
-                  </label>
+              <div id="carbonProfileContainer">
+                <div class="content-card glass-card" style="text-align: center; padding: 48px; opacity: 0.6">
+                  Karbon profili verileri simülasyondan çekiliyor…
                 </div>
               </div>
-
-              <!-- Dil Tercihi -->
-              <div>
-                <div style="font-size:13px; font-weight:700; color:var(--color-text); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.06em; opacity:0.7;">Dil</div>
-                <select class="input" id="prefLanguage" data-pref="language" style="max-width:240px;">
-                  <option value="tr">Türkçe</option>
-                  <option value="en">English</option>
-                </select>
-              </div>
-
-              <!-- Birim Tercihi -->
-              <div>
-                <div style="font-size:13px; font-weight:700; color:var(--color-text); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.06em; opacity:0.7;">Birim Tercihi</div>
-                <select class="input" id="prefUnit" data-pref="unit" style="max-width:240px;">
-                  <option value="kg_co2e">kg CO₂e</option>
-                  <option value="kwh">kWh</option>
-                  <option value="m3">m³</option>
-                </select>
-              </div>
-
-              <!-- Tema -->
-              <div>
-                <div style="font-size:13px; font-weight:700; color:var(--color-text); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.06em; opacity:0.7;">Tema</div>
-                <div style="font-size:13px; color:var(--color-text-muted);">Karanlık mod aktif — uygulama sabit karanlık temada çalışmaktadır.</div>
-              </div>
-
-              <!-- Veri & Gizlilik -->
-              <div style="padding: 16px; background: rgba(128,128,128,0.04); border-radius: var(--radius-md); border: 1px solid var(--color-border);">
-                <div style="font-size:13px; font-weight:600; color:var(--color-text); margin-bottom:6px;">Veri ve Gizlilik</div>
-                <div style="font-size:13px; color:var(--color-text-muted); line-height:1.6;">Verileriniz yalnızca karbon ayak izi hesaplamaları için kullanılır ve üçüncü taraflarla paylaşılmaz. Hesabınızı silmek veya verilerinizi dışa aktarmak için destek ekibiyle iletişime geçin.</div>
-              </div>
-
-              <p class="api-message" id="prefsMsg"></p>
-              <button class="btn-primary" id="savePrefsBtn" style="width:auto; padding: 10px 24px;">Tercihleri Kaydet</button>
             </div>
           </div>
-
         </main>
       </div>
     </div>
 
     <script type="module" src="../js/profile.js"></script>
-    <script>
-      /* Password toggle for profile security section */
-      document.querySelectorAll('.password-toggle-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const input = document.getElementById(btn.dataset.target);
-          if (!input) return;
-          const isHidden = input.type === 'password';
-          input.type = isHidden ? 'text' : 'password';
-          btn.setAttribute('aria-label', isHidden ? 'Parolayı gizle' : 'Parolayı göster');
-          btn.querySelector('svg').innerHTML = isHidden
-            ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>'
-            : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
-        });
-      });
-    </script>
   </body>
 </html>

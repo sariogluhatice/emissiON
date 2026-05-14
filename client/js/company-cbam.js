@@ -1,6 +1,7 @@
 import { companyService } from './api/companyService.js';
 import { renderLayout }   from './layout.js';
 import { showToast }      from './utils/uiUtils.js';
+import { getCategoryLabelWithEmoji, CBAM_SECTOR_LABELS, RISK_LABELS, RISK_COLORS } from './utils/labelUtils.js';
 
 const user = renderLayout({ activeNav: 'nav-company', title: 'CBAM / Vergi Hesabı' });
 if (!user) throw new Error('redirect');
@@ -39,30 +40,6 @@ const entryCountEl     = document.getElementById('entryCountEl');
 const entriesContainer = document.getElementById('entriesContainer');
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const EMISSION_CATEGORY_LABELS = {
-    energy:    '⚡ Enerji (Elektrik)',
-    water:     '💧 Su',
-    gas:       '🔥 Doğalgaz',
-    transport: '🚗 Ulaşım',
-    materials: '📦 Malzeme',
-    waste:     '♻️ Atık',
-    food:      '🍽️ Gıda',
-    shopping:  '🛒 Alışveriş',
-    other:     '📋 Diğer',
-};
-
-const CBAM_CATEGORY_LABELS = {
-    iron_steel:  '🏗️ Demir ve Çelik',
-    aluminium:   '⚙️ Alüminyum',
-    cement:      '🏢 Çimento',
-    fertiliser:  '🌱 Gübre',
-    hydrogen:    '⚗️ Hidrojen',
-    electricity: '⚡ Elektrik',
-    other:       '📦 Diğer',
-};
-
-const RISK_LABELS = { low: 'Düşük', medium: 'Orta', high: 'Yüksek', critical: 'Kritik' };
-const RISK_COLORS = { low: '#16a34a', medium: '#f59e0b', high: '#dc2626', critical: '#7c3aed' };
 const RISK_THRESHOLDS = { medium: 10000, high: 50000, critical: 200000 };
 
 // ── Pagination state ──────────────────────────────────────────────────────────
@@ -124,7 +101,7 @@ function renderCategories(categories, totalTco2) {
     }
 
     cbamCategoryContainer.innerHTML = categories.map(c => {
-        const label    = EMISSION_CATEGORY_LABELS[c.category] || c.category;
+        const label    = getCategoryLabelWithEmoji(c.category);
         const sharePct = c.share_pct ?? (totalTco2 > 0 ? c.total_tco2 / totalTco2 * 100 : 0);
         return `
           <div style="margin-bottom:14px;">
@@ -324,7 +301,7 @@ function entryRow(e) {
         : `<div style="font-size:11px;color:var(--color-text-muted);">AB: €${parseFloat(e.carbon_price).toFixed(2)}</div>`;
     const notesHtml   = e.notes ? `<div style="font-size:11px;color:var(--color-text-muted);margin-top:2px;">${e.notes}</div>` : '';
     const regionHtml  = e.destination_region ? `<span style="font-size:12px;">${e.destination_region}</span>` : '—';
-    const displayName = CBAM_CATEGORY_LABELS[e.export_category] || e.export_category;
+    const displayName = CBAM_SECTOR_LABELS[e.export_category] || e.export_category;
     const periodEnd   = e.period_end ? ` – ${formatPeriod(e.period_end)}` : '';
 
     return `

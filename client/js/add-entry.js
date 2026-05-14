@@ -13,7 +13,7 @@ const isEditMode = !!editId;
 
 const user = renderLayout({
   activeNav: "nav-add",
-  title: isEditMode ? "Kaydı Düzenle" : "Yeni Kayıt Ekle",
+  title: isEditMode ? "Kaydı Düzenle" : undefined,
 });
 if (!user) throw new Error("redirect");
 
@@ -290,6 +290,15 @@ if (isEditMode) {
       showToast("Hata", err.message || "Kayıt yüklenemedi.", "error");
     }
   })();
+}
+
+// ── Category prefill from ?category= param (e.g. task CTA redirect) ──────────
+if (!isEditMode) {
+  const prefillCat = _urlParams.get('category');
+  if (prefillCat && categoryEl.querySelector(`option[value="${prefillCat}"]`)) {
+    categoryEl.value = prefillCat;
+    onCategoryChange();
+  }
 }
 
 // ── Method switching ──────────────────────────────────────────────────────────

@@ -2,101 +2,15 @@ import { emissionService } from './api/emissionService.js';
 import { householdService } from './api/householdService.js';
 import { renderLayout } from './layout.js';
 import { formatDate } from './utils/uiUtils.js';
+import {
+  CATEGORY_LABELS,
+  getCategoryKey,
+  getCategoryLabel,
+  getActivityTypeLabelFromRecord as getActivityTypeLabel,
+} from './utils/labelUtils.js';
 
-const user = renderLayout({ activeNav: 'nav-emissions', title: 'Emisyon Kayıtları' });
+const user = renderLayout({ activeNav: 'nav-emissions' });
 if (!user) throw new Error('redirect');
-
-// --- Merkezi Label Mapping ---
-
-const CATEGORY_LABELS = {
-  energy:    'Enerji',
-  water:     'Su',
-  gas:       'Doğalgaz',
-  transport: 'Ulaşım',
-  materials: 'Malzeme',
-  waste:     'Atık',
-  food:      'Gıda',
-  other:     'Diğer / Alışveriş',
-};
-
-const ACTIVITY_TYPE_LABELS = {
-  electricity:   'Elektrik',
-  natural_gas:   'Doğalgaz',
-  gasoline_car:  'Benzinli Araç',
-  diesel_car:    'Dizel Araç',
-  waste_general: 'Genel Atık',
-  shopping:      'Alışveriş',
-  food:          'Gıda',
-  water:         'Su',
-  beef_red_meat: 'Sığır / Kırmızı Et',
-  chicken:       'Tavuk',
-  vegetables:    'Sebze',
-  rice_grains:   'Pirinç / Tahıl',
-  food_general:  'Genel Gıda',
-  meat:          'Et Tüketimi',
-};
-
-// source label (DB'deki değer) → category key eşlemesi
-const SOURCE_TO_CATEGORY = {
-  'Elektrik':                    'energy',
-  'Su Kullanımı':                'water',
-  'Doğalgaz':                    'gas',
-  'Benzinli Araç':               'transport',
-  'Dizel Araç':                  'transport',
-  'Otobüs':                      'transport',
-  'Kağıt':                       'materials',
-  'Plastik / Ambalaj (Harcama)': 'materials',
-  'Genel Atık':                  'waste',
-  'Gıda Harcaması':              'food',
-  'Sığır / Kırmızı Et':         'food',
-  'Tavuk':                       'food',
-  'Sebze':                       'food',
-  'Pirinç / Tahıl':              'food',
-  'Genel Gıda':                  'food',
-  'Et Tüketimi':                 'food',
-  // shopping — yeni ve eski kayıtlar
-  'Genel Alışveriş':             'shopping',
-  'Genel Perakende / Alışveriş': 'shopping',
-  'Ofis Malzemeleri':            'shopping',
-  'Elektronik':                  'shopping',
-  'shopping':                    'shopping',
-  'other':                       'shopping',
-  'Diğer':                       'shopping',
-};
-
-/** Kayıttan category key türet */
-function getCategoryKey(record) {
-  if (record.category && CATEGORY_LABELS[record.category]) return record.category;
-
-  const src = record.source || '';
-
-  if (SOURCE_TO_CATEGORY[src]) return SOURCE_TO_CATEGORY[src];
-
-  // Kayıt zaten kategori key ise (energy, gas, ...)
-  if (CATEGORY_LABELS[src]) return src;
-
-  // Kelime bazlı fallback
-  const lower = src.toLowerCase();
-  if (lower.includes('uçuş') || lower.includes('flight') || lower.includes('araç') || lower.includes('otobüs') || lower.includes('bus')) return 'transport';
-  if (lower.includes('elektrik') || lower.includes('electricity'))    return 'energy';
-  if (lower.includes('su') || lower.includes('water'))                return 'water';
-  if (lower.includes('doğalgaz') || lower.includes('gaz') || lower.includes('gas')) return 'gas';
-  if (lower.includes('atık') || lower.includes('waste'))              return 'waste';
-  if (lower.includes('gıda') || lower.includes('food'))               return 'food';
-  if (lower.includes('kağıt') || lower.includes('paper') || lower.includes('plastik') || lower.includes('malzeme')) return 'materials';
-  if (lower.includes('alışveriş') || lower.includes('shop') || lower.includes('retail')) return 'shopping';
-
-  return 'shopping';
-}
-
-/** Faaliyet Türü görüntü değerini döndür */
-function getActivityTypeLabel(record) {
-  if (record.activity_type) {
-    return ACTIVITY_TYPE_LABELS[record.activity_type] || record.activity_type;
-  }
-  // source zaten Türkçe etiket; doğrudan göster
-  return record.source || '—';
-}
 
 function escapeHtml(str) {
   return String(str)
@@ -197,7 +111,7 @@ function render() {
 
   tbody.innerHTML = filtered.map(record => {
     const catKey   = getCategoryKey(record);
-    const catLabel = CATEGORY_LABELS[catKey] || catKey || '—';
+    const catLabel = getCategoryLabel(catKey);
     const actLabel = getActivityTypeLabel(record);
 
     const commentBtn = user.role === 'household'

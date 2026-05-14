@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gelecek Ay Planlayıcısı | emissiON</title>
+    <title>Gelecek Ay Planlayıcısı – emissiON</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -31,49 +31,104 @@
               <div class="content-card glass-card planner-card">
                 <div class="planner-header">
                   <div class="planner-title">
-                    <span>Gelecek Ay Planlayıcısı</span>
+                    <span>Azaltım Senaryosu</span>
                   </div>
-                  <p style="font-size: 13px; color: var(--color-text-muted); margin: 8px 0 0">
-                    Önümüzdeki ay için yaşam tarzındaki değişimleri simüle et.
-                  </p>
                 </div>
 
-                <div class="planner-body" id="actionsContainer" style="max-height: 520px; overflow-y: auto;">
+                <div
+                  class="planner-body"
+                  id="actionsContainer"
+                  style="max-height: 520px; overflow-y: auto"
+                >
                   <!-- Action cards will be injected here by JS -->
-                  <div class="loader-placeholder" style="padding: 40px; text-align: center; color: var(--color-text-muted)">
+                  <div
+                    class="loader-placeholder"
+                    style="
+                      padding: 40px;
+                      text-align: center;
+                      color: var(--color-text-muted);
+                    "
+                  >
                     Aksiyonlar yükleniyor...
                   </div>
                 </div>
 
-                <div style="padding: 24px; border-top: 1px solid rgba(255, 255, 255, 0.05); background: rgba(0,0,0,0.1)">
-                   <div class="summary-section">
-                      <div class="summary-stat">
-                        <span class="summary-stat-label">Mevcut Ortalama</span>
-                        <div class="summary-stat-value" id="currentTotalVal">0.0</div>
-                        <span class="summary-stat-unit">kg CO₂e</span>
+                <div
+                  style="
+                    padding: 24px;
+                    border-top: 1px solid rgba(255, 255, 255, 0.05);
+                    background: rgba(0, 0, 0, 0.1);
+                  "
+                >
+                  <div class="summary-section">
+                    <div class="summary-stat">
+                      <span class="summary-stat-label">Mevcut Ortalama</span>
+                      <div class="summary-stat-value" id="currentTotalVal">
+                        0.0
                       </div>
-                      <div class="summary-stat" style="border-color: var(--color-primary)">
-                        <span class="summary-stat-label">Projeksiyon</span>
-                        <div class="summary-stat-value" id="projectedTotalVal" style="color: var(--color-primary)">0.0</div>
-                        <span class="summary-stat-unit">kg CO₂e</span>
+                      <span class="summary-stat-unit">kg CO₂e</span>
+                    </div>
+                    <div
+                      class="summary-stat"
+                      style="border-color: var(--color-primary)"
+                    >
+                      <span class="summary-stat-label">Projeksiyon</span>
+                      <div
+                        class="summary-stat-value"
+                        id="projectedTotalVal"
+                        style="color: var(--color-primary)"
+                      >
+                        0.0
                       </div>
-                   </div>
-                   
-                   <button id="resetBtn" class="btn-secondary" style="width: 100%; margin-top: 16px; padding: 12px; font-weight: 600">
-                     Sıfırla
-                   </button>
+                      <span class="summary-stat-unit">kg CO₂e</span>
+                    </div>
+                  </div>
+
+                  <button
+                    id="resetBtn"
+                    class="btn-secondary"
+                    style="
+                      width: 100%;
+                      margin-top: 16px;
+                      padding: 12px;
+                      font-weight: 600;
+                    "
+                  >
+                    Sıfırla
+                  </button>
                 </div>
               </div>
-              
-              <div id="targetGoalCard" class="content-card glass-card" style="margin-top: 24px; padding: 20px; border-left: 4px solid var(--color-primary)">
-                 <h4 id="targetGoalTitle" style="margin: 0 0 10px; font-size: 15px">Hedef Belirleme</h4>
-                 <p id="targetGoalText" style="font-size: 13px; color: var(--color-text-muted); line-height: 1.6; margin: 0">
-                   Türkiye ortalaması aylık <strong>450 kg CO₂e</strong>'dir. 
-                   Yeşil bir dünya için hedefiniz bu değerin altında kalmak olmalı. 
-                   Özellikle ulaşım ve enerji alanındaki küçük değişimler büyük farklar yaratır.
-                 </p>
-              </div>
 
+              <div
+                id="targetGoalCard"
+                class="content-card glass-card"
+                style="
+                  margin-top: 24px;
+                  padding: 20px;
+                  border-left: 4px solid var(--color-primary);
+                "
+              >
+                <h4
+                  id="targetGoalTitle"
+                  style="margin: 0 0 10px; font-size: 15px"
+                >
+                  Hedef Belirleme
+                </h4>
+                <p
+                  id="targetGoalText"
+                  style="
+                    font-size: 13px;
+                    color: var(--color-text-muted);
+                    line-height: 1.6;
+                    margin: 0;
+                  "
+                >
+                  Türkiye ortalaması aylık <strong>450 kg CO₂e</strong>'dir.
+                  Yeşil bir dünya için hedefiniz bu değerin altında kalmak
+                  olmalı. Özellikle ulaşım ve enerji alanındaki küçük değişimler
+                  büyük farklar yaratır.
+                </p>
+              </div>
             </div>
 
             <!-- SAĞ: Görsel Karşılaştırma -->
@@ -86,39 +141,159 @@
               <div class="globe-pair">
                 <!-- Mevcut Durum (Küçük/Sol) -->
                 <div class="globe-box current" id="globeCurrentBox">
-                  <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--color-text-muted); display: block; margin-bottom: 8px">Şu Anki Gidişat</span>
-                  <div id="globeCurrentContainer" style="width: 220px; height: 220px"></div>
+                  <span
+                    style="
+                      font-size: 11px;
+                      font-weight: 700;
+                      text-transform: uppercase;
+                      color: var(--color-text-muted);
+                      display: block;
+                      margin-bottom: 8px;
+                    "
+                    >Şu Anki Gidişat</span
+                  >
+                  <div
+                    id="globeCurrentContainer"
+                    style="width: 220px; height: 220px"
+                  ></div>
                 </div>
 
-                <div style="font-size: 24px; opacity: 0.3; margin: 0 -20px; z-index: 5">➜</div>
+                <div
+                  style="
+                    font-size: 24px;
+                    opacity: 0.3;
+                    margin: 0 -20px;
+                    z-index: 5;
+                  "
+                >
+                  ➜
+                </div>
 
                 <!-- Simülasyon (Büyük/Merkez) -->
                 <div class="globe-box future" id="globeFutureBox">
-                  <span style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--color-primary); display: block; margin-bottom: 8px">Planlanan Gelecek</span>
-                  <div id="globeSimContainer" style="width: 440px; height: 440px"></div>
-                  <div id="globeSimLabel" style="font-weight: 700; font-size: 16px; margin-top: 10px">Yükleniyor...</div>
+                  <span
+                    style="
+                      font-size: 12px;
+                      font-weight: 700;
+                      text-transform: uppercase;
+                      color: var(--color-primary);
+                      display: block;
+                      margin-bottom: 8px;
+                    "
+                    >Planlanan Gelecek</span
+                  >
+                  <div
+                    id="globeSimContainer"
+                    style="width: 440px; height: 440px"
+                  ></div>
+                  <div
+                    id="globeSimLabel"
+                    style="font-weight: 700; font-size: 16px; margin-top: 10px"
+                  >
+                    Yükleniyor...
+                  </div>
                 </div>
               </div>
 
-              <div id="comparisonText" style="margin-top: 20px; text-align: center; max-width: 500px; font-size: 14px; color: var(--color-text-muted)">
+              <div
+                id="comparisonText"
+                style="
+                  margin-top: 20px;
+                  text-align: center;
+                  max-width: 500px;
+                  font-size: 14px;
+                  color: var(--color-text-muted);
+                "
+              >
                 Parametreleri değiştirerek gelecekteki etkinizi görün.
               </div>
 
-              <div id="aiPlannerCard" class="content-card glass-card" style="margin-top: 32px; padding: 24px; border-left: 4px solid #3b82f6; width: 100%; max-width: 620px; text-align: left;">
-                 <h4 style="margin: 0 0 10px; font-size: 15px; color: #3b82f6; display: flex; align-items: center; gap: 8px;">
-                   <span>Yapay Zeka Azaltım Yol Haritası</span>
-                 </h4>
-                 <p style="font-size: 13px; color: var(--color-text-muted); line-height: 1.6; margin: 0 0 16px;">
-                   Kategori bazlı azalttığınız karbon oranlarına göre size özel pratik, teknik adımları içeren yapay zeka yol haritasını anında oluşturun.
-                 </p>
-                 <div id="aiPlannerContent" style="display: none; background: rgba(255,255,255,0.02); border-radius: 8px; padding: 16px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 16px; max-height: 250px; overflow-y: auto;">
-                    <ul id="aiPlannerSteps" style="margin: 0; padding-left: 20px; font-size: 12px; color: var(--color-text); line-height: 1.8;">
-                      <!-- AI Adımları yüklenecek -->
-                    </ul>
-                 </div>
-                 <button id="getAiRoadmapBtn" class="btn-primary" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: none; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer;">
-                   <span>Yol Haritası Üret</span>
-                 </button>
+              <div
+                id="aiPlannerCard"
+                class="content-card glass-card"
+                style="
+                  margin-top: 32px;
+                  padding: 24px;
+                  border-left: 4px solid #3b82f6;
+                  width: 100%;
+                  max-width: 620px;
+                  text-align: left;
+                "
+              >
+                <h4
+                  style="
+                    margin: 0 0 10px;
+                    font-size: 15px;
+                    color: #3b82f6;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                  "
+                >
+                  <span>Yapay Zeka Azaltım Yol Haritası</span>
+                </h4>
+                <p
+                  style="
+                    font-size: 13px;
+                    color: var(--color-text-muted);
+                    line-height: 1.6;
+                    margin: 0 0 16px;
+                  "
+                >
+                  Kategori bazlı azalttığınız karbon oranlarına göre size özel
+                  pratik, teknik adımları içeren yapay zeka yol haritasını
+                  anında oluşturun.
+                </p>
+                <div
+                  id="aiPlannerContent"
+                  style="
+                    display: none;
+                    background: rgba(255, 255, 255, 0.02);
+                    border-radius: 8px;
+                    padding: 16px;
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    margin-bottom: 16px;
+                    max-height: 250px;
+                    overflow-y: auto;
+                  "
+                >
+                  <ul
+                    id="aiPlannerSteps"
+                    style="
+                      margin: 0;
+                      padding-left: 20px;
+                      font-size: 12px;
+                      color: var(--color-text);
+                      line-height: 1.8;
+                    "
+                  >
+                    <!-- AI Adımları yüklenecek -->
+                  </ul>
+                </div>
+                <button
+                  id="getAiRoadmapBtn"
+                  class="btn-primary"
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      #3b82f6 0%,
+                      #1d4ed8 100%
+                    );
+                    border: none;
+                    width: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    font-size: 13px;
+                    padding: 12px;
+                    border-radius: 10px;
+                    font-weight: 600;
+                    cursor: pointer;
+                  "
+                >
+                  <span>Yol Haritası Üret</span>
+                </button>
               </div>
             </div>
           </div>
@@ -127,56 +302,114 @@
     </div>
 
     <!-- Add as Household Task modal — visible only to household admins after roadmap generation -->
-    <div id="addTaskModal" class="modal-backdrop" style="display:none;">
-      <div class="modal-box glass-card" style="max-width:480px;">
+    <div id="addTaskModal" class="modal-backdrop" style="display: none">
+      <div class="modal-box glass-card" style="max-width: 480px">
         <h2 class="modal-title">Hane Görevi Ekle</h2>
-        <p style="font-size:13px;color:var(--color-text-muted);margin:0 0 16px;">
+        <p
+          style="
+            font-size: 13px;
+            color: var(--color-text-muted);
+            margin: 0 0 16px;
+          "
+        >
           Bu AI önerisini emisyon takipli bir hane görevine dönüştürün.
         </p>
 
         <input type="hidden" id="taskModalCategoryKey" />
 
-        <div style="margin-bottom:12px;">
-          <label class="label" style="font-size:13px;display:block;margin-bottom:4px;">Kategori</label>
-          <div id="taskModalCategoryLabel"
-               style="font-size:13px;font-weight:700;padding:8px 12px;background:var(--color-surface);border-radius:6px;color:var(--color-primary);border:1px solid var(--color-border);"></div>
+        <div style="margin-bottom: 12px">
+          <label
+            class="label"
+            style="font-size: 13px; display: block; margin-bottom: 4px"
+            >Kategori</label
+          >
+          <div
+            id="taskModalCategoryLabel"
+            style="
+              font-size: 13px;
+              font-weight: 700;
+              padding: 8px 12px;
+              background: var(--color-surface);
+              border-radius: 6px;
+              color: var(--color-primary);
+              border: 1px solid var(--color-border);
+            "
+          ></div>
         </div>
 
-        <div style="margin-bottom:12px;">
-          <label class="label" for="taskModalTitle" style="font-size:13px;display:block;margin-bottom:4px;">Görev Başlığı</label>
-          <input class="input" type="text" id="taskModalTitle" maxlength="200" />
+        <div style="margin-bottom: 12px">
+          <label
+            class="label"
+            for="taskModalTitle"
+            style="font-size: 13px; display: block; margin-bottom: 4px"
+            >Görev Başlığı</label
+          >
+          <input
+            class="input"
+            type="text"
+            id="taskModalTitle"
+            maxlength="200"
+          />
         </div>
 
-        <div style="margin-bottom:12px;">
-          <label class="label" for="taskModalPct" style="font-size:13px;display:block;margin-bottom:4px;">Hedef Azaltım (%)</label>
-          <input class="input" type="number" id="taskModalPct" min="1" max="99" step="1" />
+        <div style="margin-bottom: 12px">
+          <label
+            class="label"
+            for="taskModalPct"
+            style="font-size: 13px; display: block; margin-bottom: 4px"
+            >Hedef Azaltım (%)</label
+          >
+          <input
+            class="input"
+            type="number"
+            id="taskModalPct"
+            min="1"
+            max="99"
+            step="1"
+          />
         </div>
 
-        <div style="margin-bottom:12px;">
-          <label class="label" for="taskModalAssignee" style="font-size:13px;display:block;margin-bottom:4px;">Atanan Üye</label>
+        <div style="margin-bottom: 12px">
+          <label
+            class="label"
+            for="taskModalAssignee"
+            style="font-size: 13px; display: block; margin-bottom: 4px"
+            >Atanan Üye</label
+          >
           <select class="input" id="taskModalAssignee">
             <option value="">🏠 Tüm Hane</option>
           </select>
         </div>
 
-        <div style="margin-bottom:20px;">
-          <label class="label" for="taskModalDueDate" style="font-size:13px;display:block;margin-bottom:4px;">Son Tarih <span style="color:var(--color-text-muted);font-weight:400;">— İsteğe Bağlı</span></label>
+        <div style="margin-bottom: 20px">
+          <label
+            class="label"
+            for="taskModalDueDate"
+            style="font-size: 13px; display: block; margin-bottom: 4px"
+            >Son Tarih
+            <span style="color: var(--color-text-muted); font-weight: 400"
+              >— İsteğe Bağlı</span
+            ></label
+          >
           <input class="input" type="date" id="taskModalDueDate" />
         </div>
 
         <div class="modal-actions">
           <button class="btn-secondary" id="cancelAddTaskBtn">İptal</button>
-          <button class="btn-primary" id="confirmAddTaskBtn">Görevi Oluştur</button>
+          <button class="btn-primary" id="confirmAddTaskBtn">
+            Görevi Oluştur
+          </button>
         </div>
       </div>
     </div>
 
     <!-- ── No-records modal ───────────────────────────────────────── -->
-    <div id="noRecordsModal" class="modal-backdrop" style="display:none;">
-      <div class="modal-box glass-card" style="max-width:440px;width:100%;">
+    <div id="noRecordsModal" class="modal-backdrop" style="display: none">
+      <div class="modal-box glass-card" style="max-width: 440px; width: 100%">
         <h2 class="modal-title">Önce Emisyon Kaydı Girmelisin</h2>
         <p class="modal-body">
-          Bu görev emisyon verilerine göre takip edilir. Henüz kayıt bulunmadığı için önce tüketim/emisyon kaydı eklemelisin.
+          Bu görev emisyon verilerine göre takip edilir. Henüz kayıt bulunmadığı
+          için önce tüketim/emisyon kaydı eklemelisin.
         </p>
         <div class="modal-actions">
           <button class="btn-secondary" id="noRecordsVazgecBtn">Vazgeç</button>

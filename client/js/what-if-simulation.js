@@ -4,8 +4,9 @@ import { ApiClient }    from './api/apiClient.js';
 import { updateGlobe } from './utils/globe.js';
 import { emissionService } from './api/emissionService.js';
 import { householdService } from './api/householdService.js';
+import { getCategoryLabel } from './utils/labelUtils.js';
 
-const user = renderLayout({ activeNav: 'nav-whatif', title: 'Gelecek Ay Planlayıcısı' });
+const user = renderLayout({ activeNav: 'nav-whatif' });
 if (!user) throw new Error('redirect');
 
 // ── Household admin detection ─────────────────────────────────────────────────
@@ -374,17 +375,6 @@ const getAiRoadmapBtn = document.getElementById('getAiRoadmapBtn');
 const aiPlannerContent = document.getElementById('aiPlannerContent');
 const aiPlannerSteps = document.getElementById('aiPlannerSteps');
 
-// Slider key → Türkçe kategori adı eşlemesi (frontend filtresi için)
-const ROADMAP_CAT_TR = {
-  energy:    'Enerji',
-  water:     'Su Kullanımı',
-  gas:       'Doğalgaz',
-  transport: 'Ulaşım',
-  food:      'Gıda',
-  waste:     'Atık',
-  materials: 'Malzeme',
-  shopping:  'Alışveriş',
-};
 
 if (getAiRoadmapBtn && aiPlannerContent && aiPlannerSteps) {
   getAiRoadmapBtn.addEventListener('click', async () => {
@@ -402,7 +392,7 @@ if (getAiRoadmapBtn && aiPlannerContent && aiPlannerSteps) {
     }
 
     // İzin verilen kategori adları (frontend filtresi)
-    const allowedNames = Object.keys(selectedChanges).map(c => (ROADMAP_CAT_TR[c] || c).toLowerCase());
+    const allowedNames = Object.keys(selectedChanges).map(c => (getCategoryLabel(c) || c).toLowerCase());
 
     try {
       getAiRoadmapBtn.disabled = true;
@@ -430,7 +420,7 @@ if (getAiRoadmapBtn && aiPlannerContent && aiPlannerSteps) {
 
             if (isHouseholdAdmin) {
               const matchedCat = Object.keys(selectedChanges).find(key => {
-                const tr = (ROADMAP_CAT_TR[key] || '').toLowerCase();
+                const tr = (getCategoryLabel(key) || '').toLowerCase();
                 const lower = step.kategori.toLowerCase();
                 return lower.includes(tr) || lower.includes(tr.split(' ')[0]);
               });
@@ -498,11 +488,6 @@ const taskModalCategoryLabel = document.getElementById('taskModalCategoryLabel')
 const taskModalAssignee  = document.getElementById('taskModalAssignee');
 const taskModalDueDate   = document.getElementById('taskModalDueDate');
 
-const CATEGORY_TR_LABELS = {
-  energy: 'Enerji (Elektrik)', water: 'Su Kullanımı', gas: 'Doğalgaz',
-  transport: 'Ulaşım', materials: 'Malzeme', waste: 'Atık',
-  food: 'Gıda', shopping: 'Alışveriş',
-};
 
 async function _ensureMembers() {
   if (_householdMembersCache) return _householdMembersCache;
@@ -519,7 +504,7 @@ async function openAddTaskModal(categoryKey, pct, label) {
   if (!addTaskModal) return;
 
   taskModalCategoryKey.value     = categoryKey;
-  taskModalCategoryLabel.textContent = CATEGORY_TR_LABELS[categoryKey] || categoryKey;
+  taskModalCategoryLabel.textContent = getCategoryLabel(categoryKey);
   taskModalTitle.value           = label;
   taskModalPct.value             = Math.round(pct);
 

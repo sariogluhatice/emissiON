@@ -186,6 +186,19 @@
 .status-badge.pending     { background: var(--color-warning-soft); color: #92400e; }
 .status-badge.in-progress { background: var(--color-info-soft);    color: #1e40af; }
 .status-badge.completed   { background: var(--color-success-soft); color: var(--color-primary-dark); }
+.status-badge.cancelled   { background: #f1f5f9;                   color: #64748b; }
+
+/* Status select — left border reflects workflow state */
+.hh-status-select {
+  border-left-width: 3px;
+  border-left-style: solid;
+  border-left-color: var(--color-border);
+  padding-left: 7px;
+}
+.hh-status-select[data-status="pending"]     { border-left-color: #f59e0b; }
+.hh-status-select[data-status="in_progress"] { border-left-color: #1d4ed8; }
+.hh-status-select[data-status="completed"]   { border-left-color: #16a34a; }
+.hh-status-select[data-status="cancelled"]   { border-left-color: #9ca3af; }
 
 /* ── Recent tasks list ────────────────────────────────────────────────────── */
 .hh-task-item {

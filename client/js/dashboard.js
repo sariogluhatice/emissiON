@@ -7,9 +7,10 @@ import {
   categoryEmoji,
   formatDate,
 } from './utils/uiUtils.js';
+import { getCategoryKey, getCategoryLabelWithEmoji } from './utils/labelUtils.js';
 import { updateGlobe, updateGlobeTooltip, buildGlobeStats } from './utils/globe.js';
 
-const user = renderLayout({ activeNav: 'nav-dashboard', title: 'Özet Panel' });
+const user = renderLayout({ activeNav: 'nav-dashboard' });
 if (!user) throw new Error('redirect');
 
 const welcomeEl = document.getElementById('welcomeName');
@@ -313,16 +314,6 @@ if (recordList) {
   });
 }
 
-const CHART_CATEGORY_LABELS = {
-  energy:    '⚡ Enerji',
-  water:     '💧 Su',
-  gas:       '🔥 Doğalgaz',
-  transport: '🚗 Ulaşım',
-  materials: '📦 Malzeme',
-  waste:     '🗑️ Atık',
-  food:      '🍽️ Gıda',
-  shopping:  '🛍️ Alışveriş',
-};
 
 function initChart(data) {
   const ctx = document.getElementById('emissionChart');
@@ -330,9 +321,7 @@ function initChart(data) {
 
   const categories = {};
   data.forEach(e => {
-    const label = e.category
-      ? (CHART_CATEGORY_LABELS[e.category] || e.category)
-      : (e.source || 'Diğer');
+    const label = getCategoryLabelWithEmoji(e.category || getCategoryKey(e));
     categories[label] = (categories[label] || 0) + parseFloat(e.amount);
   });
 
