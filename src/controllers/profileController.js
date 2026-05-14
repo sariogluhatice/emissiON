@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const pool   = require('../config/db');
 const { generateVerificationCode } = require('../utils/codeUtils');
+const { normalizeName } = require('../utils/nameUtils');
 const {
     sendEmailChangeVerification,
     sendPasswordChangeVerification,
@@ -55,7 +56,7 @@ const getProfile = async (req, res) => {
 const updateProfile = async (req, res) => {
     const userId = req.user.id;
     const { name: rawName } = req.body;
-    const name = typeof rawName === 'string' ? rawName.trim() : '';
+    const name = normalizeName(rawName);
 
     if (!name || name.length < 2) {
         return res.status(400).json({ message: 'Name must be at least 2 characters.' });

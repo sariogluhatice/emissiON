@@ -1,7 +1,11 @@
 import { getCurrentUser, logout } from './utils/uiUtils.js';
 
-const SVG = (body) =>
-    `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${body}</svg>`;
+// ── Icon helpers ────────────────────────────────────────────────────────────
+
+const SVG = (body, cls = 'nav-icon') =>
+    `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
+
+// ── Nav items ───────────────────────────────────────────────────────────────
 
 const NAV_ITEMS = [
     {
@@ -52,6 +56,11 @@ const NAV_ITEMS = [
         label: 'Gelecek Ay Planlayıcısı',
         icon:  SVG('<path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>'),
     },
+];
+
+// ── Sidebar footer items ─────────────────────────────────────────────────────
+
+const FOOTER_ITEMS = [
     {
         id:    'nav-profile',
         href:  'profile.html',
@@ -60,20 +69,103 @@ const NAV_ITEMS = [
     },
     {
         id:    'nav-settings',
-        href:  'settings.html',
+        href:  'profile.html#system-preferences',
         label: 'Sistem Ayarları',
         icon:  SVG('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'),
     },
 ];
 
-/**
- * Renders the shared sidebar + topbar and enforces authentication.
- *
- * @param {{ activeNav: string, title: string }} config
- *   activeNav — the id of the currently active nav item (e.g. 'nav-dashboard')
- *   title     — topbar page title text
- * @returns {object|null} the current user object, or null (redirect already triggered)
- */
+// ── Notification helpers ─────────────────────────────────────────────────────
+
+const NOTIFICATION_KEY = 'emission_notifications';
+
+function getMockNotifications() {
+    const stored = localStorage.getItem(NOTIFICATION_KEY);
+    if (stored) return JSON.parse(stored);
+
+    const now = Date.now();
+    const defaults = [
+        {
+            id: 'n1',
+            type: 'task',
+            title: 'Yeni Görev Atandı',
+            desc: 'Bu hafta için enerji tasarrufu görevi eklendi.',
+            date: new Date(now - 1 * 3600 * 1000).toISOString(),
+            read: false,
+        },
+        {
+            id: 'n2',
+            type: 'goal',
+            title: 'Hedef Hatırlatması',
+            desc: 'Aylık karbon hedefinin %80\'ine ulaştın.',
+            date: new Date(now - 5 * 3600 * 1000).toISOString(),
+            read: false,
+        },
+        {
+            id: 'n3',
+            type: 'system',
+            title: 'Sistem Mesajı',
+            desc: 'Karbon profilin güncellendi, yeni veriler analiz edildi.',
+            date: new Date(now - 24 * 3600 * 1000).toISOString(),
+            read: true,
+        },
+    ];
+    localStorage.setItem(NOTIFICATION_KEY, JSON.stringify(defaults));
+    return defaults;
+}
+
+function saveNotifications(list) {
+    localStorage.setItem(NOTIFICATION_KEY, JSON.stringify(list));
+}
+
+function formatNotifDate(iso) {
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins} dk önce`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs} sa önce`;
+    return `${Math.floor(hrs / 24)} gün önce`;
+}
+
+function buildNotificationDropdown(notifications) {
+    const unread = notifications.filter(n => !n.read);
+
+    const items = notifications.length === 0
+        ? `<div class="notification-empty">Henüz bildirimin yok.</div>`
+        : notifications.map(n => `
+            <div class="notification-item ${n.read ? 'read' : 'unread'}" data-id="${n.id}">
+                <div class="notification-body">
+                    <div class="notification-item-title">${n.title}</div>
+                    <div class="notification-item-desc">${n.desc}</div>
+                    <div class="notification-item-date">${formatNotifDate(n.date)}</div>
+                </div>
+            </div>`).join('');
+
+    return `
+        <div class="notification-dropdown-header">
+            <span class="notification-dropdown-title">Bildirimler</span>
+            ${unread.length > 0 ? '<button class="notification-mark-all-btn" id="markAllReadBtn">Tümünü okundu yap</button>' : ''}
+        </div>
+        <div class="notification-list">${items}</div>
+        <div class="notification-dropdown-footer">
+            <a href="profile.html#notifications" class="notification-see-all">Tüm bildirimleri gör</a>
+        </div>`;
+}
+
+// ── Sidebar collapse ─────────────────────────────────────────────────────────
+
+const COLLAPSE_KEY = 'sidebar-collapsed';
+
+function isSidebarCollapsed() {
+    return localStorage.getItem(COLLAPSE_KEY) === 'true';
+}
+
+function setSidebarCollapsed(val) {
+    localStorage.setItem(COLLAPSE_KEY, String(val));
+}
+
+// ── Main renderLayout ────────────────────────────────────────────────────────
+
 export function renderLayout({ activeNav, title }) {
     const user = getCurrentUser();
     if (!user) {
@@ -84,6 +176,9 @@ export function renderLayout({ activeNav, title }) {
     // ── Sidebar ───────────────────────────────────────────────────────────────
     const sidebarEl = document.getElementById('sidebar');
     if (sidebarEl) {
+        const collapsed = isSidebarCollapsed();
+        if (collapsed) sidebarEl.classList.add('collapsed');
+
         const visibleItems = NAV_ITEMS.filter(item => {
             if (item.id === 'nav-household') return user.role === 'household';
             if (item.id === 'nav-company')   return user.role === 'company';
@@ -98,7 +193,7 @@ export function renderLayout({ activeNav, title }) {
             const itemHtml = `
                 <a href="${href}" class="nav-item${isActive ? ' active' : ''}" id="${id}">
                     ${icon}
-                    ${label}
+                    <span class="nav-item-label">${label}</span>
                 </a>`;
             if (subItems && isActive && user.role === 'company') {
                 const subHtml = subItems.map(sub => {
@@ -110,29 +205,114 @@ export function renderLayout({ activeNav, title }) {
             return itemHtml;
         };
 
+        const footerHtml = FOOTER_ITEMS.map(item => `
+            <a href="${item.href}" class="sidebar-footer-link${item.id === activeNav ? ' active' : ''}" id="${item.id}">
+                ${item.icon}
+                <span class="sidebar-footer-label">${item.label}</span>
+            </a>`).join('');
+
+        const collapseIcon = SVG('<polyline points="15 18 9 12 15 6"/>', 'w-4 h-4');
+
         sidebarEl.innerHTML = `
-            <div class="sidebar-brand">emissiON</div>
+            <div class="sidebar-brand">
+                <span class="sidebar-brand-text">emissiON</span>
+                <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Menüyü daralt/genişlet">
+                    ${collapseIcon}
+                </button>
+            </div>
             <nav class="sidebar-nav">
                 ${visibleItems.map(renderNavItem).join('')}
             </nav>
             <div class="sidebar-footer">
-                <button class="btn-logout" id="logoutBtn">Oturumu Kapat</button>
+                ${footerHtml}
+                <button class="btn-logout" id="logoutBtn" aria-label="Oturumu kapat">
+                    ${SVG('<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>', 'nav-icon')}
+                    <span class="btn-logout-label">Oturumu Kapat</span>
+                </button>
             </div>`;
 
-        document.getElementById('logoutBtn').addEventListener('click', logout);
+        // collapse toggle
+        document.getElementById('sidebarCollapseBtn')?.addEventListener('click', () => {
+            const isNowCollapsed = sidebarEl.classList.toggle('collapsed');
+            setSidebarCollapsed(isNowCollapsed);
+            // also toggle on app-shell for CSS sibling selector fallback
+            document.querySelector('.app-shell')?.classList.toggle('sidebar-collapsed', isNowCollapsed);
+        });
+
+        // sync app-shell class on load
+        if (collapsed) {
+            document.querySelector('.app-shell')?.classList.add('sidebar-collapsed');
+        }
+
+        document.getElementById('logoutBtn')?.addEventListener('click', logout);
     }
 
     // ── Topbar ────────────────────────────────────────────────────────────────
     const topbarEl = document.getElementById('topbar');
     if (topbarEl) {
-        const initials    = (user.name || user.email || '?').charAt(0).toUpperCase();
         const displayName = user.name || user.email || '—';
+        const initials    = displayName.charAt(0).toUpperCase();
+
+        const notifications = getMockNotifications();
+        const unreadCount   = notifications.filter(n => !n.read).length;
+
+        const bellIcon = SVG('<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>', 'w-5 h-5');
+
         topbarEl.innerHTML = `
             <span class="topbar-title">${title}</span>
             <div class="topbar-user">
-                <div class="user-avatar" id="userInitials">${initials}</div>
-                <span id="userName" class="userName">${displayName}</span>
+                <div class="notification-wrapper">
+                    <button class="notification-btn" id="notificationBtn" aria-label="Bildirimler">
+                        ${bellIcon}
+                        <span class="notification-badge" id="notificationBadge">${unreadCount > 0 ? unreadCount : ''}</span>
+                    </button>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        ${buildNotificationDropdown(notifications)}
+                    </div>
+                </div>
+                <a href="profile.html" class="topbar-user-link" aria-label="Profilim">
+                    <div class="user-avatar" id="userInitials">${initials}</div>
+                    <span id="userName" class="userName">${displayName}</span>
+                </a>
             </div>`;
+
+        // Notification toggle
+        const notifBtn      = document.getElementById('notificationBtn');
+        const notifDropdown = document.getElementById('notificationDropdown');
+
+        notifBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notifDropdown?.classList.toggle('open');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!notifDropdown?.contains(e.target) && e.target !== notifBtn) {
+                notifDropdown?.classList.remove('open');
+            }
+        });
+
+        // Mark all read
+        notifDropdown?.addEventListener('click', (e) => {
+            const markAllBtn = e.target.closest('#markAllReadBtn');
+            if (markAllBtn) {
+                const list = getMockNotifications().map(n => ({ ...n, read: true }));
+                saveNotifications(list);
+                document.getElementById('notificationBadge').textContent = '';
+                notifDropdown.innerHTML = buildNotificationDropdown(list);
+                return;
+            }
+
+            const item = e.target.closest('.notification-item');
+            if (item) {
+                const id   = item.dataset.id;
+                const list = getMockNotifications().map(n => n.id === id ? { ...n, read: true } : n);
+                saveNotifications(list);
+                item.classList.replace('unread', 'read');
+                const newUnread = list.filter(n => !n.read).length;
+                const badge = document.getElementById('notificationBadge');
+                if (badge) badge.textContent = newUnread > 0 ? newUnread : '';
+            }
+        });
     }
 
     return user;

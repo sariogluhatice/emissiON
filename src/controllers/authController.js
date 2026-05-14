@@ -4,6 +4,7 @@ const jwt    = require('jsonwebtoken');
 const pool   = require('../config/db');
 const { generateVerificationCode } = require('../utils/codeUtils');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../services/mailService');
+const { normalizeName } = require('../utils/nameUtils');
 
 const SALT_ROUNDS  = 10;
 const EMAIL_REGEX  = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -19,7 +20,7 @@ const STRONG_PASSWORD_MSG   = 'Şifre en az 8 karakter olmalı; büyük harf, k�
 const register = async (req, res) => {
     const { name: rawName, email: rawEmail, password, role: rawRole } = req.body;
 
-    const name  = typeof rawName  === 'string' ? rawName.trim()                : '';
+    const name  = normalizeName(rawName);
     const email = typeof rawEmail === 'string' ? rawEmail.trim().toLowerCase() : '';
     const role  = VALID_ROLES.includes(rawRole) ? rawRole : 'individual';
 

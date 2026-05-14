@@ -477,6 +477,36 @@
   margin-top: 20px;
 }
 
+/* ── System preferences toggle rows ── */
+.pref-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s;
+  gap: 12px;
+}
+
+.pref-toggle-row:hover {
+  background: rgba(128, 128, 128, 0.05);
+}
+
+.pref-toggle-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.pref-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 @media (max-width: 768px) {
   .settings-layout {
     grid-template-columns: 1fr;
