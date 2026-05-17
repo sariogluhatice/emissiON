@@ -1,6 +1,25 @@
 
 
 
+// Safely extract a plain string from an AI field that may be a string, object, or null.
+// LLMs occasionally return { "text": "...", "language": "tr" } instead of a bare string.
+function _extractStr(val, fallback) {
+    if (typeof val === 'string' && val.trim()) return val.trim();
+    if (val && typeof val === 'object') {
+        const knownKeys = ['text','content','value','analysis','summary','prediction',
+                           'trend','description','message','result','output'];
+        for (const k of knownKeys) {
+            if (typeof val[k] === 'string' && val[k].trim()) return val[k].trim();
+        }
+        // Handle Turkish or any other key names by joining all string values
+        const allStrings = Object.values(val)
+            .filter(v => typeof v === 'string' && v.trim().length > 10)
+            .join(' ').trim();
+        if (allStrings) return allStrings;
+    }
+    return fallback;
+}
+
 class AiService {
     constructor() {
         this.groqUrl = 'https://api.groq.com/openai/v1/chat/completions';
@@ -197,7 +216,8 @@ ZORUNLU JSON FORMATI (SADECE JSON):
       "finansal_fayda": "Yukarıdaki formüllere göre hesaplanmış GERÇEKÇİ tasarruf miktarı (Örn: '90 TL' veya '268 TL finansal kazanç')"
     }
   ]
-}`;
+}
+KRİTİK: "prediction" ve "trend_summary" alanları MUTLAKA DÜZCE BİR METİN (string) olmalıdır. Asla iç içe JSON nesnesi veya alt alan içermemelidir.`;
         } else {
             prompt = `Sen bir sürdürülebilirlik asistanısın. Kullanıcı sisteme yeni katıldı ve henüz HİÇBİR verisi yok.
             
@@ -235,14 +255,17 @@ ZORUNLU JSON FORMATI:
         try {
             const cleaned = response.replace(/```json|```/gi, '').trim();
             const parsed = JSON.parse(cleaned);
+            if (!parsed.prediction || typeof parsed.prediction !== 'string') {
+                console.warn('[AiService.getSmartInsights] prediction not a flat string:', JSON.stringify(parsed.prediction));
+            }
             return {
-                prediction: parsed.prediction || "Tahmin yapılamadı.",
-                trend_summary: parsed.trend_summary || "Özet çıkarılamadı.",
-                recommendations: parsed.recommendations || ["Veri eklemeye devam edin."]
+                prediction:   _extractStr(parsed.prediction,   "Gelecek ay tahmini hazırlanıyor."),
+                trend_summary: _extractStr(parsed.trend_summary, "Gidişat analizi hazırlanıyor."),
+                recommendations: Array.isArray(parsed.recommendations) ? parsed.recommendations : ["Veri eklemeye devam edin."]
             };
         } catch (e) {
             return {
-                prediction: "Veri bekleniyor...",
+                prediction: "Analiz şu an alınamıyor. Lütfen daha sonra tekrar deneyin.",
                 trend_summary: "Hoş geldiniz! Veri girişi yaparak analizi başlatabilirsiniz.",
                 recommendations: ["İlk kaydınızı ekleyin."]
             };

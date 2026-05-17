@@ -249,6 +249,8 @@ let currentMethod = "manual";
 let calculatedCo2 = null;
 let lastOcrData = null;
 
+const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+
 // ── Date bounds ───────────────────────────────────────────────────────────────
 const today = new Date().toISOString().split("T")[0];
 const minDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
@@ -771,19 +773,17 @@ function currentInputType() {
 }
 
 function validate() {
-  document.getElementById("categoryError").textContent = "";
-  document.getElementById("activityError").textContent = "";
-  document.getElementById("dateError").textContent = "";
+  setText("categoryError", "");
+  setText("activityError", "");
+  setText("dateError", "");
   let ok = true;
 
   if (!categoryEl.value) {
-    document.getElementById("categoryError").textContent =
-      "Lütfen bir kategori seçin.";
+    setText("categoryError", "Lütfen bir kategori seçin.");
     ok = false;
   }
   if (categoryEl.value && !activityEl.value) {
-    document.getElementById("activityError").textContent =
-      "Lütfen faaliyet türü seçin.";
+    setText("activityError", "Lütfen faaliyet türü seçin.");
     ok = false;
   }
 
@@ -803,18 +803,13 @@ function validate() {
     }
   } else if (mode === "flight") {
     if (originEl.value.trim().length < 3 || destEl.value.trim().length < 3) {
-      showToast(
-        "Eksik Alan",
-        "Kalkış ve varış bilgilerini girin (örn. IST, LHR).",
-        "error",
-      );
+      showToast("Eksik Alan", "Kalkış ve varış bilgilerini girin (örn. IST, LHR).", "error");
       ok = false;
     }
   }
 
   if (!entryDateEl.value) {
-    document.getElementById("dateError").textContent =
-      "Lütfen bir tarih seçin.";
+    setText("dateError", "Lütfen bir tarih seçin.");
     ok = false;
   }
 
@@ -899,11 +894,10 @@ calcBtn.addEventListener("click", runCalculate);
 async function runCalculate() {
   if (!validate()) return;
 
-  calcStatusEl.className = "calc-status loading";
-  calcStatusEl.textContent = "Karbon ayak izi hesaplanıyor…";
-  calcBtn.disabled = true;
-  resultBanner.classList.remove("visible");
-  saveBtn.disabled = true;
+  if (calcStatusEl) { calcStatusEl.className = "calc-status loading"; calcStatusEl.textContent = "Karbon ayak izi hesaplanıyor…"; }
+  if (calcBtn) calcBtn.disabled = true;
+  resultBanner?.classList.remove("visible");
+  if (saveBtn) saveBtn.disabled = true;
 
   try {
     const payload = buildPayload();
@@ -911,17 +905,10 @@ async function runCalculate() {
 
     // Yerel katsayı → Climatiq çağrısı yok
     if ("localCoefficient" in payload) {
-      calculatedCo2 = parseFloat(
-        (payload.quantity * payload.localCoefficient).toFixed(6),
-      );
-      calcStatusEl.className = "calc-status";
-      calcStatusEl.textContent = "";
+      calculatedCo2 = parseFloat((payload.quantity * payload.localCoefficient).toFixed(6));
+      if (calcStatusEl) { calcStatusEl.className = "calc-status"; calcStatusEl.textContent = ""; }
       showResult(calculatedCo2);
-      updateDebug({
-        payload,
-        co2e: calculatedCo2,
-        method: "local_coefficient",
-      });
+      updateDebug({ payload, co2e: calculatedCo2, method: "local_coefficient" });
       return;
     }
 
@@ -938,24 +925,22 @@ async function runCalculate() {
       throw new Error(data.message || `Hesaplama hatası (${res.status})`);
 
     calculatedCo2 = parseFloat(data.co2e);
-    calcStatusEl.className = "calc-status";
-    calcStatusEl.textContent = "";
+    if (calcStatusEl) { calcStatusEl.className = "calc-status"; calcStatusEl.textContent = ""; }
     showResult(calculatedCo2);
     updateDebug({ payload, calcResult: data, co2e: calculatedCo2 });
   } catch (err) {
-    calcStatusEl.className = "calc-status error";
-    calcStatusEl.textContent = `⚠ ${err.message}`;
+    if (calcStatusEl) { calcStatusEl.className = "calc-status error"; calcStatusEl.textContent = `⚠ ${err.message}`; }
     showToast("Hesaplama Hatası", err.message, "error");
     updateDebug({ error: err.message });
   } finally {
-    calcBtn.disabled = false;
+    if (calcBtn) calcBtn.disabled = false;
   }
 }
 
 function showResult(co2) {
-  resultCo2El.textContent = co2.toFixed(3);
-  resultBanner.classList.add("visible");
-  saveBtn.disabled = false;
+  if (resultCo2El) resultCo2El.textContent = co2.toFixed(3);
+  resultBanner?.classList.add("visible");
+  if (saveBtn) saveBtn.disabled = false;
 }
 
 // ── Save ──────────────────────────────────────────────────────────────────────
@@ -1058,10 +1043,9 @@ clearBtn?.addEventListener("click", () => {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function resetCalc() {
   calculatedCo2 = null;
-  resultBanner.classList.remove("visible");
-  saveBtn.disabled = true;
-  calcStatusEl.className = "calc-status";
-  calcStatusEl.textContent = "";
+  resultBanner?.classList.remove("visible");
+  if (saveBtn) saveBtn.disabled = true;
+  if (calcStatusEl) { calcStatusEl.className = "calc-status"; calcStatusEl.textContent = ""; }
 }
 
 function updateDebug(extra = {}) {
@@ -1080,7 +1064,7 @@ function updateDebug(extra = {}) {
     description: descriptionEl.value || "—",
     ...extra,
   };
-  debugOutput.textContent = JSON.stringify(state, null, 2);
+  if (debugOutput) debugOutput.textContent = JSON.stringify(state, null, 2);
 }
 
 function fileToBase64(file) {

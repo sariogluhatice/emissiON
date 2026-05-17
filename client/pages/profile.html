@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Profil – emissiON</title>
     <link rel="stylesheet" href="../css/main.css" />
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
   </head>
   <body>
     <div class="app-shell">
@@ -29,10 +31,10 @@
 
           <div class="profile-grid">
             <!-- Sol Panel -->
-            <div class="profile-identity-card glass-card" style="position: relative;">
-              <a href="settings.html" class="profile-settings-btn" aria-label="Sistem Ayarları">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-              </a>
+            <div
+              class="profile-identity-card glass-card"
+              style="position: relative"
+            >
               <div class="profile-avatar-circle" id="profileAvatar">?</div>
               <div class="profile-name" id="profileName">—</div>
               <div class="profile-email" id="profileEmail">—</div>
@@ -40,8 +42,18 @@
               <div class="profile-since" id="profileSince">—</div>
               <div class="profile-ob-badge" id="obStatusBadge">—</div>
               <div class="profile-identity-actions">
-                <a href="settings.html" class="btn-primary" style="width: 100%; margin-bottom: 8px">Profili Düzenle</a>
-                <a href="carbon-profile.html" class="btn-secondary" style="width: 100%">Karbon Profilini Düzenle</a>
+                <a
+                  href="settings.html"
+                  class="btn-primary"
+                  style="width: 100%; margin-bottom: 8px"
+                  >Profili Düzenle</a
+                >
+                <a
+                  href="carbon-profile.html"
+                  class="btn-secondary"
+                  style="width: 100%"
+                  >Karbon Profilini Düzenle</a
+                >
               </div>
             </div>
 
@@ -52,17 +64,26 @@
                   <span class="content-card-title">Genel Bakış</span>
                 </div>
                 <div class="card-grid" style="margin-bottom: 0">
-                  <div class="stat-card glass-card" style="border-left: 3px solid var(--color-primary)">
+                  <div
+                    class="stat-card glass-card"
+                    style="border-left: 3px solid var(--color-primary)"
+                  >
                     <span class="stat-label">Toplam Emisyon</span>
                     <span class="stat-value" id="profileStatTotal">—</span>
                     <span class="stat-unit">kg CO₂e</span>
                   </div>
-                  <div class="stat-card glass-card" style="border-left: 3px solid var(--color-success)">
+                  <div
+                    class="stat-card glass-card"
+                    style="border-left: 3px solid var(--color-success)"
+                  >
                     <span class="stat-label">Bu Ay</span>
                     <span class="stat-value" id="profileStatMonth">—</span>
                     <span class="stat-unit">kg CO₂e</span>
                   </div>
-                  <div class="stat-card glass-card" style="border-left: 3px solid var(--color-text-muted)">
+                  <div
+                    class="stat-card glass-card"
+                    style="border-left: 3px solid var(--color-text-muted)"
+                  >
                     <span class="stat-label">Toplam Kayıt</span>
                     <span class="stat-value" id="profileStatEntries">—</span>
                     <span class="stat-unit">kayıt</span>
@@ -71,7 +92,10 @@
               </div>
 
               <div id="carbonProfileContainer">
-                <div class="content-card glass-card" style="text-align: center; padding: 48px; opacity: 0.6">
+                <div
+                  class="content-card glass-card"
+                  style="text-align: center; padding: 48px; opacity: 0.6"
+                >
                   Karbon profili verileri simülasyondan çekiliyor…
                 </div>
               </div>

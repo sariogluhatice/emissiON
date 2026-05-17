@@ -6,6 +6,8 @@
     <title>Yeni Kayıt Ekle – emissiON</title>
     <link rel="stylesheet" href="../css/main.css" />
     <link rel="stylesheet" href="../css/pages/add-entry.css" />
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
   </head>
   <body>
     <div class="app-shell">
@@ -63,7 +65,7 @@
                 </svg>
               </div>
             </div>
-            <div class="method-card" id="cardCbam" style="display:none;">
+            <div class="method-card" id="cardCbam" style="display: none">
               <div class="method-icon">📋</div>
               <div class="method-body">
                 <div class="method-title">İhracat Beyanı / CBAM</div>
@@ -324,112 +326,192 @@
           </div>
           <!-- /upper-row -->
 
-          <!-- Debug column — always visible -->
-          <div class="debug-col">
-            <div class="debug-card">
-              <div class="debug-card-header">
-                <span class="debug-card-title">Geçici Test Çıktısı</span>
-                <span class="debug-badge">GEÇİCİ</span>
-              </div>
-              <div class="debug-note">
-                Bu alan yalnızca geliştirme sürecinde OCR ve hesaplama
-                çıktılarını görmek için kullanılır. Üretim öncesi
-                kaldırılacaktır.
-              </div>
-              <pre class="debug-pre" id="debugOutput">
-{
-  "method": "—",
-  "category": "—",
-  "activityType": "—",
-  "quantity": null,
-  "unit": "—",
-  "totalAmountTRY": null,
-  "co2e": null,
-  "date": "—",
-  "description": "—"
-}</pre
-              >
-            </div>
-          </div>
-
           <!-- CBAM declaration form — shown only when CBAM method is active -->
-          <div id="cbamSection" style="display:none;margin-top:var(--spacing-lg);">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:var(--spacing-lg);">
-
+          <div
+            id="cbamSection"
+            style="display: none; margin-top: var(--spacing-lg)"
+          >
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+                gap: var(--spacing-lg);
+              "
+            >
               <!-- Form -->
               <div class="content-card glass-card">
                 <div class="content-card-header">
                   <span class="content-card-title">Yeni İhracat Beyanı</span>
                 </div>
-                <div style="font-size:13px;padding:10px 14px;background:#5bad8e14;border:1px solid #5bad8e40;border-radius:var(--radius-md);color:var(--color-text);margin-bottom:16px;">
-                  ℹ️ Bu beyan kaydedildiğinde <strong>Emisyon Takibi</strong>'ne de eklenir ve ana paneldeki toplam karbona dahil edilir.
+                <div
+                  style="
+                    font-size: 13px;
+                    padding: 10px 14px;
+                    background: #5bad8e14;
+                    border: 1px solid #5bad8e40;
+                    border-radius: var(--radius-md);
+                    color: var(--color-text);
+                    margin-bottom: 16px;
+                  "
+                >
+                  ℹ️ Bu beyan kaydedildiğinde <strong>Emisyon Takibi</strong>'ne
+                  de eklenir ve ana paneldeki toplam karbona dahil edilir.
                 </div>
-                <div style="display:flex;flex-direction:column;gap:12px;">
-
-                  <div class="form-group" style="margin:0;">
-                    <label class="form-label" for="ceCategory">CBAM Kategorisi <span style="color:var(--color-error)">*</span></label>
+                <div style="display: flex; flex-direction: column; gap: 12px">
+                  <div class="form-group" style="margin: 0">
+                    <label class="form-label" for="ceCategory"
+                      >CBAM Kategorisi
+                      <span style="color: var(--color-error)">*</span></label
+                    >
                     <select class="input" id="ceCategory">
                       <option value="">— Seçin</option>
-                      <option value="iron_steel">🏗️ Demir ve Çelik</option>
-                      <option value="aluminium">⚙️ Alüminyum</option>
-                      <option value="cement">🏢 Çimento</option>
-                      <option value="fertiliser">🌱 Gübre</option>
-                      <option value="hydrogen">⚗️ Hidrojen</option>
-                      <option value="electricity">⚡ Elektrik</option>
-                      <option value="other">📦 Diğer</option>
+                      <option value="iron_steel">Demir ve Çelik</option>
+                      <option value="aluminium">Alüminyum</option>
+                      <option value="cement">Çimento</option>
+                      <option value="fertiliser">Gübre</option>
+                      <option value="hydrogen">Hidrojen</option>
+                      <option value="electricity">Elektrik</option>
+                      <option value="other">Diğer</option>
                     </select>
                   </div>
 
-                  <div class="form-group" style="margin:0;">
-                    <label class="form-label" for="cePeriod">Dönem <span style="color:var(--color-error)">*</span></label>
+                  <div class="form-group" style="margin: 0">
+                    <label class="form-label" for="cePeriod"
+                      >Dönem
+                      <span style="color: var(--color-error)">*</span></label
+                    >
                     <input class="input" type="month" id="cePeriod" />
                   </div>
 
-                  <div id="ceEmissionsInfo" style="display:none;border-radius:var(--radius-md);padding:12px 14px;font-size:13px;line-height:1.7;border:1px solid var(--color-border);background:var(--color-surface);">
+                  <div
+                    id="ceEmissionsInfo"
+                    style="
+                      display: none;
+                      border-radius: var(--radius-md);
+                      padding: 12px 14px;
+                      font-size: 13px;
+                      line-height: 1.7;
+                      border: 1px solid var(--color-border);
+                      background: var(--color-surface);
+                    "
+                  >
                     <div id="ceEmissionsInfoContent"></div>
                   </div>
 
-                  <div class="form-group" style="margin:0;">
-                    <label class="form-label" for="ceExportAmount">İhracat Miktarı (ton) <span style="color:var(--color-error)">*</span></label>
-                    <input class="input" type="number" id="ceExportAmount" placeholder="Örn: 500" min="0.0001" step="any" />
+                  <div class="form-group" style="margin: 0">
+                    <label class="form-label" for="ceExportAmount"
+                      >İhracat Miktarı (ton)
+                      <span style="color: var(--color-error)">*</span></label
+                    >
+                    <input
+                      class="input"
+                      type="number"
+                      id="ceExportAmount"
+                      placeholder="Örn: 500"
+                      min="0.0001"
+                      step="any"
+                    />
                   </div>
 
-                  <div class="form-group" style="margin:0;">
+                  <div class="form-group" style="margin: 0">
                     <label class="form-label" for="ceDestinationRegion">
-                      Hedef Bölge <span style="color:var(--color-text-muted);font-weight:400;">— İsteğe Bağlı</span>
+                      Hedef Bölge
+                      <span
+                        style="color: var(--color-text-muted); font-weight: 400"
+                        >— İsteğe Bağlı</span
+                      >
                     </label>
-                    <input class="input" type="text" id="ceDestinationRegion" placeholder="Örn: Almanya, AB" maxlength="100" />
+                    <input
+                      class="input"
+                      type="text"
+                      id="ceDestinationRegion"
+                      placeholder="Örn: Almanya, AB"
+                      maxlength="100"
+                    />
                   </div>
 
-                  <div class="form-group" style="margin:0;">
+                  <div class="form-group" style="margin: 0">
                     <label class="form-label" for="ceDeclPaidPrice">
-                      Ödenen Karbon Vergisi (€/tCO₂) <span style="color:var(--color-text-muted);font-weight:400;">— İsteğe Bağlı</span>
+                      Ödenen Karbon Vergisi (€/tCO₂)
+                      <span
+                        style="color: var(--color-text-muted); font-weight: 400"
+                        >— İsteğe Bağlı</span
+                      >
                     </label>
-                    <input class="input" type="number" id="ceDeclPaidPrice" placeholder="0" min="0" step="0.01" value="0" />
+                    <input
+                      class="input"
+                      type="number"
+                      id="ceDeclPaidPrice"
+                      placeholder="0"
+                      min="0"
+                      step="0.01"
+                      value="0"
+                    />
                   </div>
 
                   <details>
-                    <summary style="cursor:pointer;font-size:12px;font-weight:600;color:var(--color-text-muted);padding:6px 0;">
+                    <summary
+                      style="
+                        cursor: pointer;
+                        font-size: 12px;
+                        font-weight: 600;
+                        color: var(--color-text-muted);
+                        padding: 6px 0;
+                      "
+                    >
                       ▶ Gelişmiş (Manuel Faktör / Fiyat Geçersiz Kılma)
                     </summary>
-                    <div style="padding:10px 0;display:flex;flex-direction:column;gap:10px;">
-                      <div class="form-group" style="margin:0;">
-                        <label class="form-label" for="ceEmissionFactor">Manuel Emisyon Faktörü (tCO₂/ton)</label>
-                        <input class="input" type="number" id="ceEmissionFactor" placeholder="Boş: emisyon kayıtlarından otomatik" min="0.000001" step="any" />
+                    <div
+                      style="
+                        padding: 10px 0;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 10px;
+                      "
+                    >
+                      <div class="form-group" style="margin: 0">
+                        <label class="form-label" for="ceEmissionFactor"
+                          >Manuel Emisyon Faktörü (tCO₂/ton)</label
+                        >
+                        <input
+                          class="input"
+                          type="number"
+                          id="ceEmissionFactor"
+                          placeholder="Boş: emisyon kayıtlarından otomatik"
+                          min="0.000001"
+                          step="any"
+                        />
                       </div>
-                      <div class="form-group" style="margin:0;">
-                        <label class="form-label" for="ceCarbonPrice">Manuel AB ETS Fiyatı (€/tCO₂)</label>
-                        <input class="input" type="number" id="ceCarbonPrice" placeholder="Boş: yönetici yapılandırmasından" min="0" step="0.01" />
+                      <div class="form-group" style="margin: 0">
+                        <label class="form-label" for="ceCarbonPrice"
+                          >Manuel AB ETS Fiyatı (€/tCO₂)</label
+                        >
+                        <input
+                          class="input"
+                          type="number"
+                          id="ceCarbonPrice"
+                          placeholder="Boş: yönetici yapılandırmasından"
+                          min="0"
+                          step="0.01"
+                        />
                       </div>
                     </div>
                   </details>
 
-                  <div class="form-group" style="margin:0;">
+                  <div class="form-group" style="margin: 0">
                     <label class="form-label" for="ceNotes">Notlar</label>
-                    <textarea class="input" id="ceNotes" rows="2" placeholder="Ek açıklama…" style="resize:vertical;"></textarea>
+                    <textarea
+                      class="input"
+                      id="ceNotes"
+                      rows="2"
+                      placeholder="Ek açıklama…"
+                      style="resize: vertical"
+                    ></textarea>
                   </div>
 
-                  <button class="btn-primary" id="ceSaveBtn">Hesapla ve Kaydet</button>
+                  <button class="btn-primary" id="ceSaveBtn">
+                    Hesapla ve Kaydet
+                  </button>
                 </div>
               </div>
 
@@ -438,41 +520,91 @@
                 <div class="content-card-header">
                   <span class="content-card-title">Beyan Önizleme</span>
                 </div>
-                <div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:12px 14px;font-size:12px;color:var(--color-text-muted);line-height:1.8;margin-bottom:12px;">
-                  <div><strong>Gömülü Emisyon</strong> = İhracat Miktarı × Faktör</div>
-                  <div><strong>Net Fiyat</strong> = max(0, AB Fiyatı − Ödenen)</div>
-                  <div><strong>CBAM Maliyeti</strong> = Gömülü Em. × Net Fiyat</div>
-                  <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--color-border);">
+                <div
+                  style="
+                    background: var(--color-surface);
+                    border: 1px solid var(--color-border);
+                    border-radius: var(--radius-md);
+                    padding: 12px 14px;
+                    font-size: 12px;
+                    color: var(--color-text-muted);
+                    line-height: 1.8;
+                    margin-bottom: 12px;
+                  "
+                >
+                  <div>
+                    <strong>Gömülü Emisyon</strong> = İhracat Miktarı × Faktör
+                  </div>
+                  <div>
+                    <strong>Net Fiyat</strong> = max(0, AB Fiyatı − Ödenen)
+                  </div>
+                  <div>
+                    <strong>CBAM Maliyeti</strong> = Gömülü Em. × Net Fiyat
+                  </div>
+                  <div
+                    style="
+                      margin-top: 6px;
+                      padding-top: 6px;
+                      border-top: 1px solid var(--color-border);
+                    "
+                  >
                     <span id="ceFactorSourceBadge"></span>
                   </div>
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                  <div class="glass-card stat-card" style="padding:14px;">
+                <div
+                  style="
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 10px;
+                  "
+                >
+                  <div class="glass-card stat-card" style="padding: 14px">
                     <div class="stat-label">Faktör</div>
-                    <div class="stat-value" id="previewFactor" style="font-size:18px;">—</div>
+                    <div
+                      class="stat-value"
+                      id="previewFactor"
+                      style="font-size: 18px"
+                    >
+                      —
+                    </div>
                     <div class="stat-unit">tCO₂/ton</div>
                   </div>
-                  <div class="glass-card stat-card" style="padding:14px;">
+                  <div class="glass-card stat-card" style="padding: 14px">
                     <div class="stat-label">Gömülü Em.</div>
-                    <div class="stat-value" id="previewEmission" style="font-size:18px;">—</div>
+                    <div
+                      class="stat-value"
+                      id="previewEmission"
+                      style="font-size: 18px"
+                    >
+                      —
+                    </div>
                     <div class="stat-unit">tCO₂</div>
                   </div>
-                  <div class="glass-card stat-card" style="padding:14px;">
+                  <div class="glass-card stat-card" style="padding: 14px">
                     <div class="stat-label">CBAM Maliyeti</div>
-                    <div class="stat-value" id="previewCost" style="font-size:18px;">—</div>
+                    <div
+                      class="stat-value"
+                      id="previewCost"
+                      style="font-size: 18px"
+                    >
+                      —
+                    </div>
                     <div class="stat-unit">€</div>
                   </div>
-                  <div class="glass-card stat-card" style="padding:14px;">
+                  <div class="glass-card stat-card" style="padding: 14px">
                     <div class="stat-label">Risk</div>
-                    <div id="previewRisk" style="font-size:16px;font-weight:800;margin:4px 0;">—</div>
+                    <div
+                      id="previewRisk"
+                      style="font-size: 16px; font-weight: 800; margin: 4px 0"
+                    >
+                      —
+                    </div>
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
           <!-- /cbamSection -->
-
         </main>
       </div>
     </div>

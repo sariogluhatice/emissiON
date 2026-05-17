@@ -35,60 +35,60 @@ const globeSimLabel     = document.getElementById('globeSimLabel');
 const CATEGORIES_CONFIG = {
   'energy': {
     name: 'Enerji (Elektrik)',
-    icon: '⚡',
     unit: 'kWh',
     factor: 0.45,       // 1 kWh ~ 0.45 kg CO2
-    defaultCo2: 85.0
+    defaultCo2: 85.0,
+    unitPriceTL: 3.50,  // TL per kWh (Türkiye bireysel ortalama 2024)
   },
   'water': {
     name: 'Su',
-    icon: '💧',
     unit: 'm³',
     factor: 0.3,        // 1 m³ ~ 0.3 kg CO2
-    defaultCo2: 12.0
+    defaultCo2: 12.0,
+    unitPriceTL: 15.00, // TL per m³
   },
   'gas': {
     name: 'Doğalgaz',
-    icon: '🔥',
     unit: 'm³',
     factor: 1.9,        // 1 m³ ~ 1.9 kg CO2
-    defaultCo2: 70.0
+    defaultCo2: 70.0,
+    unitPriceTL: 25.00, // TL per m³ (doğalgaz bireysel tarife)
   },
   'transport': {
     name: 'Ulaşım',
-    icon: '🚗',
     unit: 'km',
     factor: 0.18,       // 1 km ~ 0.18 kg CO2
-    defaultCo2: 140.0
+    defaultCo2: 140.0,
+    unitPriceTL: 10.00, // TL per km (yakıt + amortisman tahmini)
   },
   'materials': {
     name: 'Malzeme',
-    icon: '📦',
     unit: 'kg',
-    factor: 0.5,        // 1 kg ~ 0.5 kg CO2
-    defaultCo2: 45.0
+    factor: 0.5,
+    defaultCo2: 45.0,
+    unitPriceTL: 30.00,
   },
   'waste': {
     name: 'Atık',
-    icon: '🗑️',
     unit: 'kg',
-    factor: 0.8,        // 1 kg ~ 0.8 kg CO2
-    defaultCo2: 25.0
+    factor: 0.8,
+    defaultCo2: 25.0,
+    unitPriceTL: 2.50,
   },
   'food': {
     name: 'Gıda',
-    icon: '🍽️',
     unit: 'Gün',
     factor: 3.5,        // 1 gün etli/karışık beslenme ~ 3.5 kg CO2
-    defaultCo2: 110.0
+    defaultCo2: 110.0,
+    unitPriceTL: 200.00, // TL per günlük beslenme harcaması
   },
   'shopping': {
     name: 'Alışveriş',
-    icon: '🛍️',
     unit: 'TL',
     factor: 0.05,       // 1 TL ~ 0.05 kg CO2
-    defaultCo2: 60.0
-  }
+    defaultCo2: 60.0,
+    unitPriceTL: 1.00,  // 1:1 (zaten TL cinsinden)
+  },
 };
 
 // ── Durum (State) ─────────────────────────────────────────────────────────────
@@ -143,8 +143,8 @@ function renderEmptyState() {
     </div>
   `;
   
-  currentTotalVal.textContent = "0.0";
-  projectedTotalVal.textContent = "0.0";
+  if (currentTotalVal) currentTotalVal.textContent = "0.0";
+  if (projectedTotalVal) projectedTotalVal.textContent = "0.0";
   
   const comparisonText = document.getElementById('comparisonText');
   if (comparisonText) {
@@ -284,54 +284,85 @@ function renderSliders() {
   });
 }
 
+const _fmtTL = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 });
+
 // ── Toplam Hesaplama ve Güncelleme ─────────────────────────────────────────────
 function updateProjection() {
   let currentTotal = 0;
   let projectedTotal = 0;
+  let monthlySavingsTL = 0;
+  let monthlyCostTL = 0;
 
   Object.keys(CATEGORIES_CONFIG).forEach(cat => {
     const config = CATEGORIES_CONFIG[cat];
     const baseline = baselines[cat];
     const changePct = changes[cat];
-    
+
     const targetQty = baseline.qty * (1 + changePct / 100);
     const targetCo2 = baseline.co2 * (1 + changePct / 100);
 
     currentTotal += baseline.co2;
     projectedTotal += targetCo2;
 
-    // Sürgü değerini ve miktar yazısını anlık güncelle
+    if (changePct < 0) {
+      const savedQty = baseline.qty - targetQty;
+      monthlySavingsTL += savedQty * config.unitPriceTL;
+    } else if (changePct > 0) {
+      const extraQty = targetQty - baseline.qty;
+      monthlyCostTL += extraQty * config.unitPriceTL;
+    }
+
     const badge = document.getElementById(`badge-${cat}`);
     const qtyDisplay = document.getElementById(`qty-${cat}`);
-    
+
     if (badge) {
       badge.textContent = `${changePct > 0 ? '+' : ''}${changePct}%`;
       badge.style.color = changePct < 0 ? '#5BAD8E' : (changePct > 0 ? '#D4A017' : 'inherit');
     }
-    
+
     if (qtyDisplay) {
       qtyDisplay.textContent = `${Math.round(targetQty)} ${config.unit} (${targetCo2.toFixed(1)} kg)`;
     }
   });
 
-  currentTotalVal.textContent = currentTotal.toFixed(1);
-  projectedTotalVal.textContent = projectedTotal.toFixed(1);
+  if (currentTotalVal) currentTotalVal.textContent = currentTotal.toFixed(1);
+  if (projectedTotalVal) projectedTotalVal.textContent = projectedTotal.toFixed(1);
 
   const diff = projectedTotal - currentTotal;
+  const savingsCo2El = document.getElementById('savingsCo2');
+  const annualSavingsEl = document.getElementById('annualSavingsVal');
+  const impactTitleEl = document.getElementById('impactTitle');
 
   if (diff < -0.1) {
     impactBadge.style.display = 'flex';
-    savingsVal.textContent = `${Math.abs(diff).toFixed(1)} kg`;
+    if (impactTitleEl) impactTitleEl.textContent = 'Aylık Tahmini Tasarruf';
+    if (monthlySavingsTL > 0) {
+      savingsVal.textContent = _fmtTL.format(Math.round(monthlySavingsTL));
+      if (savingsCo2El) savingsCo2El.textContent = `${Math.abs(diff).toFixed(1)} kg CO₂e azalım`;
+      if (annualSavingsEl) annualSavingsEl.textContent = `Yılık: ${_fmtTL.format(Math.round(monthlySavingsTL * 12))}`;
+    } else {
+      savingsVal.textContent = `${Math.abs(diff).toFixed(1)} kg CO₂e`;
+      if (savingsCo2El) savingsCo2El.textContent = '';
+      if (annualSavingsEl) annualSavingsEl.textContent = '';
+    }
     savingsVal.style.color = '#5BAD8E';
   } else if (diff > 0.1) {
     impactBadge.style.display = 'flex';
-    savingsVal.textContent = `+${diff.toFixed(1)} kg`;
+    if (impactTitleEl) impactTitleEl.textContent = 'Aylık Ek Maliyet';
+    if (monthlyCostTL > 0) {
+      savingsVal.textContent = _fmtTL.format(Math.round(monthlyCostTL));
+      if (savingsCo2El) savingsCo2El.textContent = `+${diff.toFixed(1)} kg CO₂e artış`;
+      if (annualSavingsEl) annualSavingsEl.textContent = `Yılık: ${_fmtTL.format(Math.round(monthlyCostTL * 12))}`;
+    } else {
+      savingsVal.textContent = `+${diff.toFixed(1)} kg CO₂e`;
+      if (savingsCo2El) savingsCo2El.textContent = 'Emisyon artıyor';
+      if (annualSavingsEl) annualSavingsEl.textContent = '';
+    }
     savingsVal.style.color = '#D4A017';
   } else {
     impactBadge.style.display = 'none';
   }
 
-  // Globe'ları güncelle
   updateGlobe(currentTotal, {
     containerId: 'globeCurrentContainer',
     labelId:     'none',
@@ -344,17 +375,18 @@ function updateProjection() {
     textId:      'none'
   });
 
-  // Karşılaştırma metni
   const comparisonText = document.getElementById('comparisonText');
-  
+  if (!comparisonText) return;
+
   if (diff < -5) {
-     const pctSaved = Math.round((Math.abs(diff) / currentTotal) * 100);
-     comparisonText.innerHTML = `Müthiş! Gelecek ay emisyonlarınızı <strong style="color:#5BAD8E">%${pctSaved} (${Math.abs(diff).toFixed(1)} kg)</strong> oranında azaltmayı planlıyorsunuz.`;
+    const pctSaved = Math.round((Math.abs(diff) / currentTotal) * 100);
+    const tlPart = monthlySavingsTL > 0 ? ` · ${_fmtTL.format(Math.round(monthlySavingsTL))} aylık tahmini tasarruf` : '';
+    comparisonText.innerHTML = `Müthiş! Gelecek ay emisyonlarınızı <strong style="color:#5BAD8E">%${pctSaved} (${Math.abs(diff).toFixed(1)} kg)</strong> oranında azaltmayı planlıyorsunuz${tlPart}.`;
   } else if (diff > 5) {
-     const pctIncrease = Math.round((diff / currentTotal) * 100);
-     comparisonText.innerHTML = `Dikkat! Bu planla emisyonlarınız <strong style="color:#D4A017">%${pctIncrease} (+${diff.toFixed(1)} kg)</strong> artacak gibi görünüyor.`;
+    const pctIncrease = Math.round((diff / currentTotal) * 100);
+    comparisonText.innerHTML = `Dikkat! Bu planla emisyonlarınız <strong style="color:#D4A017">%${pctIncrease} (+${diff.toFixed(1)} kg)</strong> artacak gibi görünüyor.`;
   } else {
-     comparisonText.innerHTML = `Mevcut alışkanlıklarınızı koruyarak stabil bir gelecek planlıyorsunuz.`;
+    comparisonText.innerHTML = `Mevcut alışkanlıklarınızı koruyarak stabil bir gelecek planlıyorsunuz.`;
   }
 }
 

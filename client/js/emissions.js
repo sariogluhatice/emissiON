@@ -4,6 +4,7 @@ import { renderLayout } from './layout.js';
 import { formatDate } from './utils/uiUtils.js';
 import {
   CATEGORY_LABELS,
+  ACTIVITY_TYPE_LABELS,
   getCategoryKey,
   getCategoryLabel,
   getActivityTypeLabelFromRecord as getActivityTypeLabel,

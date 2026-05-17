@@ -62,11 +62,6 @@ let monthlyChartInstance = null;
 const STATUS_LABELS  = { pending: getTaskStatusLabel('pending'), in_progress: getTaskStatusLabel('in_progress'), completed: getTaskStatusLabel('completed'), cancelled: getTaskStatusLabel('cancelled') };
 const STATUS_CLASSES = { pending: getTaskStatusClass('pending'), in_progress: getTaskStatusClass('in_progress'), completed: getTaskStatusClass('completed'), cancelled: getTaskStatusClass('cancelled') };
 
-const CAT_EMOJI = {
-  energy: '⚡', electricity: '⚡', water: '💧', gas: '🔥', transport: '🚗',
-  food: '🍽️', shopping: '🛍️', waste: '🗑️', materials: '📦',
-};
-const catEmoji = (c) => CAT_EMOJI[String(c).toLowerCase()] ?? '📌';
 
 // ── Show / hide state panels ──────────────────────────────────────────────────
 const show = (el) => { el.style.display = 'block'; };
@@ -155,7 +150,6 @@ function renderCategories(breakdown) {
     const pct = total > 0 ? (parseFloat(cat.total_amount) / total * 100).toFixed(1) : 0;
     return `
       <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--color-border);">
-        <span style="font-size:18px;flex-shrink:0;">${catEmoji(cat.category)}</span>
         <div style="flex:1;min-width:0;">
           <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:var(--color-text);margin-bottom:4px;">
             <span>${getCategoryLabel(cat.category)}</span>

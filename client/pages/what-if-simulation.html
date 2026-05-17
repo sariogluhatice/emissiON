@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="../css/components/globe.css" />
     <link rel="stylesheet" href="../css/pages/what-if-simulation.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
   </head>
   <body>
     <div class="app-shell">
@@ -134,8 +136,10 @@
             <!-- SAĞ: Görsel Karşılaştırma -->
             <div class="visualization-container">
               <div class="impact-badge" id="impactBadge" style="display: none">
-                <span class="impact-title">Aylık Tasarruf</span>
-                <span class="impact-value" id="savingsVal">0.0 kg</span>
+                <span class="impact-title" id="impactTitle">Aylık Tahmini Tasarruf</span>
+                <span class="impact-value" id="savingsVal">₺0</span>
+                <span id="savingsCo2" style="font-size:12px;opacity:0.75;display:block;margin-top:2px;"></span>
+                <span id="annualSavingsVal" style="font-size:11px;opacity:0.65;display:block;margin-top:1px;"></span>
               </div>
 
               <div class="globe-pair">

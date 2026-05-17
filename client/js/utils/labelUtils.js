@@ -19,19 +19,6 @@ export const CATEGORY_LABELS = {
   other:     'Diğer',
 };
 
-// ── Kategori anahtarı → emoji ────────────────────────────────
-export const CATEGORY_EMOJI = {
-  energy:    '⚡',
-  water:     '💧',
-  gas:       '🔥',
-  transport: '🚗',
-  materials: '📦',
-  waste:     '♻️',
-  food:      '🍽️',
-  shopping:  '🛍️',
-  other:     '📋',
-};
-
 // ── Faaliyet türü ID'si → Türkçe etiket ─────────────────────
 // Hem güncel hem eski (backward compat) ID'leri kapsar.
 export const ACTIVITY_TYPE_LABELS = {
@@ -74,13 +61,13 @@ export const ACTIVITY_TYPE_LABELS = {
 
 // ── CBAM sektör etiketleri ───────────────────────────────────
 export const CBAM_SECTOR_LABELS = {
-  iron_steel:  '🏗️ Demir ve Çelik',
-  aluminium:   '⚙️ Alüminyum',
-  cement:      '🏢 Çimento',
-  fertiliser:  '🌱 Gübre',
-  hydrogen:    '⚗️ Hidrojen',
-  electricity: '⚡ Elektrik',
-  other:       '📦 Diğer',
+  iron_steel:  'Demir ve Çelik',
+  aluminium:   'Alüminyum',
+  cement:      'Çimento',
+  fertiliser:  'Gübre',
+  hydrogen:    'Hidrojen',
+  electricity: 'Elektrik',
+  other:       'Diğer',
 };
 
 // ── Risk seviyeleri ──────────────────────────────────────────
@@ -124,11 +111,9 @@ export function getCategoryLabel(key) {
   return CATEGORY_LABELS[key] || key || '—';
 }
 
-/** Kategori anahtarından emoji + Türkçe etiket döndürür. */
+/** Kategori anahtarından Türkçe etiket döndürür (emoji olmadan). */
 export function getCategoryLabelWithEmoji(key) {
-  const emoji = CATEGORY_EMOJI[key] || '';
-  const label = CATEGORY_LABELS[key] || key || 'Diğer';
-  return emoji ? `${emoji} ${label}` : label;
+  return CATEGORY_LABELS[key] || key || 'Diğer';
 }
 
 /** Faaliyet türü ID'sinden Türkçe etiket döndürür. */

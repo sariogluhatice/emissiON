@@ -79,47 +79,6 @@ const FOOTER_ITEMS = [];
 
 // ── Notification helpers ─────────────────────────────────────────────────────
 
-const NOTIFICATION_KEY = "emission_notifications";
-
-function getMockNotifications() {
-  const stored = localStorage.getItem(NOTIFICATION_KEY);
-  if (stored) return JSON.parse(stored);
-
-  const now = Date.now();
-  const defaults = [
-    {
-      id: "n1",
-      type: "task",
-      title: "Yeni Görev Atandı",
-      desc: "Bu hafta için enerji tasarrufu görevi eklendi.",
-      date: new Date(now - 1 * 3600 * 1000).toISOString(),
-      read: false,
-    },
-    {
-      id: "n2",
-      type: "goal",
-      title: "Hedef Hatırlatması",
-      desc: "Aylık karbon hedefinin %80'ine ulaştın.",
-      date: new Date(now - 5 * 3600 * 1000).toISOString(),
-      read: false,
-    },
-    {
-      id: "n3",
-      type: "system",
-      title: "Sistem Mesajı",
-      desc: "Karbon profilin güncellendi, yeni veriler analiz edildi.",
-      date: new Date(now - 24 * 3600 * 1000).toISOString(),
-      read: true,
-    },
-  ];
-  localStorage.setItem(NOTIFICATION_KEY, JSON.stringify(defaults));
-  return defaults;
-}
-
-function saveNotifications(list) {
-  localStorage.setItem(NOTIFICATION_KEY, JSON.stringify(list));
-}
-
 function formatNotifDate(iso) {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
@@ -274,9 +233,6 @@ export function renderLayout({ activeNav, title } = {}) {
     const displayName = user.name || user.email || "—";
     const initials = displayName.charAt(0).toUpperCase();
 
-    const notifications = getMockNotifications();
-    const unreadCount = notifications.filter((n) => !n.read).length;
-
     const bellIcon = SVG(
       '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
       "w-5 h-5",
@@ -299,10 +255,10 @@ export function renderLayout({ activeNav, title } = {}) {
                 <div class="notification-wrapper">
                     <button class="notification-btn" id="notificationBtn" aria-label="Bildirimler">
                         ${bellIcon}
-                        <span class="notification-badge" id="notificationBadge">${unreadCount > 0 ? unreadCount : ""}</span>
+                        <span class="notification-badge" id="notificationBadge"></span>
                     </button>
                     <div class="notification-dropdown" id="notificationDropdown">
-                        ${buildNotificationDropdown(notifications)}
+                        ${buildNotificationDropdown([])}
                     </div>
                 </div>
                 <a href="profile.html" class="topbar-user-link" aria-label="Profilim">
@@ -330,36 +286,254 @@ export function renderLayout({ activeNav, title } = {}) {
       }
     });
 
-    // Mark all read
+    // Mark all/single read — updates DOM and persists to localStorage
     notifDropdown?.addEventListener("click", (e) => {
       const markAllBtn = e.target.closest("#markAllReadBtn");
       if (markAllBtn) {
-        const list = getMockNotifications().map((n) => ({ ...n, read: true }));
-        saveNotifications(list);
-        document.getElementById("notificationBadge").textContent = "";
-        notifDropdown.innerHTML = buildNotificationDropdown(list);
+        notifDropdown.querySelectorAll(".notification-item.unread").forEach(el => {
+          el.classList.replace("unread", "read");
+          if (el.dataset.id) _markNotifRead(el.dataset.id);
+        });
+        const badge = document.getElementById("notificationBadge");
+        if (badge) badge.textContent = "";
+        markAllBtn.remove();
         return;
       }
 
-      const item = e.target.closest(".notification-item");
+      const item = e.target.closest(".notification-item.unread");
       if (item) {
-        const id = item.dataset.id;
-        const list = getMockNotifications().map((n) =>
-          n.id === id ? { ...n, read: true } : n,
-        );
-        saveNotifications(list);
         item.classList.replace("unread", "read");
-        const newUnread = list.filter((n) => !n.read).length;
+        if (item.dataset.id) _markNotifRead(item.dataset.id);
+        const remaining = notifDropdown.querySelectorAll(".notification-item.unread").length;
         const badge = document.getElementById("notificationBadge");
-        if (badge) badge.textContent = newUnread > 0 ? newUnread : "";
+        if (badge) badge.textContent = remaining > 0 ? String(remaining) : "";
       }
     });
+
+    // Load real notifications asynchronously (non-blocking)
+    _loadRealNotifications();
   }
 
   // Load gamification stats into topbar (non-blocking)
   _loadTopbarGamification();
 
   return user;
+}
+
+// ── Persistent notification state ────────────────────────────────────────────
+// localStorage key: "emission_notif_state"
+// Shape: { [id]: { read: bool, month: "YYYY-MM" } }
+
+const _NOTIF_KEY = "emission_notif_state";
+
+function _readNotifState() {
+  try { return JSON.parse(localStorage.getItem(_NOTIF_KEY) || "{}"); }
+  catch { return {}; }
+}
+
+function _writeNotifState(state) {
+  try { localStorage.setItem(_NOTIF_KEY, JSON.stringify(state)); } catch { /* ignore */ }
+}
+
+function _markNotifRead(id) {
+  const state = _readNotifState();
+  if (state[id]) { state[id].read = true; _writeNotifState(state); }
+}
+
+async function _loadRealNotifications() {
+  const token = localStorage.getItem("emission_token") || sessionStorage.getItem("emission_token");
+  if (!token) return;
+
+  const badge       = document.getElementById("notificationBadge");
+  const dropdown    = document.getElementById("notificationDropdown");
+  if (!dropdown) return;
+
+  const currentUser = getCurrentUser();
+  const now         = new Date();
+  const today       = now.toISOString().slice(0, 10);
+  const in3Days     = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const thisMonth   = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const prevMonth   = (() => {
+    const d = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  })();
+
+  const activeIds = new Set();
+  const notifMeta = {};  // id → display data
+
+  // ── 1. Aylık kayıt + karbon artışı (tüm kullanıcılar) ───────────────────────
+  let thisMonthTotal = 0, prevMonthTotal = 0;
+  try {
+    const res = await fetch("/api/emissions", { headers: { Authorization: `Bearer ${token}` } });
+    if (res.ok) {
+      const body    = await res.json();
+      const records = body?.records ?? body?.data?.records ?? [];
+
+      const hasThisMonth = records.some(r => String(r.date || "").startsWith(thisMonth));
+      if (!hasThisMonth) activeIds.add("no_entry_this_month");
+
+      thisMonthTotal = records
+        .filter(r => String(r.date || "").startsWith(thisMonth))
+        .reduce((s, r) => s + parseFloat(r.amount || 0), 0);
+      prevMonthTotal = records
+        .filter(r => String(r.date || "").startsWith(prevMonth))
+        .reduce((s, r) => s + parseFloat(r.amount || 0), 0);
+
+      if (prevMonthTotal > 0 && thisMonthTotal > 0) {
+        const spikePct = Math.round(((thisMonthTotal - prevMonthTotal) / prevMonthTotal) * 100);
+        if (spikePct >= 20) {
+          const spikeId = `carbon_spike_${thisMonth}`;
+          activeIds.add(spikeId);
+          notifMeta[spikeId] = { type: "spike", pct: spikePct };
+        }
+      }
+    }
+  } catch { /* non-critical */ }
+
+  // ── 2. Hane görev bildirimleri ───────────────────────────────────────────────
+  if (currentUser?.role === "household") {
+    try {
+      const res = await fetch("/api/households/tasks", { headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) {
+        const body  = await res.json();
+        const tasks = body?.data?.tasks ?? body?.tasks ?? [];
+
+        tasks.forEach(t => {
+          const isMyTask   = t.assigned_to === currentUser.id || t.assigned_to === null;
+          const isActive   = t.status === "pending" || t.status === "in_progress";
+          const iAssigned  = t.assigned_by === currentUser.id;
+
+          // Atanan görev
+          if (isActive && isMyTask) {
+            const id = `task_${t.id}`;
+            activeIds.add(id);
+            notifMeta[id] = { type: "assigned", title: t.title, assignedBy: t.assigned_by_name || "Yönetici" };
+          }
+
+          // Son tarihi yaklaşıyor (3 gün)
+          if (isActive && isMyTask && t.due_date && t.due_date >= today && t.due_date <= in3Days) {
+            const id = `due_soon_${t.id}`;
+            activeIds.add(id);
+            notifMeta[id] = { type: "due_soon", title: t.title, dueDate: t.due_date };
+          }
+
+          // Yönetici: üye görevi tamamladı
+          if (t.status === "completed" && iAssigned && t.assigned_to && t.assigned_to !== currentUser.id) {
+            const id = `task_done_${t.id}`;
+            activeIds.add(id);
+            notifMeta[id] = { type: "done", title: t.title, assigneeName: t.assigned_to_name || "Üye" };
+          }
+        });
+      }
+    } catch { /* non-critical */ }
+  }
+
+  // ── 3. Şirket görev bildirimleri (son tarih) ─────────────────────────────────
+  if (currentUser?.role === "company") {
+    try {
+      const res = await fetch("/api/company/tasks", { headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) {
+        const body  = await res.json();
+        const tasks = body?.data?.tasks ?? body?.tasks ?? [];
+
+        tasks.forEach(t => {
+          if ((t.status === "pending" || t.status === "in_progress") &&
+              t.due_date && t.due_date >= today && t.due_date <= in3Days) {
+            const id = `co_due_soon_${t.id}`;
+            activeIds.add(id);
+            notifMeta[id] = { type: "due_soon", title: t.title, dueDate: t.due_date };
+          }
+        });
+      }
+    } catch { /* non-critical */ }
+  }
+
+  // ── Kalıcı durum senkronizasyonu ────────────────────────────────────────────
+  const state = _readNotifState();
+  let changed = false;
+
+  for (const id of activeIds) {
+    const entry = state[id];
+    if (id === "no_entry_this_month") {
+      if (!entry || entry.month !== thisMonth) {
+        state[id] = { read: false, month: thisMonth };
+        changed = true;
+      }
+    } else if (id.startsWith("carbon_spike_")) {
+      if (!entry) { state[id] = { read: false, month: thisMonth }; changed = true; }
+      else if (entry.month !== thisMonth) { state[id] = { read: false, month: thisMonth }; changed = true; }
+    } else {
+      // task_*, due_soon_*, task_done_*, co_due_soon_*
+      if (!entry) { state[id] = { read: false }; changed = true; }
+    }
+  }
+
+  for (const id of Object.keys(state)) {
+    if (!activeIds.has(id)) { delete state[id]; changed = true; }
+  }
+
+  if (changed) _writeNotifState(state);
+
+  // ── Bildirim listesini oluştur ───────────────────────────────────────────────
+  const notifications = [];
+
+  if (state["no_entry_this_month"]) {
+    notifications.push({
+      id: "no_entry_this_month", type: "reminder",
+      title: "Aylık Kayıt Eksik",
+      desc:  `${now.toLocaleDateString("tr-TR", { month: "long", year: "numeric" })} için henüz emisyon kaydı eklemediniz.`,
+      date: new Date().toISOString(), read: state["no_entry_this_month"].read,
+    });
+  }
+
+  const spikeId = `carbon_spike_${thisMonth}`;
+  if (state[spikeId]) {
+    notifications.push({
+      id: spikeId, type: "warning",
+      title: "Karbon Artışı Tespit Edildi",
+      desc:  `Bu ay karbon salımın geçen aya göre %${notifMeta[spikeId]?.pct || ""} arttı.`,
+      date: new Date().toISOString(), read: state[spikeId].read,
+    });
+  }
+
+  for (const [id, meta] of Object.entries(notifMeta)) {
+    if (!state[id]) continue;
+    if (meta.type === "assigned") {
+      notifications.push({
+        id, type: "task",
+        title: "Yeni Görev Atandı",
+        desc:  `"${meta.title}" görevi ${meta.assignedBy} tarafından sana atandı.`,
+        date: new Date().toISOString(), read: state[id].read,
+      });
+    } else if (meta.type === "due_soon") {
+      notifications.push({
+        id, type: "warning",
+        title: "Görev Son Tarihi Yaklaşıyor",
+        desc:  `"${meta.title}" görevinin son tarihi ${new Date(meta.dueDate).toLocaleDateString("tr-TR")}.`,
+        date: new Date().toISOString(), read: state[id].read,
+      });
+    } else if (meta.type === "done") {
+      notifications.push({
+        id, type: "success",
+        title: "Görev Tamamlandı",
+        desc:  `"${meta.title}" görevi ${meta.assigneeName} tarafından tamamlandı.`,
+        date: new Date().toISOString(), read: state[id].read,
+      });
+    }
+  }
+
+  if (notifications.length === 0) return;
+
+  const unread = notifications.filter(n => !n.read).length;
+  if (badge) badge.textContent = unread > 0 ? String(unread) : "";
+  dropdown.innerHTML = buildNotificationDropdown(notifications);
+
+  dropdown.querySelectorAll(".notification-item.unread").forEach(el => {
+    el.addEventListener("click", () => {
+      const id = el.dataset.id;
+      if (id) _markNotifRead(id);
+    });
+  });
 }
 
 async function _loadTopbarGamification() {

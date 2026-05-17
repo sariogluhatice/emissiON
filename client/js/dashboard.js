@@ -4,7 +4,6 @@ import { gamificationService }   from './api/gamificationService.js';
 import { renderLayout }          from './layout.js';
 import {
   calculateStats,
-  categoryEmoji,
   formatDate,
 } from './utils/uiUtils.js';
 import { getCategoryKey, getCategoryLabelWithEmoji } from './utils/labelUtils.js';
@@ -90,7 +89,7 @@ function createCard(record) {
 
   card.innerHTML = `
     <div class="record-info">
-      <span class="record-source">${categoryEmoji(record.source)} ${record.source}</span>
+      <span class="record-source">${record.source}</span>
       <span class="record-meta">${formatDate(record.date)}</span>
     </div>
     <span class="record-amount">${parseFloat(record.amount).toFixed(1)} kg CO₂</span>
@@ -139,12 +138,21 @@ async function initDashboard() {
     try {
       const insights = await emissionService.getSmartInsights();
       const spotlightEl = document.getElementById('aiSpotlightText');
-      if (spotlightEl && insights.prediction) {
-        spotlightEl.textContent = insights.prediction;
+      if (spotlightEl) {
+        let pred = insights?.prediction;
+        // Guard: if AI returned an object instead of a string, try common keys
+        if (pred && typeof pred === 'object') {
+          pred = pred.text || pred.content || pred.value || pred.analysis || null;
+        }
+        if (typeof pred === 'string' && pred.trim()) {
+          spotlightEl.textContent = pred.trim();
+        } else {
+          spotlightEl.textContent = "Analiz hazırlanıyor. Lütfen biraz sonra tekrar bakın.";
+        }
       }
     } catch {
-      // Spotlight hatası kritik değil, sessizce geçebiliriz
-      document.getElementById('aiSpotlightText').textContent = "Tahmin verileri şu an alınamıyor.";
+      const el = document.getElementById('aiSpotlightText');
+      if (el) el.textContent = "Tahmin verileri şu an alınamıyor.";
     }
 
     // 5. Kurumsal Rapor Butonunu Göster
@@ -377,140 +385,218 @@ if (user.role === 'company') {
   if (reportBtn) {
     reportBtn.style.display = 'flex';
     reportBtn.addEventListener('click', async () => {
-      const { records } = await emissionService.getAll();
-      generateCorporateReport(records, user);
+      const origLabel = reportBtn.textContent;
+      reportBtn.disabled = true;
+      reportBtn.textContent = 'Rapor hazırlanıyor…';
+      try {
+        const { records } = await emissionService.getAll();
+        await generateCorporateReport(records, user);
+      } catch (err) {
+        showToast('Hata', err.message || 'Rapor oluşturulamadı.', 'error');
+      } finally {
+        reportBtn.disabled = false;
+        reportBtn.textContent = origLabel;
+      }
     });
   }
 }
 
-function generateCorporateReport(records, user) {
+// normTR: used ONLY for the PDF filename (filesystem safety). Never for PDF text.
+function normTR(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/İ/g, 'I').replace(/ı/g, 'i')
+    .replace(/Ş/g, 'S').replace(/ş/g, 's')
+    .replace(/Ğ/g, 'G').replace(/ğ/g, 'g');
+}
+
+// ── DejaVu Sans font loader (fetched once, cached, supports full Unicode incl. Turkish) ──
+let _dejaVuFontB64 = null;
+
+async function _loadDejaVuFont() {
+  if (_dejaVuFontB64) return _dejaVuFontB64;
+  try {
+    const res = await fetch(
+      'https://cdn.jsdelivr.net/npm/dejavu-fonts-ttf@2.37.3/ttf/DejaVuSans.ttf'
+    );
+    if (!res.ok) return null;
+    const buf = await res.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    let binary = '';
+    const CHUNK = 8192;
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+      binary += String.fromCharCode(...bytes.subarray(i, Math.min(i + CHUNK, bytes.length)));
+    }
+    _dejaVuFontB64 = btoa(binary);
+    return _dejaVuFontB64;
+  } catch {
+    return null;
+  }
+}
+
+async function generateCorporateReport(records, user) {
+  // Load Turkish-capable font before creating the doc
+  const fontB64 = await _loadDejaVuFont();
+
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  
-  // Header & Brand Bar
-  doc.setFillColor(16, 185, 129); // Brand Green
-  doc.rect(0, 0, 210, 15, 'F');
-  
-  doc.setFontSize(22);
-  doc.setTextColor(16, 185, 129);
-  doc.setFont("helvetica", "bold");
-  doc.text('emissiON', 14, 30);
-  
-  doc.setFontSize(14);
-  doc.setTextColor(80);
-  doc.setFont("helvetica", "normal");
-  doc.text('Kurumsal Sürdürülebilirlik ve Karbon Analizi', 14, 38);
-  
-  doc.setDrawColor(200);
-  doc.line(14, 42, 196, 42);
-  
-  // Company & Report Info
-  doc.setFontSize(10);
-  doc.setTextColor(100);
-  doc.text(`Şirket: ${user.name}`, 14, 52);
-  doc.text(`Rapor No: ${Math.random().toString(36).substr(2, 9).toUpperCase()}`, 14, 58);
-  doc.text(`Rapor Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 14, 64);
-  
-  // AI Spotlight Analysis
-  const aiText = document.getElementById('aiSpotlightText')?.textContent;
-  let nextY = 85;
-  if (aiText && !aiText.includes('bekle')) {
-    doc.setFontSize(12);
-    doc.setTextColor(16, 185, 129);
-    doc.text('Yapay Zeka Analiz Özeti', 14, 78);
-    doc.setFontSize(10);
-    doc.setTextColor(50);
-    const splitText = doc.splitTextToSize(aiText, 182);
-    doc.text(splitText, 14, 84);
-    nextY = 84 + (splitText.length * 5) + 10;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = 210, M = 14, CW = W - M * 2;
+  const GREEN = [16, 185, 129], DARK = [30, 41, 59], MUTED = [100, 116, 139];
+  const BLUE = [59, 130, 246];
+
+  const FNAME = 'DejaVuSans';
+  if (fontB64) {
+    doc.addFileToVFS('DejaVuSans.ttf', fontB64);
+    doc.addFont('DejaVuSans.ttf', FNAME, 'normal');
   }
 
-  // Summary Metrics Table
+  // Helper: set font + size (falls back to helvetica if font not loaded)
+  const sf = (size) => {
+    doc.setFontSize(size);
+    doc.setFont(fontB64 ? FNAME : 'helvetica', 'normal');
+  };
+
+  // autoTable style objects
+  const tBody = { font: fontB64 ? FNAME : 'helvetica', fontSize: 8.5 };
+  const tHead = (fill) => ({ fillColor: fill, textColor: 255, font: fontB64 ? FNAME : 'helvetica', fontStyle: 'normal', fontSize: 8 });
+  const tAlt  = (fill) => ({ fillColor: fill });
+
+  // ── Header bar ──────────────────────────────────────────────────────────────
+  doc.setFillColor(...GREEN);
+  doc.rect(0, 0, W, 18, 'F');
+
+  sf(16); doc.setTextColor(255, 255, 255);
+  doc.text('emissiON', M, 12);
+
+  sf(9);
+  doc.text('Kurumsal Sürdürülebilirlik Raporu', M + 42, 12);
+
+  // ── Company / report info card ───────────────────────────────────────────────
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(226, 232, 240);
+  doc.roundedRect(M, 22, CW, 26, 3, 3, 'FD');
+
+  sf(11); doc.setTextColor(...DARK);
+  doc.text(user.name || 'Şirket', M + 6, 31);
+
+  sf(9); doc.setTextColor(...MUTED);
+  const reportNo = Math.random().toString(36).substr(2, 9).toUpperCase();
+  const reportDate = new Date().toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' });
+  doc.text(`Rapor No: ${reportNo}`, M + 6, 38);
+  doc.text(`Oluşturulma Tarihi: ${reportDate}`, M + 6, 44);
+  doc.text(`Kayıt Sayısı: ${records.length}`, M + 90, 38);
+  const firstYear = records.length > 0 ? new Date(records[records.length - 1].date).getFullYear() : '—';
+  const lastYear  = records.length > 0 ? new Date(records[0].date).getFullYear() : '—';
+  doc.text(`Dönem: ${firstYear} – ${lastYear}`, M + 90, 44);
+
+  let y = 54;
+
+  // ── Metrics ──────────────────────────────────────────────────────────────────
   const stats = calculateStats(records);
   const totalCost = calculateCarbonCost(records, user.role);
-  
-  doc.setFontSize(12);
-  doc.setTextColor(0);
-  doc.text('Emisyon Performans Göstergeleri', 14, nextY);
-  
+
+  sf(10); doc.setTextColor(...DARK);
+  doc.text('Emisyon Performans Göstergeleri', M, y + 6);
+  y += 10;
+
   doc.autoTable({
-    startY: nextY + 4,
-    head: [['Metrik', 'Değer', 'Birim']],
+    startY: y,
+    head: [['Gösterge', 'Değer', 'Birim']],
     body: [
-      ['Toplam Karbon Ayak İzi', stats.total, 'kg CO2e'],
-      ['Aktif Emisyon Kaydı', stats.entries, 'Adet'],
-      ['Kritik Emisyon Kaynağı', stats.topCat, '-'],
-      ['Tahmini Karbon Maliyeti', `${Math.round(totalCost).toLocaleString('tr-TR')} TL`, 'TRY']
+      ['Toplam Karbon Ayak İzi', stats.total, 'kg CO₂e'],
+      ['Aktif Emisyon Kaydı', String(stats.entries), 'Adet'],
+      ['En Yüksek Kategori', stats.topCat || '—', '—'],
+      ['Tahmini Karbon Maliyeti', `${Math.round(totalCost).toLocaleString('tr-TR')} TL`, 'TRY'],
     ],
     theme: 'striped',
-    headStyles: { fillColor: [16, 185, 129] },
-    styles: { font: "helvetica", fontSize: 9 }
+    headStyles: tHead(GREEN),
+    bodyStyles: tBody,
+    alternateRowStyles: tAlt([248, 250, 252]),
+    columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right', cellWidth: 28 } },
+    margin: { left: M, right: M },
   });
 
-  let lastY = doc.lastAutoTable.finalY;
+  y = doc.lastAutoTable.finalY + 8;
 
-  // ── AB Sınırda Karbon Düzenleme Mekanizması (CBAM) Vergi Projeksiyonu (Yalnızca Şirketler) ──
+  // ── CBAM projection (company only) ───────────────────────────────────────────
   if (user.role === 'company') {
-    doc.setFontSize(11);
-    doc.setTextColor(16, 185, 129);
-    doc.setFont("helvetica", "bold");
-    doc.text('AB Sınırda Karbon Düzenleme Mekanizması (CBAM) Vergi Projeksiyonu', 14, lastY + 12);
-    
-    const co2Tons = stats.total / 1000;
-    const cbamRateEur = 85; // 85 EUR per ton of CO2
-    const cbamTaxEur = co2Tons * cbamRateEur;
-    const cbamTaxTry = cbamTaxEur * 35.5; // realistic EUR to TRY rate
+    sf(10); doc.setTextColor(...DARK);
+    doc.text('AB Sınırda Karbon Mekanizması (CBAM) Öngörüsü', M, y + 6);
+    y += 10;
+
+    const co2Tons = parseFloat(stats.total) / 1000;
+    const cbamEur = co2Tons * 85;
+    const cbamTry = cbamEur * 38;
 
     doc.autoTable({
-      startY: lastY + 16,
-      head: [['CBAM Metriği', 'Hesaplama Oranı', 'Öngörülen Tutar']],
+      startY: y,
+      head: [['CBAM Metriği', 'Hesaplama', 'Öngörülen Tutar']],
       body: [
-        ['Toplam Karbon Tonu', 'Toplam kg CO2e / 1.000', `${co2Tons.toFixed(3)} Ton`],
-        ['AB ETS Karbon Referans Bedeli', 'AB Komisyonu Sabit Birim Bedel', '85.00 EUR / Ton'],
-        ['Öngörülen Yıllık Karbon Vergisi (EUR)', 'Toplam Ton x 85.00 EUR', `${cbamTaxEur.toFixed(2).toLocaleString('tr-TR')} EUR`],
-        ['Tahmini SKDM Yükümlülüğü (TL)', 'EUR Tutar x 35.50 TRY/EUR', `${Math.round(cbamTaxTry).toLocaleString('tr-TR')} TL`]
+        ['Toplam Karbon Tonu', 'Toplam kg CO₂e / 1.000', `${co2Tons.toFixed(3)} tCO₂`],
+        ['AB ETS Karbon Bedeli', 'Sabit birim bedel', '85,00 EUR / ton'],
+        ['Yıllık Karbon Vergisi', 'Ton × 85 EUR', `${cbamEur.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} EUR`],
+        ['Tahmini SKDM Yükümlülüğü', '1 EUR = 38 TRY', `${Math.round(cbamTry).toLocaleString('tr-TR')} TL`],
       ],
       theme: 'striped',
-      headStyles: { fillColor: [59, 130, 246] }, // Blue for compliance
-      styles: { font: "helvetica", fontSize: 8 }
+      headStyles: tHead(BLUE),
+      bodyStyles: tBody,
+      alternateRowStyles: tAlt([239, 246, 255]),
+      columnStyles: { 2: { halign: 'right', cellWidth: 46 } },
+      margin: { left: M, right: M },
     });
-    
-    lastY = doc.lastAutoTable.finalY;
+
+    y = doc.lastAutoTable.finalY + 8;
   }
 
-  // Detailed Records List
-  doc.setFontSize(11);
-  doc.setTextColor(0);
-  doc.setFont("helvetica", "bold");
-  doc.text('Detaylı Faaliyet Dökümü', 14, lastY + 15);
+  // ── Detailed records ──────────────────────────────────────────────────────────
+  sf(10); doc.setTextColor(...DARK);
+  doc.text('Detaylı Faaliyet Dökümü', M, y + 6);
+  y += 10;
 
-  const tableData = records.sort((a,b) => new Date(b.date) - new Date(a.date)).map(r => [
-    new Date(r.date).toLocaleDateString('tr-TR'),
-    r.source,
-    r.description || 'Açıklama yok',
-    `${parseFloat(r.amount).toFixed(2)} kg`
-  ]);
+  if (!records || records.length === 0) {
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(226, 232, 240);
+    doc.roundedRect(M, y, CW, 14, 2, 2, 'FD');
+    sf(9); doc.setTextColor(...MUTED);
+    doc.text('Henüz faaliyet kaydı bulunmuyor.', M + 6, y + 9);
+  } else {
+    const sorted = [...records].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const tableData = sorted.map(r => [
+      new Date(r.date).toLocaleDateString('tr-TR'),
+      r.source || '—',
+      r.description || '—',
+      `${parseFloat(r.amount).toFixed(2)} kg`,
+    ]);
 
-  doc.autoTable({
-    startY: lastY + 20,
-    head: [['Tarih', 'Kategori', 'Açıklama', 'Miktar']],
-    body: tableData,
-    theme: 'grid',
-    headStyles: { fillColor: [50, 50, 50] },
-    styles: { font: "helvetica", fontSize: 8 }
-  });
+    doc.autoTable({
+      startY: y,
+      head: [['Tarih', 'Kaynak', 'Açıklama', 'Miktar']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: tHead(DARK),
+      bodyStyles: { ...tBody, fontSize: 8 },
+      columnStyles: { 0: { cellWidth: 24 }, 3: { halign: 'right', cellWidth: 24 } },
+      margin: { left: M, right: M },
+    });
+  }
 
-  // Conclusion Footer
+  // ── Footer on every page ──────────────────────────────────────────────────────
   const pageCount = doc.internal.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
-    doc.setFontSize(9);
-    doc.setTextColor(150);
-    doc.text(`Sayfa ${i} / ${pageCount} - emissiON Dijital İkiz Raporu`, 14, doc.internal.pageSize.height - 10);
-    doc.text('Bu rapor otomatik olarak oluşturulmuştur.', 140, doc.internal.pageSize.height - 10);
+    const ph = doc.internal.pageSize.height;
+    doc.setFillColor(248, 250, 252);
+    doc.rect(0, ph - 14, W, 14, 'F');
+    doc.setDrawColor(226, 232, 240);
+    doc.line(0, ph - 14, W, ph - 14);
+    sf(8); doc.setTextColor(...MUTED);
+    doc.text(`Sayfa ${i} / ${pageCount}  ·  emissiON Kurumsal Sürdürülebilirlik Raporu`, M, ph - 6);
+    doc.text('Bu rapor otomatik olarak oluşturulmuştur.', W - M, ph - 6, { align: 'right' });
   }
 
-  doc.save(`Sustainability_Report_${user.name.replace(/\s+/g, '_')}.pdf`);
+  // normTR only for the filename (filesystem safety, not PDF content)
+  const safeName = normTR(user.name || 'Sirket').replace(/\s+/g, '_');
+  doc.save(`emissiON_Rapor_${safeName}_${new Date().toISOString().slice(0, 10)}.pdf`);
 }
 
 
