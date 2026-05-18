@@ -229,3 +229,235 @@
   text-align: right;
   flex-shrink: 0;
 }
+
+/* ── Simülasyon sayfası UX bileşenleri ───────────────────────── */
+
+/* Açıklama bandı */
+.cs-intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  background: rgba(91, 173, 142, 0.08);
+  border: 1px solid rgba(91, 173, 142, 0.25);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-lg);
+}
+.cs-intro-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.cs-intro p {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Baz emisyon bandı */
+.cs-baseline-bar {
+  margin-bottom: var(--spacing-lg);
+  padding: 14px 20px;
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.cs-baseline-label {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.cs-baseline-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-text);
+  line-height: 1.2;
+  margin-top: 2px;
+}
+.cs-baseline-unit {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+.cs-baseline-divider {
+  width: 1px;
+  background: var(--color-border);
+  align-self: stretch;
+  flex-shrink: 0;
+}
+.cs-baseline-hint {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  flex: 1;
+  max-width: 420px;
+  line-height: 1.6;
+}
+
+/* Hazır senaryo kartları */
+.cs-preset-section {
+  margin-bottom: var(--spacing-lg);
+}
+.cs-preset-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+.cs-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+.cs-preset-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 12px;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+}
+.cs-preset-card:hover {
+  border-color: var(--color-primary);
+  background: rgba(91, 173, 142, 0.06);
+  transform: translateY(-2px);
+}
+.cs-preset-card--active {
+  border-color: var(--color-primary);
+  background: rgba(91, 173, 142, 0.12);
+}
+.cs-preset-card--positive {
+  border-color: rgba(22, 163, 74, 0.3);
+}
+.cs-preset-card--positive.cs-preset-card--active,
+.cs-preset-card--positive:hover {
+  border-color: #16a34a;
+  background: rgba(22, 163, 74, 0.08);
+}
+.cs-preset-card--danger {
+  border-color: rgba(220, 38, 38, 0.2);
+}
+.cs-preset-card--danger.cs-preset-card--active,
+.cs-preset-card--danger:hover {
+  border-color: #dc2626;
+  background: rgba(220, 38, 38, 0.06);
+}
+.cs-preset-icon { font-size: 24px; line-height: 1; }
+.cs-preset-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.cs-preset-desc {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+/* Form yardımcıları */
+.cs-optional-tag {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--color-text-soft);
+  margin-left: 4px;
+}
+.cs-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cs-price-badge {
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  background: rgba(91, 173, 142, 0.12);
+  color: var(--color-brand-text);
+  border-radius: 99px;
+  border: 1px solid rgba(91, 173, 142, 0.3);
+  flex-shrink: 0;
+}
+.cs-field-hint {
+  display: block;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin-top: 5px;
+}
+.cs-example {
+  display: block;
+  font-family: monospace;
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 4px;
+  padding: 3px 6px;
+  margin-top: 4px;
+  color: var(--color-text-muted);
+}
+.cs-section-divider {
+  border-top: 1px solid var(--color-border);
+  padding-top: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Canlı önizleme: Mevcut → Tahmini karşılaştırma satırı */
+.cs-compare-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  background: var(--color-surface-muted, rgba(0,0,0,0.03));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.cs-compare-col {
+  flex: 1;
+  text-align: center;
+}
+.cs-compare-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 4px;
+}
+.cs-compare-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-text);
+  line-height: 1.2;
+}
+.cs-compare-value--projected {
+  color: var(--color-primary);
+}
+.cs-compare-unit {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+.cs-compare-arrow {
+  font-size: 20px;
+  color: var(--color-text-soft);
+  flex-shrink: 0;
+  padding: 0 4px;
+}
+
+/* Sonuç yorum bandı */
+.cs-preview-comment {
+  padding: 12px 16px;
+  background: rgba(91, 173, 142, 0.06);
+  border: 1px solid rgba(91, 173, 142, 0.2);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  color: var(--color-text);
+  line-height: 1.6;
+}

@@ -79,4 +79,26 @@ router.patch('/tasks/:id/status',  ctrl.updateCompanyTaskStatus);
 router.post('/simulate',       ctrl.runSimulation);
 router.get('/simulate/saved',  ctrl.getSavedSimulations);
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 6: Report sharing
+// ─────────────────────────────────────────────────────────────────────────────
+
+// POST /api/company/reports/request-access — request access to another company's report
+router.post('/reports/request-access', ctrl.requestReportAccess);
+
+// GET /api/company/reports/access-requests/incoming — owner sees requests for their reports
+router.get('/reports/access-requests/incoming', ctrl.getIncomingAccessRequests);
+
+// GET /api/company/reports/access-requests/outgoing — requester sees their own requests
+router.get('/reports/access-requests/outgoing', ctrl.getOutgoingAccessRequests);
+
+// GET /api/company/reports/access-requests/pending-count — notification count
+router.get('/reports/access-requests/pending-count', ctrl.getPendingIncomingCount);
+
+// PATCH /api/company/reports/access-requests/:id — approve or reject a request (owner only)
+router.patch('/reports/access-requests/:id', ctrl.respondToAccessRequest);
+
+// GET /api/company/reports/:reportId/shared — read-only view of an approved shared report
+router.get('/reports/:reportId/shared', ctrl.getSharedReport);
+
 module.exports = router;

@@ -1,6 +1,7 @@
-import { emissionService } from './api/emissionService.js';
-import { TokenManager } from './api/tokenManager.js';
+import { emissionService }  from './api/emissionService.js';
+import { TokenManager }     from './api/tokenManager.js';
 import { getCurrentUser, renderTopbarUser, bindLogout, showToast } from './utils/uiUtils.js';
+import { normalizeCategory } from './utils/categoryNormalizer.js';
 
 const user = getCurrentUser();
 if (!user) {
@@ -41,15 +42,12 @@ const CATEGORY_ACTIVITY = {
   }
 };
 
-// OCR ham kategori → sistem kategori + activityType dönüşümü
-const OCR_CATEGORY_MAP = {
-  electricity: { category: 'energy', activityType: 'electricity' },
-  water:       { category: 'water',  activityType: 'water_usage' },
-  natural_gas: { category: 'gas',    activityType: 'natural_gas' },
-};
+// activityType strings shown in the UI / stored in source label (not Climatiq values)
+const ACTIVITY_TYPE_FALLBACKS = { energy: 'electricity', water: 'water_usage', gas: 'natural_gas' };
 
 function mapOcrCategory(raw) {
-  return OCR_CATEGORY_MAP[raw] ?? { category: raw || '', activityType: raw || '' };
+  const category = normalizeCategory(raw);
+  return { category, activityType: ACTIVITY_TYPE_FALLBACKS[category] || category };
 }
 
 function normalizeQuantityForCalculation(category, quantity, unit) {
@@ -65,7 +63,7 @@ function normalizeQuantityForCalculation(category, quantity, unit) {
     if (cleanUnit === 'm3' || cleanUnit === 'm^3') value = value * 1000;
   }
 
-  if (category === 'natural_gas') {
+  if (category === 'gas') {
     // Approx conversion for household gas when input is m3.
     if (cleanUnit === 'm3' || cleanUnit === 'm^3') value = value * 10.55;
   }

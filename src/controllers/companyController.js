@@ -413,6 +413,59 @@ const getCompanyDashboard = async (req, res) => {
     }
 };
 
+// ── REPORT SHARING ─────────────────────────────────────────────────────────────
+
+const requestReportAccess = async (req, res) => {
+    const reportNo = str(req.body.report_no);
+    if (!reportNo) return res.status(400).json({ success: false, message: 'Rapor numarası gereklidir.' });
+    try {
+        const result = await svc.requestReportAccess(req.user.id, reportNo.toUpperCase());
+        return ok(res, result, 'Erişim talebi oluşturuldu.', 201);
+    } catch (err) { return handle(res, err); }
+};
+
+const getIncomingAccessRequests = async (req, res) => {
+    try {
+        const requests = await svc.getIncomingAccessRequests(req.user.id);
+        return ok(res, { requests });
+    } catch (err) { return handle(res, err); }
+};
+
+const getOutgoingAccessRequests = async (req, res) => {
+    try {
+        const requests = await svc.getOutgoingAccessRequests(req.user.id);
+        return ok(res, { requests });
+    } catch (err) { return handle(res, err); }
+};
+
+const respondToAccessRequest = async (req, res) => {
+    const id = posInt(req.params.id);
+    if (!id) return res.status(400).json({ success: false, message: 'Geçersiz talep ID.' });
+    const decision = str(req.body.decision);
+    if (!['approved', 'rejected'].includes(decision))
+        return res.status(400).json({ success: false, message: 'Geçersiz karar.' });
+    try {
+        const updated = await svc.respondToAccessRequest(req.user.id, id, decision);
+        return ok(res, { request: updated }, decision === 'approved' ? 'Talep onaylandı.' : 'Talep reddedildi.');
+    } catch (err) { return handle(res, err); }
+};
+
+const getSharedReport = async (req, res) => {
+    const id = posInt(req.params.reportId);
+    if (!id) return res.status(400).json({ success: false, message: 'Geçersiz rapor ID.' });
+    try {
+        const report = await svc.getSharedReport(req.user.id, id);
+        return ok(res, { report });
+    } catch (err) { return handle(res, err); }
+};
+
+const getPendingIncomingCount = async (req, res) => {
+    try {
+        const count = await svc.getPendingIncomingCount(req.user.id);
+        return ok(res, { count });
+    } catch (err) { return handle(res, err); }
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // EXPORTS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -431,4 +484,10 @@ module.exports = {
     runSimulation,
     getSavedSimulations,
     getCompanyDashboard,
+    requestReportAccess,
+    getIncomingAccessRequests,
+    getOutgoingAccessRequests,
+    respondToAccessRequest,
+    getSharedReport,
+    getPendingIncomingCount,
 };

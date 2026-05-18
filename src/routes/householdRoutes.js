@@ -110,8 +110,8 @@ router.get('/members/:userId/emissions', requireMember, requireAdmin, ctrl.getMe
 // POST /api/households/tasks — assign a new task
 router.post('/tasks', requireMember, requireAdmin, ctrl.createTask);
 
-// GET /api/households/tasks — list all household tasks
-router.get('/tasks', requireMember, requireAdmin, ctrl.getTasks);
+// GET /api/households/tasks — list all household tasks (all members can view)
+router.get('/tasks', requireMember, ctrl.getTasks);
 
 // PATCH /api/households/tasks/:taskId/status — update task status (members can update their own tasks)
 router.patch('/tasks/:taskId/status', requireMember, ctrl.updateTaskStatus);

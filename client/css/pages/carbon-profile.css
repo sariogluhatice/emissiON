@@ -1,3 +1,21 @@
+      .btn-back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--color-primary, #00d27f);
+        text-decoration: none;
+        margin-bottom: 14px;
+        padding: 6px 16px;
+        border: 1px solid var(--color-primary, #00d27f);
+        border-radius: 20px;
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+      .btn-back-link:hover {
+        background: rgba(0, 210, 127, 0.12);
+      }
+
       .ob-field-wrapper { margin-bottom: 20px; }
       .ob-field-wrapper .label {
         display: block;

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bildirimler – emissiON</title>
+    <link rel="stylesheet" href="../css/main.css" />
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
+    <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar"></aside>
+
+      <div class="main-content">
+        <header class="topbar" id="topbar"></header>
+
+        <main class="page-body">
+          <div class="page-header">
+            <h1>Bildirimler</h1>
+            <p>Tüm sistem bildirimlerin aşağıda listeleniyor.</p>
+          </div>
+
+          <div style="max-width: 720px; margin: 0 auto;">
+            <div class="glass-card" style="padding: 0; overflow: hidden;">
+              <div id="notifPageHeader" style="display:flex; justify-content:space-between; align-items:center; padding: var(--spacing-md) var(--spacing-lg); border-bottom: 1px solid var(--color-border);">
+                <span style="font-size:14px; font-weight:700; color:var(--color-text);">Bildirimler</span>
+                <button id="markAllPageBtn" style="display:none; font-size:12px; font-weight:600; color:var(--color-primary); background:none; border:none; cursor:pointer; padding:4px 8px; border-radius:var(--radius-sm);">Tümünü okundu yap</button>
+              </div>
+              <div id="notifPageList" style="min-height:120px;">
+                <div style="padding: var(--spacing-xl); text-align:center; color:var(--color-text-muted); font-size:14px;">
+                  <div class="skeleton" style="width:80%; height:56px; margin:0 auto 12px;"></div>
+                  <div class="skeleton" style="width:80%; height:56px; margin:0 auto 12px;"></div>
+                  <div class="skeleton" style="width:60%; height:56px; margin:0 auto;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="../js/notifications.js"></script>
+  </body>
+</html>

@@ -1,42 +1,46 @@
 const pool = require('../config/db');
 
-// Kategori → veritabanı source değerleri eşlemesi (Türkçe ve İngilizce varyasyonlar eklendi)
+// Kategori → canonical category column values (emission_records.category)
 const CATEGORY_MAP = {
-    electricity: {
-        label:   'Elektrik',
-        sources: ['electricity', 'elektrik', 'enerji', 'energy'],
+    energy: {
+        label:      'Enerji (Elektrik)',
+        categories: ['energy'],
     },
-    natural_gas: {
-        label:   'Doğalgaz',
-        sources: ['natural_gas', 'doğalgaz', 'gaz', 'gas'],
+    gas: {
+        label:      'Doğalgaz',
+        categories: ['gas'],
     },
     transport: {
-        label:   'Ulaşım (Kara)',
-        sources: ['car_petrol', 'car_diesel', 'bus', 'train', 'ulaşım', 'transport', 'benzin', 'dizel', 'araç', 'araba'],
-    },
-    flight: {
-        label:   'Uçuş',
-        sources: ['flight_short', 'flight_long', 'uçuş', 'uçak', 'flight'],
+        label:      'Ulaşım',
+        categories: ['transport'],
     },
     water: {
-        label:   'Su',
-        sources: ['water_usage', 'su', 'water'],
+        label:      'Su',
+        categories: ['water'],
     },
     food: {
-        label:   'Gıda',
-        sources: ['food_general', 'meat', 'gıda', 'yemek', 'beslenme'],
+        label:      'Gıda',
+        categories: ['food'],
     },
     shopping: {
-        label:   'Alışveriş',
-        sources: ['office_supplies', 'electronics', 'shopping_general', 'shopping', 'alışveriş', 'market'],
+        label:      'Alışveriş',
+        categories: ['shopping'],
     },
     waste: {
-        label:   'Atık & Malzeme',
-        sources: ['waste_general', 'recycling', 'plastic', 'paper', 'atık', 'çöp', 'geri dönüşüm'],
+        label:      'Atık',
+        categories: ['waste'],
+    },
+    materials: {
+        label:      'Malzeme',
+        categories: ['materials'],
+    },
+    other: {
+        label:      'Diğer',
+        categories: ['other'],
     },
     all: {
-        label:   'Tüm Kategoriler',
-        sources: null, // null → filtre yok
+        label:      'Tüm Kategoriler',
+        categories: null, // null → filtre yok
     },
 };
 
@@ -89,9 +93,9 @@ const simulate = async (req, res) => {
 
         // Kategori filtresi (all → tüm kayıtlar)
         const catInfo = CATEGORY_MAP[category];
-        if (catInfo.sources !== null) {
-            params.push(catInfo.sources);
-            query += ` AND LOWER(source) = ANY($${params.length}::text[])`;
+        if (catInfo.categories !== null) {
+            params.push(catInfo.categories);
+            query += ` AND LOWER(category) = ANY($${params.length}::text[])`;
         }
 
         // Dönem filtresi

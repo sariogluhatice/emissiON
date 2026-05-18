@@ -2,10 +2,11 @@ const pool = require('../config/db');
 const climatiqService = require('../services/climatiqService');
 const aiService = require('../services/aiService');
 const textractService = require('../services/textractService');
+const { normalizeCategory, isCanonical } = require('../utils/categoryNormalizer');
 
 const normalizeExtractedBillData = (raw = {}) => {
-    const allowedCategories = ['electricity', 'water', 'natural_gas'];
-    const category = allowedCategories.includes(raw.category) ? raw.category : null;
+    // Accept any canonical category; null means AI couldn't identify the bill type.
+    const category = raw.category && isCanonical(raw.category) ? raw.category : null;
 
     const quantity = Number(raw.quantity);
     const normalizedQuantity = Number.isFinite(quantity) && quantity > 0 ? quantity : null;
@@ -180,9 +181,9 @@ NEVER classify as electricity based on these alone:
   "elektronik olarak iletilmiştir", "e-archive", "e-invoice", "ELEKTRONIK"
 
 STEP 3 — Genuine utility signals only:
-- category "electricity": ONLY if you see kWh, aktif enerji, tesisat no, sayaç, dağıtım bedeli,
+- category "energy": ONLY if you see kWh, aktif enerji, tesisat no, sayaç, dağıtım bedeli,
   enerji bedeli, elektrik tüketimi, elektrik faturası, electric supply.
-  "elektronik" alone is NEVER an electricity signal.
+  "elektronik" alone is NEVER an energy signal.
 - category "water": ONLY if you see su tüketimi, m³ (for water), water supply, su faturası.
 - category "gas": ONLY if you see doğalgaz, sm3, gaz faturası, natural gas.
 - Otherwise → category: "shopping".
@@ -248,8 +249,9 @@ ${String(ocrText).slice(0, 4000)}`;
             return res.status(502).json({ message: 'Groq geçersiz JSON döndürdü.' });
         }
 
-        const allowedCategories = ['electricity', 'water', 'gas', 'shopping'];
-        const category = allowedCategories.includes(parsed.category) ? parsed.category : 'shopping';
+        // normalizeCategory maps any AI output (e.g. 'electricity') to canonical; fallback 'shopping' for receipts.
+        const rawCat = normalizeCategory(parsed.category);
+        const category = isCanonical(rawCat) ? rawCat : 'shopping';
 
         const rawAmount = parsed.totalAmount;
         const totalAmount = typeof rawAmount === 'number' && Number.isFinite(rawAmount) && rawAmount > 0
@@ -311,7 +313,8 @@ const create = async (req, res) => {
         return res.status(400).json({ message: 'Miktar pozitif bir sayı olmalıdır.' });
     }
 
-    const cat = typeof category === 'string' && category.trim() ? category.trim() : null;
+    const rawCatInput = typeof category === 'string' ? category.trim() : '';
+    const cat = rawCatInput ? normalizeCategory(rawCatInput) : null;
     const actType = typeof activity_type === 'string' && activity_type.trim() ? activity_type.trim() : null;
 
     try {
@@ -367,7 +370,8 @@ const update = async (req, res) => {
         return res.status(400).json({ message: 'Miktar pozitif bir sayı olmalıdır.' });
     }
 
-    const cat = typeof category === 'string' && category.trim() ? category.trim() : null;
+    const rawCatInput = typeof category === 'string' ? category.trim() : '';
+    const cat = rawCatInput ? normalizeCategory(rawCatInput) : null;
     const actType = typeof activity_type === 'string' && activity_type.trim() ? activity_type.trim() : null;
 
     try {

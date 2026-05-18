@@ -26,6 +26,11 @@ const NAV_ITEMS = [
     icon: SVG(
       '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
     ),
+    subItems: [
+      { href: "household.html",         label: "Hane Özeti" },
+      { href: "household-members.html", label: "Üyeler" },
+      { href: "household-tasks.html",   label: "Görevler" },
+    ],
   },
   {
     id: "nav-company",
@@ -88,6 +93,21 @@ function formatNotifDate(iso) {
   return `${Math.floor(hrs / 24)} gün önce`;
 }
 
+function _notifTargetUrl(n) {
+  const id = n.id || "";
+  if (id === "no_entry_this_month") return "emissions.html";
+  if (id.startsWith("carbon_spike_"))   return "emissions.html";
+  if (id.startsWith("task_done_"))      return "household-tasks.html";
+  if (id.startsWith("due_soon_"))       return "household-tasks.html";
+  if (id.startsWith("task_"))           return "household-tasks.html";
+  if (id.startsWith("co_due_soon_"))    return "company-tasks.html";
+  if (id.startsWith("rpt_approved_"))   return "company-reports.html";
+  if (id.startsWith("rpt_access_"))     return "company-reports.html";
+  if (id.startsWith("rpt_rejected_"))   return "company-reports.html";
+  if (n.type === "gamification")        return "dashboard.html";
+  return "";
+}
+
 function buildNotificationDropdown(notifications) {
   const unread = notifications.filter((n) => !n.read);
 
@@ -95,16 +115,18 @@ function buildNotificationDropdown(notifications) {
     notifications.length === 0
       ? `<div class="notification-empty">Henüz bildirimin yok.</div>`
       : notifications
-          .map(
-            (n) => `
-            <div class="notification-item ${n.read ? "read" : "unread"}" data-id="${n.id}">
+          .map((n) => {
+            const url = n.targetUrl || _notifTargetUrl(n);
+            return `
+            <div class="notification-item ${n.read ? "read" : "unread"}${url ? " notification-item--link" : ""}" data-id="${n.id}" data-url="${url}">
                 <div class="notification-body">
                     <div class="notification-item-title">${n.title}</div>
                     <div class="notification-item-desc">${n.desc}</div>
                     <div class="notification-item-date">${formatNotifDate(n.date)}</div>
                 </div>
-            </div>`,
-          )
+                ${url ? `<span class="notification-item-arrow">›</span>` : ""}
+            </div>`;
+          })
           .join("");
 
   return `
@@ -114,7 +136,7 @@ function buildNotificationDropdown(notifications) {
         </div>
         <div class="notification-list">${items}</div>
         <div class="notification-dropdown-footer">
-            <a href="profile.html#notifications" class="notification-see-all">Tüm bildirimleri gör</a>
+            <a href="/pages/notifications.html" id="viewAllNotificationsBtn" class="notification-see-all">Tüm bildirimleri gör →</a>
         </div>`;
 }
 
@@ -167,7 +189,7 @@ export function renderLayout({ activeNav, title } = {}) {
                     ${icon}
                     <span class="nav-item-label">${label}</span>
                 </a>`;
-      if (subItems && isActive && user.role === "company") {
+      if (subItems && isActive) {
         const subHtml = subItems
           .map((sub) => {
             const isSubActive = currentPage === sub.href;
@@ -286,8 +308,18 @@ export function renderLayout({ activeNav, title } = {}) {
       }
     });
 
-    // Mark all/single read — updates DOM and persists to localStorage
+    // Mark all/single read + navigate — updates DOM and persists to localStorage
     notifDropdown?.addEventListener("click", (e) => {
+      // "Tüm bildirimleri gör" footer link — always navigate to notifications page
+      const seeAllLink = e.target.closest("#viewAllNotificationsBtn");
+      if (seeAllLink) {
+        e.preventDefault();
+        e.stopPropagation();
+        notifDropdown.classList.remove("open");
+        window.location.href = "/pages/notifications.html";
+        return;
+      }
+
       const markAllBtn = e.target.closest("#markAllReadBtn");
       if (markAllBtn) {
         notifDropdown.querySelectorAll(".notification-item.unread").forEach(el => {
@@ -300,13 +332,20 @@ export function renderLayout({ activeNav, title } = {}) {
         return;
       }
 
-      const item = e.target.closest(".notification-item.unread");
+      const item = e.target.closest(".notification-item");
       if (item) {
-        item.classList.replace("unread", "read");
-        if (item.dataset.id) _markNotifRead(item.dataset.id);
-        const remaining = notifDropdown.querySelectorAll(".notification-item.unread").length;
-        const badge = document.getElementById("notificationBadge");
-        if (badge) badge.textContent = remaining > 0 ? String(remaining) : "";
+        if (item.classList.contains("unread")) {
+          item.classList.replace("unread", "read");
+          if (item.dataset.id) _markNotifRead(item.dataset.id);
+          const remaining = notifDropdown.querySelectorAll(".notification-item.unread").length;
+          const badge = document.getElementById("notificationBadge");
+          if (badge) badge.textContent = remaining > 0 ? String(remaining) : "";
+        }
+        const url = item.dataset.url;
+        if (url) {
+          notifDropdown.classList.remove("open");
+          window.location.href = url;
+        }
       }
     });
 
@@ -340,13 +379,11 @@ function _markNotifRead(id) {
   if (state[id]) { state[id].read = true; _writeNotifState(state); }
 }
 
-async function _loadRealNotifications() {
+// Exported: builds and returns the current user's notification array.
+// Shared by the dropdown (via _loadRealNotifications) and the full notifications page.
+export async function loadNotifications() {
   const token = localStorage.getItem("emission_token") || sessionStorage.getItem("emission_token");
-  if (!token) return;
-
-  const badge       = document.getElementById("notificationBadge");
-  const dropdown    = document.getElementById("notificationDropdown");
-  if (!dropdown) return;
+  if (!token) return [];
 
   const currentUser = getCurrentUser();
   const now         = new Date();
@@ -399,26 +436,30 @@ async function _loadRealNotifications() {
         const tasks = body?.data?.tasks ?? body?.tasks ?? [];
 
         tasks.forEach(t => {
-          const isMyTask   = t.assigned_to === currentUser.id || t.assigned_to === null;
+          // Normalize: DB returns integers, JWT may deserialize id as number too, but guard with ==
+          const myId       = currentUser.id;
+          // Task is "mine" if assigned to me specifically, or assigned to the whole household (null)
+          const isMyTask   = t.assigned_to == myId || t.assigned_to === null;
           const isActive   = t.status === "pending" || t.status === "in_progress";
-          const iAssigned  = t.assigned_by === currentUser.id;
+          // iCreator: I created this task — no "new task" notification to myself
+          const iCreator   = t.assigned_by == myId;
 
-          // Atanan görev
-          if (isActive && isMyTask) {
+          // New task notification — only if I didn't create it myself
+          if (isActive && isMyTask && !iCreator) {
             const id = `task_${t.id}`;
             activeIds.add(id);
             notifMeta[id] = { type: "assigned", title: t.title, assignedBy: t.assigned_by_name || "Yönetici" };
           }
 
-          // Son tarihi yaklaşıyor (3 gün)
-          if (isActive && isMyTask && t.due_date && t.due_date >= today && t.due_date <= in3Days) {
+          // Due soon (3 days) — same "mine & didn't create" rule
+          if (isActive && isMyTask && !iCreator && t.due_date && t.due_date >= today && t.due_date <= in3Days) {
             const id = `due_soon_${t.id}`;
             activeIds.add(id);
             notifMeta[id] = { type: "due_soon", title: t.title, dueDate: t.due_date };
           }
 
-          // Yönetici: üye görevi tamamladı
-          if (t.status === "completed" && iAssigned && t.assigned_to && t.assigned_to !== currentUser.id) {
+          // Admin: a member completed a task I assigned to them specifically
+          if (t.status === "completed" && iCreator && t.assigned_to && t.assigned_to != myId) {
             const id = `task_done_${t.id}`;
             activeIds.add(id);
             notifMeta[id] = { type: "done", title: t.title, assigneeName: t.assigned_to_name || "Üye" };
@@ -448,6 +489,45 @@ async function _loadRealNotifications() {
     } catch { /* non-critical */ }
   }
 
+  // ── 4. Şirket rapor erişim istekleri ─────────────────────────────────────────
+  if (currentUser?.role === "company") {
+    try {
+      const res = await fetch("/api/company/reports/access-requests/incoming", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const body = await res.json();
+        const requests = body?.data?.requests ?? [];
+        requests.forEach(r => {
+          if (r.status === "pending") {
+            const id = `rpt_access_${r.id}`;
+            activeIds.add(id);
+            notifMeta[id] = { type: "rpt_request", requesterName: r.requester_name, reportNo: r.report_no, reportName: r.report_name };
+          }
+        });
+        // Approved/rejected outgoing — notify requester
+        const outRes = await fetch("/api/company/reports/access-requests/outgoing", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (outRes.ok) {
+          const outBody = await outRes.json();
+          const outRequests = outBody?.data?.requests ?? [];
+          outRequests.forEach(r => {
+            if (r.status === "approved") {
+              const id = `rpt_approved_${r.id}`;
+              activeIds.add(id);
+              notifMeta[id] = { type: "rpt_approved", reportNo: r.report_no, reportName: r.report_name, reportId: r.report_id };
+            } else if (r.status === "rejected") {
+              const id = `rpt_rejected_${r.id}`;
+              activeIds.add(id);
+              notifMeta[id] = { type: "rpt_rejected", reportNo: r.report_no };
+            }
+          });
+        }
+      }
+    } catch { /* non-critical */ }
+  }
+
   // ── Kalıcı durum senkronizasyonu ────────────────────────────────────────────
   const state = _readNotifState();
   let changed = false;
@@ -463,7 +543,7 @@ async function _loadRealNotifications() {
       if (!entry) { state[id] = { read: false, month: thisMonth }; changed = true; }
       else if (entry.month !== thisMonth) { state[id] = { read: false, month: thisMonth }; changed = true; }
     } else {
-      // task_*, due_soon_*, task_done_*, co_due_soon_*
+      // task_*, due_soon_*, task_done_*, co_due_soon_*, rpt_access_*, rpt_approved_*, rpt_rejected_*
       if (!entry) { state[id] = { read: false }; changed = true; }
     }
   }
@@ -519,21 +599,48 @@ async function _loadRealNotifications() {
         desc:  `"${meta.title}" görevi ${meta.assigneeName} tarafından tamamlandı.`,
         date: new Date().toISOString(), read: state[id].read,
       });
+    } else if (meta.type === "rpt_request") {
+      notifications.push({
+        id, type: "task",
+        title: "Rapor Erişim İsteği",
+        desc:  `${meta.requesterName} raporunuzu (${meta.reportNo}) görüntülemek istiyor.`,
+        date: new Date().toISOString(), read: state[id].read,
+        targetUrl: "company-reports.html",
+      });
+    } else if (meta.type === "rpt_approved") {
+      notifications.push({
+        id, type: "success",
+        title: "Rapor Erişimi Onaylandı",
+        desc:  `${meta.reportNo} nolu rapora erişiminiz onaylandı.`,
+        date: new Date().toISOString(), read: state[id].read,
+        targetUrl: `company-report-view.html?reportId=${meta.reportId}`,
+      });
+    } else if (meta.type === "rpt_rejected") {
+      notifications.push({
+        id, type: "warning",
+        title: "Rapor Erişimi Reddedildi",
+        desc:  `${meta.reportNo} nolu rapor için erişim talebiniz reddedildi.`,
+        date: new Date().toISOString(), read: state[id].read,
+        targetUrl: "company-reports.html",
+      });
     }
   }
 
-  if (notifications.length === 0) return;
+  return notifications;
+}
+
+// Internal: refreshes the topbar notification dropdown.
+async function _loadRealNotifications() {
+  const badge    = document.getElementById("notificationBadge");
+  const dropdown = document.getElementById("notificationDropdown");
+  if (!dropdown) return;
+
+  const notifications = await loadNotifications();
+  if (!notifications.length) return;
 
   const unread = notifications.filter(n => !n.read).length;
   if (badge) badge.textContent = unread > 0 ? String(unread) : "";
   dropdown.innerHTML = buildNotificationDropdown(notifications);
-
-  dropdown.querySelectorAll(".notification-item.unread").forEach(el => {
-    el.addEventListener("click", () => {
-      const id = el.dataset.id;
-      if (id) _markNotifRead(id);
-    });
-  });
 }
 
 async function _loadTopbarGamification() {

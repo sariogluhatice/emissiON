@@ -556,6 +556,23 @@
   color: var(--color-text-soft);
 }
 
+.notification-item--link:hover {
+  background: rgba(91, 173, 142, 0.07);
+}
+
+.notification-item-arrow {
+  font-size: 18px;
+  color: var(--color-text-soft);
+  flex-shrink: 0;
+  align-self: center;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.notification-item--link:hover .notification-item-arrow {
+  color: var(--color-primary);
+  transform: translateX(3px);
+}
+
 .notification-dropdown-footer {
   padding: 10px 16px;
   border-top: 1px solid var(--color-border);
@@ -567,10 +584,15 @@
   color: var(--color-primary);
   text-decoration: none;
   font-weight: 600;
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .notification-see-all:hover {
-  text-decoration: underline;
+  background: rgba(91, 173, 142, 0.1);
+  text-decoration: none;
 }
 
 /* ── Page Body ────────────────────────────────────────────── */
@@ -804,38 +826,53 @@
 /* ── Badge Items ──────────────────────────────────────────── */
 .badge-item {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 6px;
-  padding: 14px 12px;
+  gap: 14px;
+  padding: 14px 16px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   background: var(--color-surface);
-  width: 90px;
-  text-align: center;
+  min-width: 0;
+  text-align: left;
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
   cursor: default;
 }
 .badge-item:hover {
-  transform: translateY(-4px);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-card-hover);
 }
 .badge-icon {
-  font-size: 28px;
+  font-size: 30px;
   line-height: 1;
+  flex-shrink: 0;
+}
+.badge-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
 }
 .badge-name {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--color-text-muted);
+}
+.badge-desc {
+  font-size: 11px;
+  color: var(--color-text-soft);
+  line-height: 1.4;
 }
 .badge-earned .badge-name {
   color: var(--color-primary);
 }
+.badge-earned .badge-desc {
+  color: var(--color-text-muted);
+}
 .badge-locked {
-  opacity: 0.35;
+  opacity: 0.38;
   filter: grayscale(1);
 }
 

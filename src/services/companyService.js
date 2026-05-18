@@ -836,8 +836,10 @@ const runSimulation = async (userId, {
     };
 
     const { rows: [simulation] } = await pool.query(
-        `INSERT INTO company_simulations (user_id, name, inputs, results)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO company_simulations (user_id, name, inputs, results, report_no)
+         VALUES ($1, $2, $3, $4,
+           'EMR-' || TO_CHAR(NOW(), 'YYYY') || '-' || LPAD(nextval('company_report_seq')::text, 4, '0')
+         )
          RETURNING *`,
         [userId, scenario_name || null, JSON.stringify(cleanInputs), JSON.stringify(results)]
     );
@@ -855,7 +857,7 @@ const getSavedSimulations = async (userId, { page = 1, limit = 20 } = {}) => {
 
     const [simsRes, countRes] = await Promise.all([
         pool.query(
-            `SELECT id, name, inputs, results, created_at
+            `SELECT id, name, report_no, inputs, results, created_at
              FROM company_simulations WHERE user_id = $1
              ORDER BY created_at DESC
              LIMIT $2 OFFSET $3`,
@@ -873,6 +875,150 @@ const getSavedSimulations = async (userId, { page = 1, limit = 20 } = {}) => {
         page:        safePage,
         limit:       safeLimit,
     };
+};
+
+// ─── REPORT ACCESS REQUESTS ───────────────────────────────────────────────────
+
+const requestReportAccess = async (requesterUserId, reportNo) => {
+    // 1. Find the report by report_no
+    const { rows: [report] } = await pool.query(
+        'SELECT id, user_id FROM company_simulations WHERE report_no = $1',
+        [reportNo]
+    );
+    if (!report) _fail(404, 'Bu rapor numarasına ait rapor bulunamadı.');
+    if (report.user_id === requesterUserId) _fail(400, 'Kendi raporunuza erişim talebi oluşturamazsınız.');
+
+    // 2. Check for existing pending/approved request
+    const { rows: [existing] } = await pool.query(
+        `SELECT id, status FROM company_report_access_requests
+         WHERE report_id = $1 AND requester_user_id = $2`,
+        [report.id, requesterUserId]
+    );
+    if (existing) {
+        if (existing.status === 'pending')  _fail(409, 'Bu rapor için zaten bekleyen bir talebiniz var.');
+        if (existing.status === 'approved') _fail(409, 'Bu rapora zaten erişiminiz bulunmaktadır.');
+        // rejected → allow re-request by deleting old record
+        await pool.query(
+            'DELETE FROM company_report_access_requests WHERE id = $1',
+            [existing.id]
+        );
+    }
+
+    // 3. Get requester company name for notification
+    const { rows: [requesterProfile] } = await pool.query(
+        `SELECT COALESCE(cp.company_name, u.name) AS display_name
+         FROM users u
+         LEFT JOIN company_profiles cp ON cp.user_id = u.id
+         WHERE u.id = $1`,
+        [requesterUserId]
+    );
+
+    // 4. Create request
+    const { rows: [req] } = await pool.query(
+        `INSERT INTO company_report_access_requests
+             (report_id, requester_user_id, owner_user_id, status)
+         VALUES ($1, $2, $3, 'pending')
+         RETURNING *`,
+        [report.id, requesterUserId, report.user_id]
+    );
+
+    return {
+        requestId: req.id,
+        reportId:  report.id,
+        reportNo,
+        ownerUserId:       report.user_id,
+        requesterName:     requesterProfile?.display_name || 'Bilinmeyen Şirket',
+    };
+};
+
+const getIncomingAccessRequests = async (ownerUserId) => {
+    const { rows } = await pool.query(
+        `SELECT
+             r.id, r.report_id, r.requester_user_id, r.status,
+             r.created_at, r.updated_at, r.approved_at, r.rejected_at,
+             s.name AS report_name, s.report_no,
+             COALESCE(cp.company_name, u.name) AS requester_name
+         FROM company_report_access_requests r
+         JOIN company_simulations s ON s.id = r.report_id
+         JOIN users u ON u.id = r.requester_user_id
+         LEFT JOIN company_profiles cp ON cp.user_id = r.requester_user_id
+         WHERE r.owner_user_id = $1
+         ORDER BY r.created_at DESC`,
+        [ownerUserId]
+    );
+    return rows;
+};
+
+const getOutgoingAccessRequests = async (requesterUserId) => {
+    const { rows } = await pool.query(
+        `SELECT
+             r.id, r.report_id, r.status,
+             r.created_at, r.updated_at, r.approved_at, r.rejected_at,
+             s.name AS report_name, s.report_no,
+             COALESCE(cp.company_name, u.name) AS owner_name
+         FROM company_report_access_requests r
+         JOIN company_simulations s ON s.id = r.report_id
+         JOIN users u ON u.id = r.owner_user_id
+         LEFT JOIN company_profiles cp ON cp.user_id = r.owner_user_id
+         WHERE r.requester_user_id = $1
+         ORDER BY r.created_at DESC`,
+        [requesterUserId]
+    );
+    return rows;
+};
+
+const respondToAccessRequest = async (ownerUserId, requestId, decision) => {
+    if (!['approved', 'rejected'].includes(decision)) _fail(400, 'Geçersiz karar. approved veya rejected olmalıdır.');
+
+    const { rows: [req] } = await pool.query(
+        'SELECT * FROM company_report_access_requests WHERE id = $1',
+        [requestId]
+    );
+    if (!req) _fail(404, 'Erişim talebi bulunamadı.');
+    if (req.owner_user_id !== ownerUserId) _fail(403, 'Bu talebi yalnızca rapor sahibi yanıtlayabilir.');
+    if (req.status !== 'pending') _fail(409, `Bu talep zaten ${req.status} durumunda.`);
+
+    const timestampCol = decision === 'approved' ? 'approved_at' : 'rejected_at';
+    const { rows: [updated] } = await pool.query(
+        `UPDATE company_report_access_requests
+         SET status = $1, updated_at = NOW(), ${timestampCol} = NOW()
+         WHERE id = $2
+         RETURNING *`,
+        [decision, requestId]
+    );
+    return updated;
+};
+
+const getSharedReport = async (requesterUserId, reportId) => {
+    // Check approved access
+    const { rows: [access] } = await pool.query(
+        `SELECT id FROM company_report_access_requests
+         WHERE report_id = $1 AND requester_user_id = $2 AND status = 'approved'`,
+        [reportId, requesterUserId]
+    );
+    if (!access) _fail(403, 'Bu rapora erişim izniniz bulunmamaktadır.');
+
+    const { rows: [sim] } = await pool.query(
+        `SELECT s.id, s.name, s.report_no, s.inputs, s.results, s.created_at,
+                COALESCE(cp.company_name, u.name) AS owner_name
+         FROM company_simulations s
+         JOIN users u ON u.id = s.user_id
+         LEFT JOIN company_profiles cp ON cp.user_id = s.user_id
+         WHERE s.id = $1`,
+        [reportId]
+    );
+    if (!sim) _fail(404, 'Rapor bulunamadı.');
+    return sim;
+};
+
+const getPendingIncomingCount = async (ownerUserId) => {
+    const { rows: [r] } = await pool.query(
+        `SELECT COUNT(*)::int AS count
+         FROM company_report_access_requests
+         WHERE owner_user_id = $1 AND status = 'pending'`,
+        [ownerUserId]
+    );
+    return r?.count ?? 0;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -896,4 +1042,10 @@ module.exports = {
     getDashboard,
     CBAM_SECTORS,
     EMISSION_CATEGORIES,
+    requestReportAccess,
+    getIncomingAccessRequests,
+    getOutgoingAccessRequests,
+    respondToAccessRequest,
+    getSharedReport,
+    getPendingIncomingCount,
 };

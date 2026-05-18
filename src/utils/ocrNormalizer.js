@@ -24,14 +24,14 @@ function detectCategory(text) {
     // Shopping signals win over any weak utility signal.
     if (isShopping) return null; // null → caller treats as shopping
 
-    if (/natural[\s-]?gas|gaz fatura|therm|\bbtu\b|doğalgaz|dogalgaz/.test(t)) return 'natural_gas';
+    if (/natural[\s-]?gas|gaz fatura|therm|\bbtu\b|doğalgaz|dogalgaz/.test(t)) return 'gas';
     if (/water supply|su fatura|su tüketimi|tüketim.*su/.test(t))               return 'water';
     if (/\bwater\b/.test(t) && !isShopping)                                     return 'water';
 
     // Electricity: require genuine consumption signals; e-invoice markers disqualify.
-    if (!isEInvoice && ELEC_CONSUMPTION_RE.test(t))                             return 'electricity';
+    if (!isEInvoice && ELEC_CONSUMPTION_RE.test(t))                             return 'energy';
     // "elektrik" alone is enough only when there's a corroborating consumption word.
-    if (!isEInvoice && /\belektrik\b/.test(t) && /kwh|tüketim|sayaç|abonelik|tesisat/.test(t)) return 'electricity';
+    if (!isEInvoice && /\belektrik\b/.test(t) && /kwh|tüketim|sayaç|abonelik|tesisat/.test(t)) return 'energy';
 
     console.log('[detectCategory] reason=no_match isEInvoice=%s isShopping=%s', isEInvoice, isShopping);
     return null;

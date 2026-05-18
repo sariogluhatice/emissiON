@@ -115,18 +115,20 @@
 
             <!-- Floating Status Badge -->
             <div style="z-index: 3; margin-top: 8px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-              <span class="globe-status-label" id="globeStatusLabel" style="font-size: 16px; padding: 8px 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);">Dünya Sağlıklı</span>
+              <a href="what-if-simulation.html" style="text-decoration: none;" aria-label="Gelecek planlayıcısına git" tabindex="0">
+                <span class="globe-status-label" id="globeStatusLabel" style="font-size: 16px; padding: 8px 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5); cursor: pointer; transition: opacity 0.2s ease;">Dünya Sağlıklı</span>
+              </a>
               <span class="globe-emission-text" id="globeEmissionText" style="font-size: 14px; opacity: 0.7;">Analiz ediliyor...</span>
             </div>
 
             <!-- Left/Right Floating Stats (Visual only for layout, JS will update) -->
             <div style="position: absolute; left: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 24px; z-index: 2;">
-                <div class="stat-card glass-card" style="width: 180px; margin: 0;">
+                <div class="stat-card glass-card stat-card--link" style="width: 180px; margin: 0;" tabindex="0" role="link" aria-label="Emisyon kayıtlarına git" onclick="window.location.href='emissions.html'" onkeydown="if(event.key==='Enter')window.location.href='emissions.html'">
                     <span class="stat-label">Toplam Karbon</span>
                     <span class="stat-value" id="statTotal" style="font-size: 24px;">—</span>
                     <span class="stat-unit">kg CO₂e</span>
                 </div>
-                <div class="stat-card glass-card" style="width: 180px; margin: 0; border-left: 3px solid var(--color-error);">
+                <div class="stat-card glass-card stat-card--link" style="width: 180px; margin: 0; border-left: 3px solid var(--color-error);" tabindex="0" role="link" aria-label="Emisyon kayıtlarına git" onclick="window.location.href='emissions.html'" onkeydown="if(event.key==='Enter')window.location.href='emissions.html'">
                     <span class="stat-label">Karbonun Maliyeti</span>
                     <span class="stat-value" id="statSavings" style="font-size: 24px; color: var(--color-error);">—</span>
                     <span class="stat-unit">TL Tahmini Gider</span>
@@ -134,12 +136,12 @@
             </div>
 
             <div style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 24px; z-index: 2;">
-                <div class="stat-card glass-card" style="width: 180px; margin: 0;">
+                <div class="stat-card glass-card stat-card--link" style="width: 180px; margin: 0;" tabindex="0" role="link" aria-label="Emisyon kayıtlarına git" onclick="window.location.href='emissions.html'" onkeydown="if(event.key==='Enter')window.location.href='emissions.html'">
                     <span class="stat-label">Aktif Kayıtlar</span>
                     <span class="stat-value" id="statEntries" style="font-size: 24px;">—</span>
                     <span class="stat-unit">adet veri</span>
                 </div>
-                <div class="stat-card glass-card" style="width: 180px; margin: 0; border-left: 3px solid var(--color-error);">
+                <div class="stat-card glass-card stat-card--link" style="width: 180px; margin: 0; border-left: 3px solid var(--color-error);" tabindex="0" role="link" aria-label="Emisyon kayıtlarına git" onclick="window.location.href='emissions.html'" onkeydown="if(event.key==='Enter')window.location.href='emissions.html'">
                     <span class="stat-label">Kritik Kaynak</span>
                     <span class="stat-value" id="statTopCat" style="font-size: 16px; color: var(--color-error); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">—</span>
                     <span class="stat-unit">en yüksek emisyon</span>
@@ -154,7 +156,7 @@
                 <h3 style="margin: 0; font-size: 15px; color: var(--color-brand-text);">Karbon İkizi Öngörüsü</h3>
                 <p id="aiSpotlightText" style="margin: 6px 0 0; font-size: 14px; opacity: 0.8; line-height: 1.5;">Analiz notun hazırlanıyor...</p>
               </div>
-              <a href="smart-insights.html" class="btn-primary" style="padding: 8px 20px; font-size: 12px; margin-left: 24px; white-space: nowrap;">Tüm Analizler</a>
+              <a href="what-if-simulation.html" class="btn-primary" style="padding: 8px 20px; font-size: 12px; margin-left: 24px; white-space: nowrap;">Tüm Analizler</a>
             </div>
           </div>
 
@@ -240,10 +242,10 @@
           <!-- Badges showcase -->
           <div id="badgesCard" class="content-card glass-card" style="display:none; margin-bottom:32px;">
             <div class="content-card-header">
-              <span class="content-card-title">🏅 Rozetlerim</span>
+              <span class="content-card-title">🏅 Başarılar / Rozetler</span>
               <span id="badgesEarnedCount" style="font-size:12px;color:var(--color-text-muted);margin-left:auto;"></span>
             </div>
-            <div id="badgesList" style="display:flex;flex-wrap:wrap;gap:12px;padding:0 24px 24px;"></div>
+            <div id="badgesList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;padding:0 24px 24px;"></div>
           </div>
 
         </main>

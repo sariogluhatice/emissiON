@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const pool   = require('../config/db');
+const { normalizeCategory } = require('../utils/categoryNormalizer');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INTERNAL HELPERS
@@ -8,6 +9,9 @@ const pool   = require('../config/db');
 // Generates an 8-character uppercase hex string, e.g. "3F2A1C9B".
 const _generateCode = () =>
     crypto.randomBytes(4).toString('hex').toUpperCase();
+
+// Maps any raw category value to the canonical key used in household_tasks.emission_category.
+const _canonCategory = (cat) => cat ? normalizeCategory(cat) : null;
 
 // Produces a unique invite code with up to 5 collision retries.
 const _uniqueInviteCode = async () => {
@@ -346,36 +350,44 @@ const createTask = async (householdId, adminId, { title, description, assigned_t
             _fail(400, 'Takipli görev oluşturmak için önce en az bir emisyon kaydı girmelisiniz.');
         }
 
-        const now = new Date();
-        const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        baselinePeriod = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}`;
-
+        // Find the most recent month (any month, including current) with data for this
+        // category. Previous months are preferred; current month is accepted as fallback
+        // so tasks don't stay stuck when the user only has data from the current month.
         let bQuery, bParams;
         if (assignedTo) {
-            bQuery  = `SELECT COALESCE(SUM(amount), 0)::float AS baseline
-                       FROM emission_records
-                       WHERE user_id = $1 AND category = $2 AND TO_CHAR(date, 'YYYY-MM') = $3`;
-            bParams = [assignedTo, cleanCategory, baselinePeriod];
+            bQuery = `SELECT SUM(amount)::float AS baseline,
+                             TO_CHAR(date, 'YYYY-MM') AS actual_period
+                      FROM emission_records
+                      WHERE user_id = $1
+                        AND LOWER(category) = LOWER($2)
+                      GROUP BY TO_CHAR(date, 'YYYY-MM')
+                      HAVING SUM(amount) > 0
+                      ORDER BY actual_period DESC
+                      LIMIT 1`;
+            bParams = [assignedTo, cleanCategory];
         } else {
-            bQuery  = `SELECT COALESCE(SUM(er.amount), 0)::float AS baseline
-                       FROM emission_records er
-                       JOIN household_members hm ON hm.user_id = er.user_id
-                       WHERE hm.household_id = $1 AND er.category = $2
-                         AND TO_CHAR(er.date, 'YYYY-MM') = $3`;
-            bParams = [householdId, cleanCategory, baselinePeriod];
+            bQuery = `SELECT SUM(er.amount)::float AS baseline,
+                             TO_CHAR(er.date, 'YYYY-MM') AS actual_period
+                      FROM emission_records er
+                      JOIN household_members hm ON hm.user_id = er.user_id
+                      WHERE hm.household_id = $1
+                        AND LOWER(er.category) = LOWER($2)
+                      GROUP BY TO_CHAR(er.date, 'YYYY-MM')
+                      HAVING SUM(er.amount) > 0
+                      ORDER BY actual_period DESC
+                      LIMIT 1`;
+            bParams = [householdId, cleanCategory];
         }
 
-        const { rows: [bRow] } = await pool.query(bQuery, bParams);
-        const rawBaseline = parseFloat(bRow.baseline);
-
-        if (rawBaseline > 0) {
-            // Previous month data exists — compute targets now
-            baselineAmount = rawBaseline;
+        const { rows: bRows } = await pool.query(bQuery, bParams);
+        const bRow = bRows[0];
+        if (bRow && parseFloat(bRow.baseline) > 0) {
+            baselineAmount = parseFloat(bRow.baseline);
+            baselinePeriod = bRow.actual_period;
             targetAmount   = parseFloat((baselineAmount * (1 - cleanPct / 100)).toFixed(2));
         }
-        // rawBaseline === 0: no previous data yet. Task is created with
-        // baseline_amount = NULL, target_amount = NULL.
-        // _addProgressToTasks will return 'no_baseline' at runtime.
+        // No prior data yet → baseline_amount/target_amount stay NULL.
+        // _addProgressToTasks will retroactively resolve them once data is added.
     }
 
     const { rows: [task] } = await pool.query(
@@ -407,14 +419,84 @@ const _addProgressToTasks = async (tasks, householdId) => {
     const trackingTasks = tasks.filter(t => t.emission_category);
     if (!trackingTasks.length) return tasks;
 
+    // ── Step 0: Retroactively resolve missing/zero baselines ─────────────────
+    // Catches tasks where:
+    //   a) baseline was never set (target_amount IS NULL), OR
+    //   b) old code stored 0 for both baseline and target (effectively no data found)
+    // Also handles the case where all data is in the current month (no < filter).
+    const noBaselineTasks = trackingTasks.filter(t => {
+        if (!t.target_pct) return false;
+        if (t.target_amount == null) return true;
+        // Treat 0-baseline/0-target as broken — re-resolve
+        if (parseFloat(t.baseline_amount) === 0 && parseFloat(t.target_amount) === 0) return true;
+        return false;
+    });
+    if (noBaselineTasks.length) {
+        await Promise.all(noBaselineTasks.map(async t => {
+            let bQuery, bParams;
+            if (t.assigned_to) {
+                bQuery = `SELECT SUM(amount)::float AS baseline,
+                                 TO_CHAR(date, 'YYYY-MM') AS period
+                          FROM emission_records
+                          WHERE user_id = $1
+                            AND LOWER(category) = LOWER($2)
+                          GROUP BY TO_CHAR(date, 'YYYY-MM')
+                          HAVING SUM(amount) > 0
+                          ORDER BY period DESC
+                          LIMIT 1`;
+                bParams = [t.assigned_to, t.emission_category];
+            } else {
+                bQuery = `SELECT SUM(er.amount)::float AS baseline,
+                                 TO_CHAR(er.date, 'YYYY-MM') AS period
+                          FROM emission_records er
+                          JOIN household_members hm ON hm.user_id = er.user_id
+                          WHERE hm.household_id = $1
+                            AND LOWER(er.category) = LOWER($2)
+                          GROUP BY TO_CHAR(er.date, 'YYYY-MM')
+                          HAVING SUM(er.amount) > 0
+                          ORDER BY period DESC
+                          LIMIT 1`;
+                bParams = [householdId, t.emission_category];
+            }
+            const { rows } = await pool.query(bQuery, bParams);
+            if (rows.length && parseFloat(rows[0].baseline) > 0) {
+                const baselineAmount = parseFloat(rows[0].baseline);
+                const pct            = parseFloat(t.target_pct);
+                const targetAmount   = parseFloat((baselineAmount * (1 - pct / 100)).toFixed(2));
+                await pool.query(
+                    `UPDATE household_tasks
+                     SET baseline_amount = $1, target_amount = $2, baseline_period = $3
+                     WHERE id = $4`,
+                    [baselineAmount, targetAmount, rows[0].period, t.id]
+                );
+                // Mutate in-memory so the rest of this function uses updated values
+                t.baseline_amount = baselineAmount;
+                t.target_amount   = targetAmount;
+                t.baseline_period = rows[0].period;
+            }
+        }));
+    }
+
+    // ── Step 1: Current month emissions (category-normalized) ─────────────────
+    // CASE expression maps stored variants (electricity, gas, su…) to the same
+    // canonical keys used in emission_category so lookups always match.
     const { rows: emRows } = await pool.query(
-        `SELECT er.category, er.user_id,
-                COALESCE(SUM(er.amount), 0)::float AS current_amount
+        `SELECT
+            CASE
+                WHEN LOWER(er.category) IN ('electricity','elektrik','enerji') THEN 'energy'
+                WHEN LOWER(er.category) IN ('natural_gas','doğalgaz','dogalgaz') THEN 'gas'
+                WHEN LOWER(er.category) IN ('su','water_usage')            THEN 'water'
+                WHEN LOWER(er.category) IN ('alışveriş','alisveris')       THEN 'shopping'
+                WHEN LOWER(er.category) IN ('ulaşım','ulasim')             THEN 'transport'
+                ELSE LOWER(er.category)
+            END AS category,
+            er.user_id,
+            COALESCE(SUM(er.amount), 0)::float AS current_amount
          FROM emission_records er
          JOIN household_members hm ON hm.user_id = er.user_id
          WHERE hm.household_id = $1
            AND TO_CHAR(er.date, 'YYYY-MM') = TO_CHAR(NOW(), 'YYYY-MM')
-         GROUP BY er.category, er.user_id`,
+         GROUP BY 1, er.user_id`,
         [householdId]
     );
 
@@ -433,8 +515,9 @@ const _addProgressToTasks = async (tasks, householdId) => {
 
     const progressById = {};
     trackingTasks.forEach(t => {
-        // Resolve current emission — null means "no records this period" (≠ zero emission)
-        const catData = emMap[t.emission_category];
+        // Normalize task's category key before emMap lookup
+        const catKey  = _canonCategory(t.emission_category);
+        const catData = emMap[catKey];
         let current;
         if (!catData) {
             current = null;
@@ -445,8 +528,11 @@ const _addProgressToTasks = async (tasks, householdId) => {
             current = catData.total;
         }
 
-        // No baseline/target yet — skip target logic, still surface any current data
-        if (t.target_amount == null) {
+        // No baseline/target yet — skip target logic, still surface any current data.
+        // Also treat 0-baseline as unresolved (Step 0 found no data for this category).
+        const hasBaseline = t.target_amount != null &&
+                            !(parseFloat(t.baseline_amount) === 0 && parseFloat(t.target_amount) === 0);
+        if (!hasBaseline) {
             progressById[t.id] = {
                 current_amount:  current !== null ? parseFloat(current.toFixed(2)) : null,
                 progress_status: 'no_baseline',

@@ -5,6 +5,7 @@ import { showToast }           from "./utils/uiUtils.js";
 import { companyService }      from "./api/companyService.js";
 import { gamificationService } from "./api/gamificationService.js";
 import { triggerConfetti, showXpGain, showLevelUp, showBadgeUnlock } from "./utils/confetti.js";
+import { normalizeCategory }   from "./utils/categoryNormalizer.js";
 
 // Edit mode: check for ?edit=<id> URL param
 const _urlParams = new URLSearchParams(window.location.search);
@@ -200,20 +201,7 @@ const CLIMATIQ_MAP = {
 // Fallback TRY → USD rate used when no OCR exchange rate is available
 const TRY_USD_FALLBACK = 38;
 
-const OCR_CATEGORY_MAP = {
-  electricity: "energy",
-  water: "water",
-  natural_gas: "gas",
-};
-
-// Maps Groq category values → ACTIVITY_MAP keys
-const GROQ_CATEGORY_MAP = {
-  electricity: "energy",
-  water: "water",
-  gas: "gas",
-  natural_gas: "gas",
-  shopping: "shopping",
-};
+// Both OCR (Textract) and Groq output use normalizeCategory() for canonical mapping.
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const cardManual = document.getElementById("cardManual");
@@ -483,7 +471,7 @@ async function scanUtilityBill(file) {
 
   const ext = data.extracted;
   if (ext) {
-    const mappedCat = OCR_CATEGORY_MAP[ext.category] || ext.category;
+    const mappedCat = normalizeCategory(ext.category);
     if (mappedCat && ACTIVITY_MAP[mappedCat] && !categoryEl.value) {
       categoryEl.value = mappedCat;
       onCategoryChange();
@@ -538,7 +526,7 @@ async function scanImageGeneric(file) {
   // Local regex overrides Groq for any non-null result (utility or shopping).
   // This prevents AI fuzzy-matching (e.g. "elektronik" → electricity on retail invoices)
   // and ensures genuine utility consumption signals always win.
-  let groqCat = groqResult ? GROQ_CATEGORY_MAP[groqResult.category] : null;
+  let groqCat = groqResult ? normalizeCategory(groqResult.category) : null;
   if (localCat !== null) {
     if (localCat !== groqCat) {
       console.log(
@@ -564,7 +552,7 @@ async function scanImageGeneric(file) {
     // Apply quantity/unit from Textract+AI extraction
     const ext = data.extracted;
     if (ext) {
-      const mappedCat = OCR_CATEGORY_MAP[ext.category] || ext.category;
+      const mappedCat = normalizeCategory(ext.category);
       if (mappedCat && ACTIVITY_MAP[mappedCat]) {
         categoryEl.value = mappedCat;
         onCategoryChange();

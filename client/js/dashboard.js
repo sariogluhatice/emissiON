@@ -205,7 +205,7 @@ function calculateCarbonCost(records, role) {
 
   records.forEach(r => {
     const amount = parseFloat(r.amount) || 0;
-    const cat    = (r.source || '').toLowerCase();
+    const cat    = (r.category || r.source || '').toLowerCase();
     
     let m = 5.0; // Varsayılan genel katsayı (other)
     for (const key in multipliers) {
@@ -227,6 +227,18 @@ function calculateCarbonCost(records, role) {
   if (role === 'company') totalCost *= 1.2; // Kurumsal genel gider payı
   return totalCost;
 }
+
+// ── Badge descriptions (frontend-only, keyed by badge id) ────────────────────
+const BADGE_DESC = {
+  earth_friend:  'Uygulamaya kayıt olarak sürdürülebilirlik yolculuğuna başladın.',
+  first_step:    'İlk emisyon kaydını oluşturarak harika bir adım attın.',
+  data_pro:      '5 veya daha fazla kayıtla düzenli veri takibini kanıtladın.',
+  data_expert:   '20+ kayıtla verilerini titizlikle izleyen bir analiz uzmanısın.',
+  streak_3:      '3 gün üst üste emisyon kaydı girerek alışkanlık oluşturdun.',
+  streak_7:      '7 günlük kesintisiz seri — haftalık şampiyon unvanını kazandın!',
+  streak_30:     '30 günlük devasa seri — emisyon takibinde efsane oldun!',
+  carbon_aware:  '300 XP biriktirerek yüksek karbon bilincine sahip olduğunu gösterdin.',
+};
 
 // ── Gamification Widget ───────────────────────────────────────────────────────
 function renderGamification(stats) {
@@ -290,9 +302,15 @@ function renderGamification(stats) {
     [...earned, ...unearned].forEach(b => {
       const el = document.createElement('div');
       el.className = `badge-item${b.earned ? ' badge-earned' : ' badge-locked'}`;
+      const desc = b.earned
+        ? (BADGE_DESC[b.id] || '')
+        : 'Henüz kazanılmadı';
       el.innerHTML = `
         <div class="badge-icon">${b.icon}</div>
-        <div class="badge-name">${b.name}</div>`;
+        <div class="badge-info">
+          <div class="badge-name">${b.name}</div>
+          <div class="badge-desc">${desc}</div>
+        </div>`;
       badgesList.appendChild(el);
     });
   }

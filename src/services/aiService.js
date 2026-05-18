@@ -140,16 +140,16 @@ CATEGORY RULES — apply in this exact priority order:
    category: "electricity".
 
 3. Genuine electricity: kWh, aktif enerji, tesisat no, sayaç, dağıtım bedeli, enerji bedeli,
-   elektrik tüketimi, elektrik faturası → category: "electricity".
+   elektrik tüketimi, elektrik faturası → category: "energy".
 
 4. Genuine water: su tüketimi, m³ (water), su faturası, water supply → category: "water".
 
-5. Genuine gas: doğalgaz, sm3, gaz faturası, natural gas → category: "natural_gas".
+5. Genuine gas: doğalgaz, sm3, gaz faturası, natural gas → category: "gas".
 
 6. Anything else (retail, e-commerce, services) → category: "shopping".
 
 Fields to extract:
-- category: "electricity" | "water" | "natural_gas" | "shopping"
+- category: "energy" | "water" | "gas" | "shopping"
 - activity_type: specific activity string matching category
 - quantity: numeric consumption value (kWh / m³ / litre). null for shopping.
 - unit: "kWh" | "m3" | "l" | null

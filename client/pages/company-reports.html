@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rapor Paylaşımı – emissiON</title>
+    <link rel="stylesheet" href="../css/main.css" />
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
+    <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar"></aside>
+
+      <div class="main-content">
+        <header class="topbar" id="topbar"></header>
+
+        <main class="page-body">
+          <div class="page-header">
+            <div>
+              <h1>Rapor Paylaşımı</h1>
+              <p>Başka şirketlerin CBAM simülasyon raporlarına erişim talep edin veya gelen talepleri yönetin.</p>
+            </div>
+            <a href="company.html" class="btn-secondary btn-nowrap">← Şirket Paneli</a>
+          </div>
+
+          <!-- Request access card -->
+          <div class="content-card glass-card mb-lg">
+            <div class="content-card-header">
+              <span class="content-card-title">Rapor No ile Erişim Talebi</span>
+            </div>
+            <p style="font-size:13px;color:var(--color-text-muted);margin:0 0 var(--spacing-md);">
+              Paylaşmak istediğiniz raporun numarasını (EMR-YYYY-NNNN formatında) girerek erişim talebinde bulunun.
+              Rapor sahibi talebinizi onayladıktan sonra raporu görüntüleyebilirsiniz.
+            </p>
+            <div style="display:flex;gap:var(--spacing-sm);align-items:flex-end;flex-wrap:wrap;">
+              <div class="form-group" style="flex:1;min-width:220px;margin-bottom:0;">
+                <label class="form-label" for="crReportNoInput">Rapor Numarası</label>
+                <input class="input" type="text" id="crReportNoInput"
+                       placeholder="Örn: EMR-2026-0001" maxlength="20"
+                       style="text-transform:uppercase;" />
+              </div>
+              <button class="btn-primary" id="crRequestBtn" style="white-space:nowrap;">
+                Erişim Talep Et
+              </button>
+            </div>
+            <div id="crRequestMsg" style="display:none;margin-top:var(--spacing-sm);font-size:13px;"></div>
+          </div>
+
+          <!-- Two-column layout for request lists -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:var(--spacing-lg);">
+
+            <!-- Incoming requests (owner view) -->
+            <div class="content-card glass-card">
+              <div class="content-card-header">
+                <span class="content-card-title">Gelen İstekler</span>
+                <span id="crIncomingCountEl" class="text-sm-muted"></span>
+              </div>
+              <p style="font-size:12px;color:var(--color-text-muted);margin:0 0 var(--spacing-md);">
+                Raporlarınıza başka şirketlerin yaptığı erişim talepleri.
+              </p>
+              <div id="crIncomingContainer">
+                <div class="hh-loading">Yükleniyor…</div>
+              </div>
+            </div>
+
+            <!-- Outgoing requests (requester view) -->
+            <div class="content-card glass-card">
+              <div class="content-card-header">
+                <span class="content-card-title">Gönderilen İstekler</span>
+                <span id="crOutgoingCountEl" class="text-sm-muted"></span>
+              </div>
+              <p style="font-size:12px;color:var(--color-text-muted);margin:0 0 var(--spacing-md);">
+                Başka şirketlerin raporlarına yaptığınız erişim talepleri.
+              </p>
+              <div id="crOutgoingContainer">
+                <div class="hh-loading">Yükleniyor…</div>
+              </div>
+            </div>
+
+          </div>
+
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="../js/company-reports.js"></script>
+  </body>
+</html>
