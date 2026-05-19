@@ -1,4 +1,5 @@
-const svc = require('../services/householdService');
+const svc        = require('../services/householdService');
+const gamService = require('../services/gamificationService');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RESPONSE HELPERS
@@ -231,6 +232,9 @@ const updateTaskStatus = async (req, res) => {
             req.user.id,
             req.membership.role
         );
+        if (status === 'completed') {
+            gamService.awardXp(req.user.id, 'household_task_completed').catch(() => {});
+        }
         return ok(res, { task }, 'Görev durumu güncellendi.');
     } catch (err) {
         return handle(res, err);

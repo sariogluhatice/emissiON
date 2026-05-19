@@ -349,7 +349,7 @@ function renderSection(section, answers) {
   const header = document.createElement("div");
   header.className = "profile-section-header";
   header.innerHTML = `
-    <span class="profile-section-icon">${section.icon}</span>
+
     <span class="profile-section-title">${section.title}</span>
     ${populated.length === 0 ? '<span class="profile-section-badge incomplete">Doldurulmadı</span>' : ""}`;
   card.appendChild(header);

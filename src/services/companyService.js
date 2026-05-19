@@ -216,6 +216,24 @@ const getCbamSummary = async (userId) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 4a. CBAM DEFAULT EMISSION FACTORS  (EU standard tCO₂/ton, 2024 baseline)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const CBAM_DEFAULT_FACTORS = {
+    iron_steel:  1.85,
+    aluminium:   6.70,
+    cement:      0.83,
+    fertiliser:  1.60,
+    hydrogen:    10.00,
+    electricity: 0.50,
+};
+
+const getCbamDefaultFactor = (category) => {
+    const factor = CBAM_DEFAULT_FACTORS[category] ?? null;
+    return { category, factor, source: factor !== null ? 'eu_standard' : 'none' };
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 4. PERIOD EMISSIONS LOOKUP
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -308,7 +326,7 @@ const createCbamEntry = async (userId, {
         const totalKg = parseFloat(emRow.total_kg);
 
         if (totalKg <= 0) {
-            _fail(400, `${periodStr} dönemine ait emisyon kaydı bulunamadı. Tüketim verisi girdikten sonra tekrar deneyin veya emisyon faktörünü manuel olarak girin.`);
+            _fail(400, `Otomatik hesaplama için ${periodStr} döneminde emisyon kaydı bulunamadı. Lütfen emisyon faktörünü manuel girin.`);
         }
 
         sourceEmissionTotal = parseFloat(totalKg.toFixed(4));
@@ -836,10 +854,8 @@ const runSimulation = async (userId, {
     };
 
     const { rows: [simulation] } = await pool.query(
-        `INSERT INTO company_simulations (user_id, name, inputs, results, report_no)
-         VALUES ($1, $2, $3, $4,
-           'EMR-' || TO_CHAR(NOW(), 'YYYY') || '-' || LPAD(nextval('company_report_seq')::text, 4, '0')
-         )
+        `INSERT INTO company_simulations (user_id, name, inputs, results)
+         VALUES ($1, $2, $3, $4)
          RETURNING *`,
         [userId, scenario_name || null, JSON.stringify(cleanInputs), JSON.stringify(results)]
     );
@@ -857,7 +873,7 @@ const getSavedSimulations = async (userId, { page = 1, limit = 20 } = {}) => {
 
     const [simsRes, countRes] = await Promise.all([
         pool.query(
-            `SELECT id, name, report_no, inputs, results, created_at
+            `SELECT id, name, inputs, results, created_at
              FROM company_simulations WHERE user_id = $1
              ORDER BY created_at DESC
              LIMIT $2 OFFSET $3`,
@@ -877,12 +893,197 @@ const getSavedSimulations = async (userId, { page = 1, limit = 20 } = {}) => {
     };
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 12. GENERATE COMPANY REPORT  (snapshot)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const generateCompanyReport = async (userId, { report_type = 'full', period_start, period_end } = {}) => {
+    const config = await _getConfig();
+
+    // ── Company profile ───────────────────────────────────────────────────────
+    const profile = await getCompanyProfile(userId);
+
+    // ── Emission summary + category breakdown + monthly trend ─────────────────
+    const [emRes, categoryRes, trendRes] = await Promise.all([
+        pool.query(
+            `SELECT COALESCE(SUM(amount), 0)::float AS total_kg,
+                    COUNT(*)::int AS record_count,
+                    MIN(date)::text AS first_date,
+                    MAX(date)::text AS last_date
+             FROM emission_records WHERE user_id = $1`,
+            [userId]
+        ),
+        pool.query(
+            `SELECT COALESCE(category, 'other') AS category,
+                    COALESCE(SUM(amount), 0)::float AS total_kg,
+                    COUNT(*)::int AS cnt
+             FROM emission_records WHERE user_id = $1
+             GROUP BY COALESCE(category, 'other')
+             ORDER BY total_kg DESC`,
+            [userId]
+        ),
+        pool.query(
+            `SELECT TO_CHAR(date, 'YYYY-MM') AS period,
+                    COALESCE(SUM(amount), 0)::float AS total_kg
+             FROM emission_records WHERE user_id = $1
+             GROUP BY TO_CHAR(date, 'YYYY-MM')
+             ORDER BY TO_CHAR(date, 'YYYY-MM') DESC
+             LIMIT 12`,
+            [userId]
+        ),
+    ]);
+
+    const totalKg      = parseFloat(emRes.rows[0].total_kg);
+    const totalTco2    = parseFloat((totalKg / 1000).toFixed(4));
+    const carbonPrice  = config.carbon_price_default;
+    const estCost      = parseFloat((totalTco2 * carbonPrice).toFixed(2));
+    const riskLevel    = _computeRiskLevel(estCost, config);
+    const monthsOfData = trendRes.rows.length;
+
+    const categories = categoryRes.rows.map(r => ({
+        category:      r.category,
+        total_kg:      parseFloat(r.total_kg),
+        total_tco2:    parseFloat((r.total_kg / 1000).toFixed(4)),
+        share_pct:     totalKg > 0 ? parseFloat((r.total_kg / totalKg * 100).toFixed(1)) : 0,
+        estimated_cost: parseFloat((r.total_kg / 1000 * carbonPrice).toFixed(2)),
+    }));
+
+    const monthlyTrend = [...trendRes.rows].reverse().map(r => ({
+        period:    r.period,
+        total_kg:  parseFloat(r.total_kg),
+        total_tco2: parseFloat((r.total_kg / 1000).toFixed(4)),
+        est_cost:  parseFloat((r.total_kg / 1000 * carbonPrice).toFixed(2)),
+    }));
+
+    // ── CBAM entries summary ──────────────────────────────────────────────────
+    const [cbamRes, cbamEntryRows] = await Promise.all([
+        pool.query(
+            `SELECT COUNT(*)::int AS entry_count,
+                    COALESCE(SUM(total_embedded_emission), 0)::float AS total_emission_tco2,
+                    COALESCE(SUM(estimated_cbam_cost), 0)::float AS total_cost,
+                    MAX(risk_level) AS dominant_risk
+             FROM cbam_entries WHERE user_id = $1`,
+            [userId]
+        ),
+        pool.query(
+            `SELECT product_name, export_category, period_start::text,
+                    total_embedded_emission::float, estimated_cbam_cost::float, risk_level
+             FROM cbam_entries WHERE user_id = $1
+             ORDER BY estimated_cbam_cost DESC LIMIT 20`,
+            [userId]
+        ),
+    ]);
+
+    const cbamRow = cbamRes.rows[0];
+
+    // ── Task summary ──────────────────────────────────────────────────────────
+    const taskRes = await pool.query(
+        `SELECT COUNT(*)::int AS total,
+                COUNT(*) FILTER (WHERE status = 'completed')::int AS completed
+         FROM company_tasks WHERE user_id = $1`,
+        [userId]
+    );
+    const taskRow = taskRes.rows[0];
+
+    // ── Compliance score (same formula as getDashboard) ───────────────────────
+    const RISK_PENALTY = { low: 0, medium: -20, high: -45, critical: -75 };
+    let score = 100 + (RISK_PENALTY[riskLevel] ?? 0);
+    if (monthsOfData < 3) score -= 10;
+    else if (monthsOfData < 6) score -= 5;
+    if (taskRow.total > 0) {
+        const rate = taskRow.completed / taskRow.total;
+        if (rate >= 0.75) score += 5;
+        else if (rate >= 0.5) score += 2;
+        else if (rate < 0.25 && taskRow.total >= 3) score -= 5;
+    }
+    const complianceScore = Math.max(5, Math.min(100, Math.round(score)));
+
+    // ── Build snapshot ────────────────────────────────────────────────────────
+    const snapshot = {
+        company: {
+            company_name:        profile?.company_name         ?? null,
+            industry:            profile?.industry             ?? null,
+            cbam_sector:         profile?.cbam_sector          ?? null,
+            exports_to_eu:       profile?.exports_to_eu        ?? false,
+            country:             profile?.country              ?? null,
+            annual_production:   profile?.annual_production    ? parseFloat(profile.annual_production) : null,
+            default_carbon_price: profile?.default_carbon_price ? parseFloat(profile.default_carbon_price) : carbonPrice,
+        },
+        emission_summary: {
+            total_kg:          totalKg,
+            total_tco2:        totalTco2,
+            record_count:      emRes.rows[0].record_count,
+            first_date:        emRes.rows[0].first_date ?? null,
+            last_date:         emRes.rows[0].last_date  ?? null,
+            carbon_price_used: carbonPrice,
+            estimated_cost:    estCost,
+            risk_level:        riskLevel,
+            months_of_data:    monthsOfData,
+        },
+        category_breakdown: categories,
+        monthly_trend:      monthlyTrend,
+        cbam_summary: {
+            entry_count:          cbamRow.entry_count,
+            total_emission_tco2:  parseFloat(parseFloat(cbamRow.total_emission_tco2).toFixed(4)),
+            total_cost:           parseFloat(parseFloat(cbamRow.total_cost).toFixed(2)),
+            dominant_risk:        cbamRow.dominant_risk ?? 'low',
+            entries:              cbamEntryRows.rows,
+        },
+        task_summary: {
+            total_tasks:     taskRow.total,
+            completed_tasks: taskRow.completed,
+            completion_rate: taskRow.total > 0
+                ? parseFloat((taskRow.completed / taskRow.total).toFixed(2))
+                : 0,
+        },
+        compliance_score: complianceScore,
+        generated_at:     new Date().toISOString(),
+    };
+
+    // ── Persist report ────────────────────────────────────────────────────────
+    const { rows: [report] } = await pool.query(
+        `INSERT INTO company_reports (user_id, report_no, report_type, period_start, period_end, snapshot)
+         VALUES ($1,
+           'EMR-' || TO_CHAR(NOW(), 'YYYY') || '-' || LPAD(nextval('company_report_seq')::text, 4, '0'),
+           $2, $3, $4, $5
+         )
+         RETURNING id, report_no, report_type, period_start, period_end, created_at`,
+        [
+            userId,
+            report_type,
+            period_start || emRes.rows[0].first_date || null,
+            period_end   || emRes.rows[0].last_date  || null,
+            JSON.stringify(snapshot),
+        ]
+    );
+
+    return { ...report, snapshot };
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 13. GET MY REPORTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+const getMyReports = async (userId) => {
+    const { rows } = await pool.query(
+        `SELECT id, report_no, report_type, period_start, period_end, created_at,
+                (snapshot->>'compliance_score')::int       AS compliance_score,
+                snapshot->'emission_summary'->>'risk_level' AS risk_level,
+                (snapshot->'emission_summary'->>'total_tco2')::float AS total_tco2
+         FROM company_reports
+         WHERE user_id = $1
+         ORDER BY created_at DESC`,
+        [userId]
+    );
+    return rows;
+};
+
 // ─── REPORT ACCESS REQUESTS ───────────────────────────────────────────────────
 
 const requestReportAccess = async (requesterUserId, reportNo) => {
-    // 1. Find the report by report_no
+    // 1. Find the report in company_reports
     const { rows: [report] } = await pool.query(
-        'SELECT id, user_id FROM company_simulations WHERE report_no = $1',
+        'SELECT id, user_id FROM company_reports WHERE report_no = $1',
         [reportNo]
     );
     if (!report) _fail(404, 'Bu rapor numarasına ait rapor bulunamadı.');
@@ -897,14 +1098,13 @@ const requestReportAccess = async (requesterUserId, reportNo) => {
     if (existing) {
         if (existing.status === 'pending')  _fail(409, 'Bu rapor için zaten bekleyen bir talebiniz var.');
         if (existing.status === 'approved') _fail(409, 'Bu rapora zaten erişiminiz bulunmaktadır.');
-        // rejected → allow re-request by deleting old record
         await pool.query(
             'DELETE FROM company_report_access_requests WHERE id = $1',
             [existing.id]
         );
     }
 
-    // 3. Get requester company name for notification
+    // 3. Requester display name
     const { rows: [requesterProfile] } = await pool.query(
         `SELECT COALESCE(cp.company_name, u.name) AS display_name
          FROM users u
@@ -923,11 +1123,11 @@ const requestReportAccess = async (requesterUserId, reportNo) => {
     );
 
     return {
-        requestId: req.id,
-        reportId:  report.id,
+        requestId:     req.id,
+        reportId:      report.id,
         reportNo,
-        ownerUserId:       report.user_id,
-        requesterName:     requesterProfile?.display_name || 'Bilinmeyen Şirket',
+        ownerUserId:   report.user_id,
+        requesterName: requesterProfile?.display_name || 'Bilinmeyen Şirket',
     };
 };
 
@@ -936,10 +1136,11 @@ const getIncomingAccessRequests = async (ownerUserId) => {
         `SELECT
              r.id, r.report_id, r.requester_user_id, r.status,
              r.created_at, r.updated_at, r.approved_at, r.rejected_at,
-             s.name AS report_name, s.report_no,
+             cr.report_no,
+             (cr.snapshot->'emission_summary'->>'total_tco2')::float AS report_tco2,
              COALESCE(cp.company_name, u.name) AS requester_name
          FROM company_report_access_requests r
-         JOIN company_simulations s ON s.id = r.report_id
+         JOIN company_reports cr ON cr.id = r.report_id
          JOIN users u ON u.id = r.requester_user_id
          LEFT JOIN company_profiles cp ON cp.user_id = r.requester_user_id
          WHERE r.owner_user_id = $1
@@ -954,10 +1155,11 @@ const getOutgoingAccessRequests = async (requesterUserId) => {
         `SELECT
              r.id, r.report_id, r.status,
              r.created_at, r.updated_at, r.approved_at, r.rejected_at,
-             s.name AS report_name, s.report_no,
+             cr.report_no,
+             (cr.snapshot->'emission_summary'->>'total_tco2')::float AS report_tco2,
              COALESCE(cp.company_name, u.name) AS owner_name
          FROM company_report_access_requests r
-         JOIN company_simulations s ON s.id = r.report_id
+         JOIN company_reports cr ON cr.id = r.report_id
          JOIN users u ON u.id = r.owner_user_id
          LEFT JOIN company_profiles cp ON cp.user_id = r.owner_user_id
          WHERE r.requester_user_id = $1
@@ -989,26 +1191,49 @@ const respondToAccessRequest = async (ownerUserId, requestId, decision) => {
     return updated;
 };
 
-const getSharedReport = async (requesterUserId, reportId) => {
-    // Check approved access
-    const { rows: [access] } = await pool.query(
-        `SELECT id FROM company_report_access_requests
-         WHERE report_id = $1 AND requester_user_id = $2 AND status = 'approved'`,
-        [reportId, requesterUserId]
+const revokeReportAccess = async (requestingUserId, requestId) => {
+    const { rows: [r] } = await pool.query(
+        'SELECT id, requester_user_id, owner_user_id, status FROM company_report_access_requests WHERE id = $1',
+        [requestId]
     );
-    if (!access) _fail(403, 'Bu rapora erişim izniniz bulunmamaktadır.');
+    if (!r) _fail(404, 'Erişim talebi bulunamadı.');
 
-    const { rows: [sim] } = await pool.query(
-        `SELECT s.id, s.name, s.report_no, s.inputs, s.results, s.created_at,
+    const isOwner     = r.owner_user_id     === requestingUserId;
+    const isRequester = r.requester_user_id === requestingUserId;
+    if (!isOwner && !isRequester) _fail(403, 'Bu işlem için yetkiniz yok.');
+    if (isRequester && !isOwner && r.status !== 'pending') {
+        _fail(400, 'Yalnızca bekleyen talepler geri alınabilir. Onaylanmış erişimi kaldırmak için rapor sahibiyle iletişime geçin.');
+    }
+
+    await pool.query('DELETE FROM company_report_access_requests WHERE id = $1', [requestId]);
+    return { success: true };
+};
+
+const getSharedReport = async (requesterUserId, reportId) => {
+    const { rows: [cr] } = await pool.query(
+        `SELECT cr.id, cr.user_id, cr.report_no, cr.report_type,
+                cr.period_start, cr.period_end, cr.created_at, cr.snapshot,
                 COALESCE(cp.company_name, u.name) AS owner_name
-         FROM company_simulations s
-         JOIN users u ON u.id = s.user_id
-         LEFT JOIN company_profiles cp ON cp.user_id = s.user_id
-         WHERE s.id = $1`,
+         FROM company_reports cr
+         JOIN users u ON u.id = cr.user_id
+         LEFT JOIN company_profiles cp ON cp.user_id = cr.user_id
+         WHERE cr.id = $1`,
         [reportId]
     );
-    if (!sim) _fail(404, 'Rapor bulunamadı.');
-    return sim;
+    if (!cr) _fail(404, 'Rapor bulunamadı.');
+
+    // Owner always has access; others need an approved request.
+    if (cr.user_id !== requesterUserId) {
+        const { rows: [access] } = await pool.query(
+            `SELECT id FROM company_report_access_requests
+             WHERE report_id = $1 AND requester_user_id = $2 AND status = 'approved'`,
+            [reportId, requesterUserId]
+        );
+        if (!access) _fail(403, 'Bu rapora erişim izniniz bulunmamaktadır.');
+    }
+
+    const { user_id, ...report } = cr;
+    return report;
 };
 
 const getPendingIncomingCount = async (ownerUserId) => {
@@ -1028,6 +1253,7 @@ const getPendingIncomingCount = async (ownerUserId) => {
 module.exports = {
     getCompanyProfile,
     upsertCompanyProfile,
+    getCbamDefaultFactor,
     getPeriodEmissions,
     getCbamSummary,
     createCbamEntry,
@@ -1042,7 +1268,10 @@ module.exports = {
     getDashboard,
     CBAM_SECTORS,
     EMISSION_CATEGORIES,
+    generateCompanyReport,
+    getMyReports,
     requestReportAccess,
+    revokeReportAccess,
     getIncomingAccessRequests,
     getOutgoingAccessRequests,
     respondToAccessRequest,

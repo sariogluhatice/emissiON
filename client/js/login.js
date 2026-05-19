@@ -53,6 +53,12 @@ form.addEventListener('submit', async (e) => {
       window.location.href = needsOnboarding ? 'onboarding.html' : 'dashboard.html';
     }, 1000);
   } catch (err) {
+    if (err.emailNotVerified) {
+      sessionStorage.setItem('pending_email', emailInput.value.trim());
+      setApiMessage('E-posta doğrulanmamış. Doğrulama sayfasına yönlendiriliyorsunuz…', true);
+      setTimeout(() => { window.location.href = 'verify-email.html'; }, 1500);
+      return;
+    }
     setApiMessage(err.message || 'Giriş başarısız. Lütfen tekrar deneyin.', true);
     submitBtn.disabled = false;
   }

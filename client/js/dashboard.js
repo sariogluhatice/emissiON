@@ -1,16 +1,24 @@
 import { emissionService }      from './api/emissionService.js';
 import { profileService }        from './api/profileService.js';
 import { gamificationService }   from './api/gamificationService.js';
+import { householdService }      from './api/householdService.js';
 import { renderLayout }          from './layout.js';
 import {
   calculateStats,
   formatDate,
+  getTaskStatusLabel,
+  getTaskStatusClass,
 } from './utils/uiUtils.js';
 import { getCategoryKey, getCategoryLabelWithEmoji } from './utils/labelUtils.js';
 import { updateGlobe, updateGlobeTooltip, buildGlobeStats } from './utils/globe.js';
 
 const user = renderLayout({ activeNav: 'nav-dashboard' });
 if (!user) throw new Error('redirect');
+
+// Gamification verisini sayfa açılır açılmaz çek (diğer API çağrılarını beklemeden)
+const _gamStatsPromise = gamificationService.getStats().catch(() => null);
+// Skeleton: banner'ı hemen göster, gerçek veri gelene kadar loading state
+_showGamSkeleton();
 
 const welcomeEl = document.getElementById('welcomeName');
 if (welcomeEl) welcomeEl.textContent = user?.name ? user.name.split(' ')[0] : 'Misafir';
@@ -21,63 +29,57 @@ let inflationFactor = 1.0;
 let liveFuelMultiplier = null;
 let recordsGlobal = [];
 
-// Güncel Enflasyon ve Canlı Akaryakıt Fiyatlarını Çek
+// Güncel Enflasyon ve Canlı Akaryakıt Fiyatlarını Çek (paralel)
 (async () => {
-  // 1. Canlı Döviz Kuru Sorgula (Enflasyon Çarpanı İçerir)
-  try {
-    const res = await fetch('https://open.er-api.com/v6/latest/USD');
-    if (res.ok) {
-      const data = await res.json();
+  const [rateResult, fuelResult] = await Promise.allSettled([
+    fetch('https://open.er-api.com/v6/latest/USD'),
+    fetch('https://hasanadiguzel.com.tr/api/akaryakit/sehir=istanbul'),
+  ]);
+
+  // 1. Döviz kuru
+  if (rateResult.status === 'fulfilled' && rateResult.value.ok) {
+    try {
+      const data    = await rateResult.value.json();
       const tryRate = data.rates?.TRY || 32.5;
       inflationFactor = tryRate / 32.5;
-      console.log(`[inflation] Live USD/TRY rate: ${tryRate}, multiplier factor: ${inflationFactor.toFixed(3)}`);
-    }
-  } catch (err) {
-    console.warn('[inflation] Could not fetch live rate, falling back to baseline prices:', err);
+      console.log(`[inflation] Live USD/TRY rate: ${tryRate}, multiplier: ${inflationFactor.toFixed(3)}`);
+    } catch { /* ignore parse error */ }
+  } else {
+    console.warn('[inflation] Could not fetch live rate, falling back to baseline prices.');
   }
 
-  // 2. İstanbul Güncel Akaryakıt (Benzin/Motorin) Fiyatını Canlı Çek (ÜCRETSİZ API)
-  try {
-    const res = await fetch('https://hasanadiguzel.com.tr/api/akaryakit/sehir=istanbul');
-    if (res.ok) {
-      const data = await res.json();
+  // 2. Akaryakıt fiyatı
+  if (fuelResult.status === 'fulfilled' && fuelResult.value.ok) {
+    try {
+      const data      = await fuelResult.value.json();
       const districts = Object.keys(data.data || {});
       if (districts.length > 0) {
         const firstDistrict = data.data[districts[0]];
         let priceStr = '';
         for (const key in firstDistrict) {
-          if (key.includes('Kursunsuz') || key.includes('95')) {
-            priceStr = firstDistrict[key];
-            break;
-          }
+          if (key.includes('Kursunsuz') || key.includes('95')) { priceStr = firstDistrict[key]; break; }
         }
         if (!priceStr) {
           for (const key in firstDistrict) {
-            if (key.includes('Motorin')) {
-              priceStr = firstDistrict[key];
-              break;
-            }
+            if (key.includes('Motorin')) { priceStr = firstDistrict[key]; break; }
           }
         }
         const fuelPrice = parseFloat(priceStr.replace(',', '.'));
         if (fuelPrice && fuelPrice > 20) {
-          // 1 kg CO2 üretmek için gereken harcanan ortalama yakıt maliyet payı (1 kg CO2 ~ 0.43 L)
           liveFuelMultiplier = fuelPrice * 0.43;
-          console.log(`[fuel-api] Live fuel price: ${fuelPrice} TL. Calculated transport multiplier: ${liveFuelMultiplier.toFixed(2)}`);
+          console.log(`[fuel-api] Live fuel price: ${fuelPrice} TL, transport multiplier: ${liveFuelMultiplier.toFixed(2)}`);
         }
       }
-    }
-  } catch (err) {
-    console.warn('[fuel-api] Could not fetch live fuel prices, falling back to baseline multipliers:', err);
+    } catch { /* ignore parse error */ }
+  } else {
+    console.warn('[fuel-api] Could not fetch live fuel prices, falling back to baseline multipliers.');
   }
 
   // 3. Çarpanlar yüklendikten sonra eğer veriler de hazırsa maliyetleri canlı güncelle
   if (recordsGlobal.length > 0) {
-     const carbonCost = calculateCarbonCost(recordsGlobal, user.role);
-     const statSavings = document.getElementById('statSavings');
-     if (statSavings) {
-       statSavings.textContent = Math.round(carbonCost).toLocaleString('tr-TR');
-     }
+    const carbonCost = calculateCarbonCost(recordsGlobal, user.role);
+    const statSavings = document.getElementById('statSavings');
+    if (statSavings) statSavings.textContent = Math.round(carbonCost).toLocaleString('tr-TR');
   }
 })();
 
@@ -155,25 +157,19 @@ async function initDashboard() {
       if (el) el.textContent = "Tahmin verileri şu an alınamıyor.";
     }
 
-    // 5. Kurumsal Rapor Butonunu Göster
-    if (user.role === 'company') {
-      const reportBtn = document.getElementById('downloadReportBtn');
-      if (reportBtn) {
-        reportBtn.style.display = 'flex';
-        reportBtn.onclick = () => generateCorporateReport(records, stats);
-      }
+    // 5. Gamification & Rozetler (promise zaten başlatıldı, sadece bekle)
+    try {
+      const gamData = await _gamStatsPromise;
+      if (gamData?.data) renderGamification(gamData.data);
+      else _clearGamSkeleton();
+    } catch (gamErr) {
+      console.warn('[gamification] getStats failed:', gamErr?.message);
+      _clearGamSkeleton();
     }
 
-    // 6. Gamification & Rozetler
-    try {
-      const gamData = await gamificationService.getStats();
-      if (gamData?.data) renderGamification(gamData.data);
-    } catch (gamErr) { console.warn('[gamification] getStats failed:', gamErr?.message); }
-
-    // 7. Hane İçi Görevleri Göster (Yalnızca Household)
+    // 7. Hane Görevlerini Yükle (Yalnızca Household)
     if (user.role === 'household') {
-      const hhCard = document.getElementById('householdTasksCard');
-      if (hhCard) hhCard.style.display = 'block';
+      loadHouseholdTasks();
     }
 
   } catch (err) {
@@ -240,51 +236,82 @@ const BADGE_DESC = {
   carbon_aware:  '300 XP biriktirerek yüksek karbon bilincine sahip olduğunu gösterdin.',
 };
 
+// ── Gamification Skeleton helpers ─────────────────────────────────────────────
+function _showGamSkeleton() {
+  const banner = document.getElementById('gamBanner');
+  if (!banner) return;
+  banner.style.display = '';
+  banner.dataset.loading = '1';
+  const levelEl = document.getElementById('gamLevel');
+  const xpText  = document.getElementById('gamXpText');
+  const xpNext  = document.getElementById('gamXpNext');
+  const xpFill  = document.getElementById('gamXpFill');
+  if (levelEl) { levelEl.textContent = 'Yükleniyor…'; levelEl.style.opacity = '0.35'; }
+  if (xpText)  { xpText.textContent  = '— XP';         xpText.style.opacity  = '0.35'; }
+  if (xpNext)  xpNext.textContent   = '';
+  if (xpFill)  xpFill.style.width   = '0%';
+}
+
+function _clearGamSkeleton() {
+  const banner = document.getElementById('gamBanner');
+  if (banner) banner.style.display = 'none';
+}
+
 // ── Gamification Widget ───────────────────────────────────────────────────────
 function renderGamification(stats) {
-  // Topbar widgets
-  const tbStreak = document.getElementById('topbarStreakWidget');
-  const tbCount  = document.getElementById('topbarStreakCount');
-  const tbXp     = document.getElementById('topbarXpWidget');
-  const tbLevel  = document.getElementById('topbarLevel');
-  const tbFill   = document.getElementById('topbarXpFill');
-  if (tbStreak && stats.current_streak > 0) {
-    tbStreak.style.display = 'flex';
-    if (tbCount) tbCount.textContent = stats.current_streak;
-  }
-  if (tbXp) {
-    tbXp.style.display = 'flex';
-    if (tbLevel) tbLevel.textContent = `Sv.${stats.level}`;
-    if (tbFill)  tbFill.style.width  = `${stats.level_progress_pct}%`;
-  }
-
-  // Banner
   const banner = document.getElementById('gamBanner');
   if (banner) {
     banner.style.display = '';
+    delete banner.dataset.loading;
     const streakNum   = document.getElementById('gamStreakNum');
     const streakLabel = document.getElementById('gamStreakLabel');
     const levelEl     = document.getElementById('gamLevel');
     const xpText      = document.getElementById('gamXpText');
     const xpFill      = document.getElementById('gamXpFill');
     const xpNext      = document.getElementById('gamXpNext');
-    if (streakNum)   streakNum.textContent   = stats.current_streak;
-    if (streakLabel) streakLabel.textContent = stats.current_streak === 1 ? 'Günlük Seri' : 'Günlük Seri';
-    if (levelEl)     levelEl.textContent     = `Seviye ${stats.level}`;
-    if (xpText)      xpText.textContent      = `${stats.total_xp} XP`;
-    if (xpFill)      { requestAnimationFrame(() => { xpFill.style.width = `${stats.level_progress_pct}%`; }); }
-    if (xpNext && stats.xp_to_next_level > 0) xpNext.textContent = `Sonraki seviyeye ${stats.xp_to_next_level} XP`;
+    if (streakNum)   streakNum.textContent      = stats.streak;
+    if (streakLabel) streakLabel.textContent    = 'Günlük Seri';
+    if (levelEl) {
+      levelEl.textContent = `Seviye ${stats.level}`;
+      levelEl.style.opacity = '';
+    }
+    if (xpText) {
+      xpText.textContent = `${stats.totalXp} / ${stats.nextLevelXp} XP`;
+      xpText.style.opacity = '';
+    }
+    if (xpFill) {
+      requestAnimationFrame(() => { xpFill.style.width = `${stats.progressPercent}%`; });
+    }
+    if (xpNext) {
+      xpNext.textContent = stats.xpToNextLevel > 0
+        ? `Sonraki seviyeye ${stats.xpToNextLevel} XP kaldı`
+        : 'Maksimum seviyeye ulaştın!';
+    }
+  }
+
+  // Topbar widgets
+  const tbStreak = document.getElementById('topbarStreakWidget');
+  const tbCount  = document.getElementById('topbarStreakCount');
+  const tbXp     = document.getElementById('topbarXpWidget');
+  const tbLevel  = document.getElementById('topbarLevel');
+  const tbFill   = document.getElementById('topbarXpFill');
+  if (tbStreak && stats.streak > 0) {
+    tbStreak.style.display = 'flex';
+    if (tbCount) tbCount.textContent = stats.streak;
+  }
+  if (tbXp) {
+    tbXp.style.display = 'flex';
+    tbXp.title = `${stats.totalXp} XP • Sonraki seviye için ${stats.xpToNextLevel} XP`;
+    if (tbLevel) tbLevel.textContent = `Sv.${stats.level}`;
+    if (tbFill)  requestAnimationFrame(() => { tbFill.style.width = `${stats.progressPercent}%`; });
   }
 
   // Daily reminder
   const reminder = document.getElementById('dailyReminder');
   if (reminder) {
-    // Show reminder only if streak > 0 (has used app) but hasn't logged today yet.
-    // Detect by checking if current_streak stayed same as last session — approximate:
-    // show if streak > 0 and we have no "logged today" signal (we'll check localStorage).
     const todayKey = `gam_logged_${new Date().toISOString().slice(0,10)}`;
     const loggedToday = localStorage.getItem(todayKey) === '1';
-    if (!loggedToday && stats.current_streak > 0) {
+    if (!loggedToday && stats.streak > 0) {
       reminder.style.display = 'flex';
     }
   }
@@ -397,230 +424,72 @@ function initChart(data) {
 
 initDashboard();
 
-// ── Kurumsal Raporlama (Yalnızca Company) ─────────────────────────────────────
-if (user.role === 'company') {
-  const reportBtn = document.getElementById('downloadReportBtn');
-  if (reportBtn) {
-    reportBtn.style.display = 'flex';
-    reportBtn.addEventListener('click', async () => {
-      const origLabel = reportBtn.textContent;
-      reportBtn.disabled = true;
-      reportBtn.textContent = 'Rapor hazırlanıyor…';
-      try {
-        const { records } = await emissionService.getAll();
-        await generateCorporateReport(records, user);
-      } catch (err) {
-        showToast('Hata', err.message || 'Rapor oluşturulamadı.', 'error');
-      } finally {
-        reportBtn.disabled = false;
-        reportBtn.textContent = origLabel;
-      }
-    });
-  }
-}
-
-// normTR: used ONLY for the PDF filename (filesystem safety). Never for PDF text.
-function normTR(s) {
-  if (s == null) return '';
-  return String(s)
-    .replace(/İ/g, 'I').replace(/ı/g, 'i')
-    .replace(/Ş/g, 'S').replace(/ş/g, 's')
-    .replace(/Ğ/g, 'G').replace(/ğ/g, 'g');
-}
-
-// ── DejaVu Sans font loader (fetched once, cached, supports full Unicode incl. Turkish) ──
-let _dejaVuFontB64 = null;
-
-async function _loadDejaVuFont() {
-  if (_dejaVuFontB64) return _dejaVuFontB64;
-  try {
-    const res = await fetch(
-      'https://cdn.jsdelivr.net/npm/dejavu-fonts-ttf@2.37.3/ttf/DejaVuSans.ttf'
-    );
-    if (!res.ok) return null;
-    const buf = await res.arrayBuffer();
-    const bytes = new Uint8Array(buf);
-    let binary = '';
-    const CHUNK = 8192;
-    for (let i = 0; i < bytes.length; i += CHUNK) {
-      binary += String.fromCharCode(...bytes.subarray(i, Math.min(i + CHUNK, bytes.length)));
-    }
-    _dejaVuFontB64 = btoa(binary);
-    return _dejaVuFontB64;
-  } catch {
-    return null;
-  }
-}
-
-async function generateCorporateReport(records, user) {
-  // Load Turkish-capable font before creating the doc
-  const fontB64 = await _loadDejaVuFont();
-
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const W = 210, M = 14, CW = W - M * 2;
-  const GREEN = [16, 185, 129], DARK = [30, 41, 59], MUTED = [100, 116, 139];
-  const BLUE = [59, 130, 246];
-
-  const FNAME = 'DejaVuSans';
-  if (fontB64) {
-    doc.addFileToVFS('DejaVuSans.ttf', fontB64);
-    doc.addFont('DejaVuSans.ttf', FNAME, 'normal');
-  }
-
-  // Helper: set font + size (falls back to helvetica if font not loaded)
-  const sf = (size) => {
-    doc.setFontSize(size);
-    doc.setFont(fontB64 ? FNAME : 'helvetica', 'normal');
-  };
-
-  // autoTable style objects
-  const tBody = { font: fontB64 ? FNAME : 'helvetica', fontSize: 8.5 };
-  const tHead = (fill) => ({ fillColor: fill, textColor: 255, font: fontB64 ? FNAME : 'helvetica', fontStyle: 'normal', fontSize: 8 });
-  const tAlt  = (fill) => ({ fillColor: fill });
-
-  // ── Header bar ──────────────────────────────────────────────────────────────
-  doc.setFillColor(...GREEN);
-  doc.rect(0, 0, W, 18, 'F');
-
-  sf(16); doc.setTextColor(255, 255, 255);
-  doc.text('emissiON', M, 12);
-
-  sf(9);
-  doc.text('Kurumsal Sürdürülebilirlik Raporu', M + 42, 12);
-
-  // ── Company / report info card ───────────────────────────────────────────────
-  doc.setFillColor(248, 250, 252);
-  doc.setDrawColor(226, 232, 240);
-  doc.roundedRect(M, 22, CW, 26, 3, 3, 'FD');
-
-  sf(11); doc.setTextColor(...DARK);
-  doc.text(user.name || 'Şirket', M + 6, 31);
-
-  sf(9); doc.setTextColor(...MUTED);
-  const reportNo = Math.random().toString(36).substr(2, 9).toUpperCase();
-  const reportDate = new Date().toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' });
-  doc.text(`Rapor No: ${reportNo}`, M + 6, 38);
-  doc.text(`Oluşturulma Tarihi: ${reportDate}`, M + 6, 44);
-  doc.text(`Kayıt Sayısı: ${records.length}`, M + 90, 38);
-  const firstYear = records.length > 0 ? new Date(records[records.length - 1].date).getFullYear() : '—';
-  const lastYear  = records.length > 0 ? new Date(records[0].date).getFullYear() : '—';
-  doc.text(`Dönem: ${firstYear} – ${lastYear}`, M + 90, 44);
-
-  let y = 54;
-
-  // ── Metrics ──────────────────────────────────────────────────────────────────
-  const stats = calculateStats(records);
-  const totalCost = calculateCarbonCost(records, user.role);
-
-  sf(10); doc.setTextColor(...DARK);
-  doc.text('Emisyon Performans Göstergeleri', M, y + 6);
-  y += 10;
-
-  doc.autoTable({
-    startY: y,
-    head: [['Gösterge', 'Değer', 'Birim']],
-    body: [
-      ['Toplam Karbon Ayak İzi', stats.total, 'kg CO₂e'],
-      ['Aktif Emisyon Kaydı', String(stats.entries), 'Adet'],
-      ['En Yüksek Kategori', stats.topCat || '—', '—'],
-      ['Tahmini Karbon Maliyeti', `${Math.round(totalCost).toLocaleString('tr-TR')} TL`, 'TRY'],
-    ],
-    theme: 'striped',
-    headStyles: tHead(GREEN),
-    bodyStyles: tBody,
-    alternateRowStyles: tAlt([248, 250, 252]),
-    columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right', cellWidth: 28 } },
-    margin: { left: M, right: M },
-  });
-
-  y = doc.lastAutoTable.finalY + 8;
-
-  // ── CBAM projection (company only) ───────────────────────────────────────────
-  if (user.role === 'company') {
-    sf(10); doc.setTextColor(...DARK);
-    doc.text('AB Sınırda Karbon Mekanizması (CBAM) Öngörüsü', M, y + 6);
-    y += 10;
-
-    const co2Tons = parseFloat(stats.total) / 1000;
-    const cbamEur = co2Tons * 85;
-    const cbamTry = cbamEur * 38;
-
-    doc.autoTable({
-      startY: y,
-      head: [['CBAM Metriği', 'Hesaplama', 'Öngörülen Tutar']],
-      body: [
-        ['Toplam Karbon Tonu', 'Toplam kg CO₂e / 1.000', `${co2Tons.toFixed(3)} tCO₂`],
-        ['AB ETS Karbon Bedeli', 'Sabit birim bedel', '85,00 EUR / ton'],
-        ['Yıllık Karbon Vergisi', 'Ton × 85 EUR', `${cbamEur.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} EUR`],
-        ['Tahmini SKDM Yükümlülüğü', '1 EUR = 38 TRY', `${Math.round(cbamTry).toLocaleString('tr-TR')} TL`],
-      ],
-      theme: 'striped',
-      headStyles: tHead(BLUE),
-      bodyStyles: tBody,
-      alternateRowStyles: tAlt([239, 246, 255]),
-      columnStyles: { 2: { halign: 'right', cellWidth: 46 } },
-      margin: { left: M, right: M },
-    });
-
-    y = doc.lastAutoTable.finalY + 8;
-  }
-
-  // ── Detailed records ──────────────────────────────────────────────────────────
-  sf(10); doc.setTextColor(...DARK);
-  doc.text('Detaylı Faaliyet Dökümü', M, y + 6);
-  y += 10;
-
-  if (!records || records.length === 0) {
-    doc.setFillColor(248, 250, 252);
-    doc.setDrawColor(226, 232, 240);
-    doc.roundedRect(M, y, CW, 14, 2, 2, 'FD');
-    sf(9); doc.setTextColor(...MUTED);
-    doc.text('Henüz faaliyet kaydı bulunmuyor.', M + 6, y + 9);
-  } else {
-    const sorted = [...records].sort((a, b) => new Date(b.date) - new Date(a.date));
-    const tableData = sorted.map(r => [
-      new Date(r.date).toLocaleDateString('tr-TR'),
-      r.source || '—',
-      r.description || '—',
-      `${parseFloat(r.amount).toFixed(2)} kg`,
-    ]);
-
-    doc.autoTable({
-      startY: y,
-      head: [['Tarih', 'Kaynak', 'Açıklama', 'Miktar']],
-      body: tableData,
-      theme: 'grid',
-      headStyles: tHead(DARK),
-      bodyStyles: { ...tBody, fontSize: 8 },
-      columnStyles: { 0: { cellWidth: 24 }, 3: { halign: 'right', cellWidth: 24 } },
-      margin: { left: M, right: M },
-    });
-  }
-
-  // ── Footer on every page ──────────────────────────────────────────────────────
-  const pageCount = doc.internal.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    const ph = doc.internal.pageSize.height;
-    doc.setFillColor(248, 250, 252);
-    doc.rect(0, ph - 14, W, 14, 'F');
-    doc.setDrawColor(226, 232, 240);
-    doc.line(0, ph - 14, W, ph - 14);
-    sf(8); doc.setTextColor(...MUTED);
-    doc.text(`Sayfa ${i} / ${pageCount}  ·  emissiON Kurumsal Sürdürülebilirlik Raporu`, M, ph - 6);
-    doc.text('Bu rapor otomatik olarak oluşturulmuştur.', W - M, ph - 6, { align: 'right' });
-  }
-
-  // normTR only for the filename (filesystem safety, not PDF content)
-  const safeName = normTR(user.name || 'Sirket').replace(/\s+/g, '_');
-  doc.save(`emissiON_Rapor_${safeName}_${new Date().toISOString().slice(0, 10)}.pdf`);
-}
-
-
 // Yalnızca bireysel kullanıcılar için karşılaştırma kartını yükle
 if (user.role === 'individual') {
   loadIndividualComparison();
+}
+
+// ── Hane Görevleri ────────────────────────────────────────────────────────────
+
+async function loadHouseholdTasks() {
+  const card    = document.getElementById('householdTasksCard');
+  const listEl  = document.getElementById('hhTasksList');
+  if (!card || !listEl) return;
+
+  try {
+    const res   = await householdService.getDashboard();
+    const tasks = res.data?.dashboard?.recent_tasks ?? [];
+
+    card.style.display = 'block';
+
+    if (!tasks.length) {
+      listEl.innerHTML = `
+        <p style="font-size:13px;color:var(--color-text-muted);margin:0;padding:8px 0;">
+          Henüz görev oluşturulmadı.
+          <a href="household-tasks.html" style="color:var(--color-primary);text-decoration:underline;">Görev ekle →</a>
+        </p>`;
+      return;
+    }
+
+    const STATUS_COLORS = {
+      pending:     { bg: 'var(--color-warning-soft)',  text: '#92400e'              },
+      in_progress: { bg: 'var(--color-info-soft)',     text: '#1e40af'              },
+      completed:   { bg: 'var(--color-success-soft)',  text: 'var(--color-primary-dark)' },
+      cancelled:   { bg: '#f1f5f9',                    text: '#64748b'              },
+    };
+
+    listEl.innerHTML = tasks.map(t => {
+      const sc       = STATUS_COLORS[t.status] || STATUS_COLORS.pending;
+      const assignee = t.assigned_to_name ? `👤 ${t.assigned_to_name}` : '🏠 Tüm Hane';
+      const due      = t.due_date
+        ? `<span style="font-size:11px;color:var(--color-text-muted);">Son: ${formatDate(t.due_date)}</span>`
+        : '';
+      const dim      = (t.status === 'completed' || t.status === 'cancelled') ? 'opacity:0.6;' : '';
+
+      return `
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;
+                    gap:12px;padding:10px 0;border-bottom:1px solid var(--color-border);${dim}">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:600;color:var(--color-text);
+                        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.title}</div>
+            <div style="font-size:11px;color:var(--color-text-muted);margin-top:2px;">${assignee}</div>
+            ${due}
+          </div>
+          <span style="flex-shrink:0;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
+                       background:${sc.bg};color:${sc.text};white-space:nowrap;">
+            ${getTaskStatusLabel(t.status)}
+          </span>
+        </div>`;
+    }).join('') + `
+      <div style="padding-top:10px;text-align:right;">
+        <a href="household-tasks.html"
+           style="font-size:12px;color:var(--color-primary);text-decoration:none;font-weight:600;">
+          Tüm Görevleri Gör →
+        </a>
+      </div>`;
+  } catch {
+    // Kullanıcı henüz bir haneye katılmamış — kartı gizle
+  }
 }
 
 // ── Bireysel Karşılaştırma ────────────────────────────────────────────────────

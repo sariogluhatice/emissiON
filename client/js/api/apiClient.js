@@ -35,7 +35,10 @@ export class ApiClient {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.message || data.error || 'API isteğinde hata oluştu.');
+                const err = new Error(data.message || data.error || 'API isteğinde hata oluştu.');
+                if (data.accountDeleted)   err.accountDeleted   = true;
+                if (data.emailNotVerified) err.emailNotVerified = true;
+                throw err;
             }
 
             return data;

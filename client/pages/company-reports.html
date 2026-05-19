@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Rapor Paylaşımı – emissiON</title>
+    <title>Raporlar – emissiON</title>
     <link rel="stylesheet" href="../css/main.css" />
     <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
     <link rel="icon" type="image/png" href="../assets/favicon.png" />
@@ -18,20 +18,65 @@
         <main class="page-body">
           <div class="page-header">
             <div>
-              <h1>Rapor Paylaşımı</h1>
-              <p>Başka şirketlerin CBAM simülasyon raporlarına erişim talep edin veya gelen talepleri yönetin.</p>
+              <h1>Raporlar</h1>
+              <p>Şirket emisyon raporlarınızı oluşturun ve başka şirketlerle paylaşın.</p>
             </div>
             <a href="company.html" class="btn-secondary btn-nowrap">← Şirket Paneli</a>
           </div>
 
-          <!-- Request access card -->
+          <!-- ── My Reports ─────────────────────────────────────────────── -->
+          <div class="content-card glass-card mb-lg">
+            <div class="content-card-header">
+              <span class="content-card-title">Raporlarım</span>
+              <button class="btn-primary" id="crGenerateBtn" style="font-size:13px;padding:6px 16px;">
+                + Rapor Oluştur
+              </button>
+            </div>
+            <p style="font-size:13px;color:var(--color-text-muted);margin:0 0 var(--spacing-md);">
+              Her rapor, oluşturulma anındaki emisyon verilerinizin değişmez bir anlık görüntüsüdür.
+              Rapor numarasını paylaşarak başka şirketlerin erişim talep etmesini sağlayabilirsiniz.
+            </p>
+
+            <!-- Generate form (hidden by default) -->
+            <div id="crGenerateForm" style="display:none;padding:var(--spacing-md);background:var(--color-surface-alt,#f9fafb);border-radius:var(--radius-md);margin-bottom:var(--spacing-md);">
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:var(--spacing-sm);align-items:flex-end;">
+                <div class="form-group" style="margin-bottom:0;">
+                  <label class="form-label" for="crReportType">Rapor Türü</label>
+                  <select class="input" id="crReportType">
+                    <option value="full">Tam Rapor</option>
+                    <option value="cbam_only">Yalnızca CBAM</option>
+                    <option value="emission_only">Yalnızca Emisyon</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label class="form-label" for="crPeriodStart">Dönem Başlangıcı (isteğe bağlı)</label>
+                  <input class="input" type="date" id="crPeriodStart" />
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label class="form-label" for="crPeriodEnd">Dönem Bitişi (isteğe bağlı)</label>
+                  <input class="input" type="date" id="crPeriodEnd" />
+                </div>
+                <div style="display:flex;gap:var(--spacing-sm);">
+                  <button class="btn-primary" id="crConfirmGenerateBtn">Oluştur</button>
+                  <button class="btn-secondary" id="crCancelGenerateBtn">İptal</button>
+                </div>
+              </div>
+              <div id="crGenerateMsg" style="display:none;margin-top:var(--spacing-sm);font-size:13px;"></div>
+            </div>
+
+            <div id="crMyReportsContainer">
+              <div class="hh-loading">Yükleniyor…</div>
+            </div>
+          </div>
+
+          <!-- ── Report Access Request ──────────────────────────────────── -->
           <div class="content-card glass-card mb-lg">
             <div class="content-card-header">
               <span class="content-card-title">Rapor No ile Erişim Talebi</span>
             </div>
             <p style="font-size:13px;color:var(--color-text-muted);margin:0 0 var(--spacing-md);">
-              Paylaşmak istediğiniz raporun numarasını (EMR-YYYY-NNNN formatında) girerek erişim talebinde bulunun.
-              Rapor sahibi talebinizi onayladıktan sonra raporu görüntüleyebilirsiniz.
+              Başka bir şirketten aldığınız <strong>EMR-YYYY-NNNN</strong> formatındaki rapor
+              numarasını girerek erişim talebinde bulunun. Rapor sahibi onayladıktan sonra görüntüleyebilirsiniz.
             </p>
             <div style="display:flex;gap:var(--spacing-sm);align-items:flex-end;flex-wrap:wrap;">
               <div class="form-group" style="flex:1;min-width:220px;margin-bottom:0;">
@@ -47,10 +92,9 @@
             <div id="crRequestMsg" style="display:none;margin-top:var(--spacing-sm);font-size:13px;"></div>
           </div>
 
-          <!-- Two-column layout for request lists -->
+          <!-- ── Two-column request lists ──────────────────────────────── -->
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:var(--spacing-lg);">
 
-            <!-- Incoming requests (owner view) -->
             <div class="content-card glass-card">
               <div class="content-card-header">
                 <span class="content-card-title">Gelen İstekler</span>
@@ -64,7 +108,6 @@
               </div>
             </div>
 
-            <!-- Outgoing requests (requester view) -->
             <div class="content-card glass-card">
               <div class="content-card-header">
                 <span class="content-card-title">Gönderilen İstekler</span>

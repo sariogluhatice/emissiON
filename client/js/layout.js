@@ -43,6 +43,7 @@ const NAV_ITEMS = [
       { href: "company-cbam.html", label: "CBAM / Vergi Hesabı" },
       { href: "company-tasks.html", label: "Şirket Görevleri" },
       { href: "company-simulation.html", label: "Simülasyon" },
+      { href: "company-reports.html", label: "Rapor Paylaşımı" },
       { href: "company-profile.html", label: "Profili Düzenle" },
     ],
   },
@@ -353,8 +354,12 @@ export function renderLayout({ activeNav, title } = {}) {
     _loadRealNotifications();
   }
 
-  // Load gamification stats into topbar (non-blocking)
-  _loadTopbarGamification();
+  // Load gamification stats into topbar (non-blocking).
+  // dashboard.js kendi fetch'ini erken başlatıp topbar'ı da günceller;
+  // bu sayfada layout'un tekrar fetch yapmasını engelliyoruz.
+  if (!window.location.pathname.endsWith('dashboard.html')) {
+    _loadTopbarGamification();
+  }
 
   return user;
 }
@@ -658,19 +663,20 @@ async function _loadTopbarGamification() {
 
     const tbStreak = document.getElementById("topbarStreakWidget");
     const tbCount = document.getElementById("topbarStreakCount");
-    if (tbStreak && stats.current_streak > 0) {
+    if (tbStreak && stats.streak > 0) {
       tbStreak.style.display = "flex";
-      if (tbCount) tbCount.textContent = stats.current_streak;
+      if (tbCount) tbCount.textContent = stats.streak;
     }
     const tbXp = document.getElementById("topbarXpWidget");
     const tbLevel = document.getElementById("topbarLevel");
     const tbFill = document.getElementById("topbarXpFill");
     if (tbXp) {
       tbXp.style.display = "flex";
+      tbXp.title = `${stats.totalXp} XP • Sonraki seviye için ${stats.xpToNextLevel} XP`;
       if (tbLevel) tbLevel.textContent = `Sv.${stats.level}`;
       if (tbFill)
         requestAnimationFrame(() => {
-          tbFill.style.width = `${stats.level_progress_pct}%`;
+          tbFill.style.width = `${stats.progressPercent}%`;
         });
     }
   } catch {

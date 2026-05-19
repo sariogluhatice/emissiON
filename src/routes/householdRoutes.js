@@ -2,6 +2,7 @@ const express    = require('express');
 const { authenticate } = require('../middleware/authMiddleware');
 const svc        = require('../services/householdService');
 const ctrl       = require('../controllers/householdController');
+const { checkRateLimit } = require('../utils/rateLimiter');
 
 const router = express.Router();
 
@@ -78,7 +79,10 @@ router.use(requireHouseholdRole);
 router.post('/create', ctrl.createHousehold);
 
 // POST /api/households/join — join an existing household via invite code
-router.post('/join', ctrl.joinHousehold);
+router.post('/join', (req, res, next) => {
+    try { checkRateLimit(`join:${req.ip}`, 5, 10 * 60 * 1000); next(); }
+    catch (e) { return res.status(429).json({ success: false, message: e.message }); }
+}, ctrl.joinHousehold);
 
 // GET /api/households/me — return the user's household summary, or null
 router.get('/me', ctrl.getMyHousehold);

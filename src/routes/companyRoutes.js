@@ -46,6 +46,9 @@ router.put('/profile',  ctrl.upsertCompanyProfile);
 // GET  /api/company/cbam/summary         — CBAM tax estimate from emission_records (primary)
 router.get('/cbam/summary',          ctrl.getCbamSummary);
 
+// GET  /api/company/cbam/default-factor — EU standard emission factor for a CBAM category
+router.get('/cbam/default-factor',   ctrl.getCbamDefaultFactor);
+
 // GET  /api/company/cbam/period-emissions — emission totals for a YYYY-MM period (for auto-derive)
 router.get('/cbam/period-emissions', ctrl.getPeriodEmissions);
 
@@ -80,8 +83,14 @@ router.post('/simulate',       ctrl.runSimulation);
 router.get('/simulate/saved',  ctrl.getSavedSimulations);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SECTION 6: Report sharing
+// SECTION 6: Company reports (generate + share)
 // ─────────────────────────────────────────────────────────────────────────────
+
+// POST /api/company/reports     — generate a new snapshot report
+router.post('/reports',        ctrl.generateReport);
+
+// GET  /api/company/reports     — list own reports (newest first)
+router.get('/reports',         ctrl.getMyReports);
 
 // POST /api/company/reports/request-access — request access to another company's report
 router.post('/reports/request-access', ctrl.requestReportAccess);
@@ -96,7 +105,8 @@ router.get('/reports/access-requests/outgoing', ctrl.getOutgoingAccessRequests);
 router.get('/reports/access-requests/pending-count', ctrl.getPendingIncomingCount);
 
 // PATCH /api/company/reports/access-requests/:id — approve or reject a request (owner only)
-router.patch('/reports/access-requests/:id', ctrl.respondToAccessRequest);
+router.patch('/reports/access-requests/:id',  ctrl.respondToAccessRequest);
+router.delete('/reports/access-requests/:id', ctrl.revokeReportAccess);
 
 // GET /api/company/reports/:reportId/shared — read-only view of an approved shared report
 router.get('/reports/:reportId/shared', ctrl.getSharedReport);

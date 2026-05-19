@@ -346,7 +346,7 @@ function buildSection(section) {
 
     const header = document.createElement('div');
     header.className = 'content-card-header';
-    header.innerHTML = `<span class="content-card-title">${section.icon} ${section.title}</span>`;
+    header.innerHTML = `<span class="content-card-title">${section.title}</span>`;
     card.appendChild(header);
 
     const body = document.createElement('div');
@@ -374,12 +374,7 @@ function renderForm() {
 
     // Kaydet butonu
     const footer = document.createElement('div');
-    footer.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-top:8px;';
-
-    const backLink = document.createElement('a');
-    backLink.href        = 'profile.html';
-    backLink.className   = 'btn-secondary';
-    backLink.textContent = '← Profil Sayfasına Dön';
+    footer.style.cssText = 'display:flex; justify-content:flex-end; align-items:center; margin-top:8px;';
 
     const saveBtn = document.createElement('button');
     saveBtn.id        = 'saveBtn';
@@ -388,7 +383,6 @@ function renderForm() {
     saveBtn.style.minWidth = '140px';
     saveBtn.addEventListener('click', saveCarbonProfile);
 
-    footer.appendChild(backLink);
     footer.appendChild(saveBtn);
     container.appendChild(footer);
 }

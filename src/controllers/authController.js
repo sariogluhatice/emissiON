@@ -10,6 +10,25 @@ const SALT_ROUNDS  = 10;
 const EMAIL_REGEX  = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const VALID_ROLES  = ['individual', 'household', 'company'];
 
+// Safely deletes an unverified account. Cascades password_history first to
+// avoid FK violation on databases without ON DELETE CASCADE.
+const _deleteUnverifiedUser = async (db, userId) => {
+    const client = await db.connect();
+    try {
+        await client.query('BEGIN');
+        await client.query('DELETE FROM password_history WHERE user_id = $1', [userId]);
+        await client.query('DELETE FROM users WHERE id = $1 AND is_verified = false', [userId]);
+        await client.query('COMMIT');
+    } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+    } finally {
+        client.release();
+    }
+};
+
+const { checkRateLimit: _checkRateLimit } = require('../utils/rateLimiter');
+
 // Password must be ≥8 chars with lowercase, uppercase, digit, and symbol.
 const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$/;
 const STRONG_PASSWORD_MSG   = 'Şifre en az 8 karakter olmalı; büyük harf, küçük harf, rakam ve sembol içermelidir.';
@@ -38,22 +57,27 @@ const register = async (req, res) => {
 
     try {
         const existing = await pool.query(
-            'SELECT id FROM users WHERE email = $1',
+            'SELECT id, is_verified FROM users WHERE email = $1',
             [email]
         );
 
         if (existing.rows.length > 0) {
-            return res.status(409).json({ message: 'E-posta adresi zaten kullanımda.' });
+            const existingUser = existing.rows[0];
+            if (existingUser.is_verified) {
+                return res.status(409).json({ message: 'E-posta adresi zaten kullanımda.' });
+            }
+            // Unverified account — wipe it so the user can start fresh
+            await _deleteUnverifiedUser(pool, existingUser.id);
         }
 
         const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
         const code           = generateVerificationCode();
         const codeHash       = await bcrypt.hash(code, SALT_ROUNDS);
-        const expiresAt      = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+        const expiresAt      = new Date(Date.now() + 120 * 1000); // 120 seconds
 
         const insertResult = await pool.query(
-            `INSERT INTO users (name, email, password, role, is_verified, verification_code_hash, verification_code_expires_at)
-             VALUES ($1, $2, $3, $4, false, $5, $6)
+            `INSERT INTO users (name, email, password, role, is_verified, verification_code_hash, verification_code_expires_at, code_resent)
+             VALUES ($1, $2, $3, $4, false, $5, $6, false)
              RETURNING id`,
             [name, email, hashedPassword, role, codeHash, expiresAt]
         );
@@ -90,9 +114,12 @@ const verifyEmail = async (req, res) => {
         return res.status(400).json({ message: 'E-posta ve doğrulama kodu gereklidir.' });
     }
 
+    try { _checkRateLimit(`verify:${email}`, 10, 10 * 60 * 1000); }
+    catch (rlErr) { return res.status(429).json({ message: rlErr.message }); }
+
     try {
         const result = await pool.query(
-            `SELECT id, role, is_verified, verification_code_hash, verification_code_expires_at
+            `SELECT id, role, is_verified, verification_code_hash, verification_code_expires_at, code_resent
              FROM users WHERE email = $1`,
             [email]
         );
@@ -112,6 +139,14 @@ const verifyEmail = async (req, res) => {
         }
 
         if (new Date() > new Date(user.verification_code_expires_at)) {
+            // Second code also expired → delete the unverified account
+            if (user.code_resent) {
+                await _deleteUnverifiedUser(pool, user.id);
+                return res.status(410).json({
+                    message: 'Doğrulama süresi doldu ve hesabınız silindi. Lütfen tekrar kayıt olun.',
+                    accountDeleted: true,
+                });
+            }
             return res.status(400).json({ message: 'Doğrulama kodunun süresi dolmuş. Lütfen yeni kod talep edin.' });
         }
 
@@ -157,9 +192,12 @@ const resendCode = async (req, res) => {
         return res.status(400).json({ message: 'E-posta adresi gereklidir.' });
     }
 
+    try { _checkRateLimit(`resend:${email}`, 3, 60 * 60 * 1000); }
+    catch (rlErr) { return res.status(429).json({ message: rlErr.message }); }
+
     try {
         const result = await pool.query(
-            'SELECT id, is_verified FROM users WHERE email = $1',
+            'SELECT id, is_verified, code_resent, verification_code_expires_at FROM users WHERE email = $1',
             [email]
         );
 
@@ -173,13 +211,30 @@ const resendCode = async (req, res) => {
             return res.status(400).json({ message: 'E-posta adresi zaten doğrulanmış.' });
         }
 
+        // Second resend attempt: second 120s window already used up
+        if (user.code_resent) {
+            const secondCodeExpired = !user.verification_code_expires_at ||
+                new Date() > new Date(user.verification_code_expires_at);
+
+            if (secondCodeExpired) {
+                await _deleteUnverifiedUser(pool, user.id);
+                return res.status(410).json({
+                    message: 'Doğrulama süresi doldu ve hesabınız silindi. Lütfen tekrar kayıt olun.',
+                    accountDeleted: true,
+                });
+            }
+
+            // Second code still valid — don't resend, just inform
+            return res.status(400).json({ message: 'Kodunuz hâlâ geçerlidir. Lütfen e-postanızı kontrol edin.' });
+        }
+
         const code      = generateVerificationCode();
         const codeHash  = await bcrypt.hash(code, SALT_ROUNDS);
-        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+        const expiresAt = new Date(Date.now() + 120 * 1000); // 120 seconds
 
         await pool.query(
             `UPDATE users
-             SET verification_code_hash = $1, verification_code_expires_at = $2
+             SET verification_code_hash = $1, verification_code_expires_at = $2, code_resent = true
              WHERE id = $3`,
             [codeHash, expiresAt, user.id]
         );
@@ -205,6 +260,9 @@ const login = async (req, res) => {
         return res.status(400).json({ message: 'E-posta ve şifre gereklidir.' });
     }
 
+    try { _checkRateLimit(`login:${email}`, 8, 15 * 60 * 1000); }
+    catch (rlErr) { return res.status(429).json({ message: rlErr.message }); }
+
     if (!process.env.JWT_SECRET) {
         console.error('[login] JWT_SECRET is not set');
         return res.status(500).json({ message: 'Server error.' });
@@ -229,7 +287,10 @@ const login = async (req, res) => {
         }
 
         if (!user.is_verified) {
-            return res.status(403).json({ message: 'Email not verified' });
+            return res.status(403).json({
+                message: 'E-posta doğrulanmamış. Lütfen e-postanıza gelen kodu girin.',
+                emailNotVerified: true,
+            });
         }
 
         const token = jwt.sign(
@@ -269,6 +330,9 @@ const forgotPassword = async (req, res) => {
     if (!email || !EMAIL_REGEX.test(email)) {
         return res.status(200).json(GENERIC);
     }
+
+    try { _checkRateLimit(`forgot:${email}`, 3, 60 * 60 * 1000); }
+    catch (rlErr) { return res.status(429).json({ message: rlErr.message }); }
 
     try {
         const result = await pool.query(

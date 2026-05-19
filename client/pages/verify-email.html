@@ -45,6 +45,18 @@
               <span class="error-msg" id="codeError"></span>
             </div>
 
+            <!-- Timer -->
+            <div id="timerBox" style="display:flex;align-items:center;gap:8px;
+                 background:var(--color-surface-muted);border-radius:var(--radius-md);
+                 padding:10px 14px;margin-bottom:4px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" style="flex-shrink:0;color:var(--color-text-muted);">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span style="font-size:13px;color:var(--color-text-muted);">Kod geçerlilik süresi:</span>
+              <strong id="timerDisplay" style="font-size:13px;color:var(--color-primary);min-width:36px;">120s</strong>
+            </div>
+
             <!-- API message -->
             <p class="api-message" id="apiMessage"></p>
 
@@ -53,9 +65,9 @@
               E-postayı Doğrula
             </button>
 
-            <!-- Resend code -->
-            <button type="button" class="btn-secondary" id="resendBtn">
-              Kodu Yeniden Gönder
+            <!-- Resend code — disabled until timer reaches 0 -->
+            <button type="button" class="btn-secondary" id="resendBtn" disabled>
+              Yeni Kod Gönder
             </button>
 
             <!-- Back to login -->

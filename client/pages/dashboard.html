@@ -6,10 +6,8 @@
     <title>Panel – emissiON</title>
     <link rel="stylesheet" href="../css/main.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Raporlama ve 3D için kütüphaneler -->
+    <!-- 3D Globe -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
   <link rel="icon" type="image/png" href="../assets/favicon.png" />
   </head>
@@ -76,10 +74,6 @@
                 edebilirsin.
               </p>
             </div>
-            <button id="downloadReportBtn" class="btn-primary" style="display:none; background: #3b82f6; border: none; gap: 8px;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              Kurumsal Raporu İndir (PDF)
-            </button>
           </div>
           <!-- Hero Section: Central Globe and Stats -->
           <div class="hero-dashboard-section" style="position: relative; margin-bottom: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 450px;">
@@ -175,40 +169,21 @@
             </div>
           </div>
 
-          <!-- Hane İçi Sorumluluk Paylaşımı (Sadece Hane Halkı İçin) -->
+          <!-- Hane Görevleri (Sadece Hane Halkı İçin — JS ile doldurulur) -->
           <div
             id="householdTasksCard"
             class="content-card glass-card"
             style="margin-bottom: 32px; border-left: 4px solid #3b82f6; display: none;"
           >
             <div class="content-card-header">
-              <span class="content-card-title">Hane İçi Yeşil Görev Paylaşımı</span>
-              <span style="font-size:11px;background:rgba(59,130,246,0.15);color:#3b82f6;padding:4px 12px;border-radius:20px;font-weight:700; margin-left: auto; border: 1px solid rgba(59,130,246,0.3);">Aile İşbirliği</span>
+              <span class="content-card-title">Hane Görevleri</span>
+              <a href="household-tasks.html" id="hhTasksViewAll"
+                 style="font-size:12px;color:var(--color-primary);text-decoration:none;font-weight:600;margin-left:auto;">
+                Tümünü Gör →
+              </a>
             </div>
-            <div style="padding: 0 24px 20px;">
-              <p style="font-size:14px; color:var(--color-text-muted); margin-bottom: 16px;">Hane halkı emisyonlarınızı düşürmek için aile bireylerine atanan haftalık yeşil sorumluluklar:</p>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                <div class="glass-card" style="margin:0; padding:16px; border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 6px; border-radius: 12px;">
-                  <span style="font-size: 14px; font-weight: 700; color: #60a5fa;">🌡️ Isıtma Yöneticisi</span>
-                  <span style="font-size: 11px; color: var(--color-text-muted); font-weight: 600;">Ortak Alan Sorumlusu</span>
-                  <p style="font-size: 13px; margin: 4px 0 0; line-height: 1.4; color: var(--color-text-muted);">Kombi derecesini 1°C düşürerek hane doğalgaz emisyonunu %6 azalt.</p>
-                </div>
-                <div class="glass-card" style="margin:0; padding:16px; border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 6px; border-radius: 12px;">
-                  <span style="font-size: 14px; font-weight: 700; color: #34d399;">🔌 Enerji Dedektifi</span>
-                  <span style="font-size: 11px; color: var(--color-text-muted); font-weight: 600;">Bekleme Modu Sorumlusu</span>
-                  <p style="font-size: 13px; margin: 4px 0 0; line-height: 1.4; color: var(--color-text-muted);">Kullanılmayan fişleri çekerek bekleme modu tüketimini sıfırla.</p>
-                </div>
-                <div class="glass-card" style="margin:0; padding:16px; border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 6px; border-radius: 12px;">
-                  <span style="font-size: 14px; font-weight: 700; color: #fbbf24;">🍏 Mutfak Şefliği</span>
-                  <span style="font-size: 11px; color: var(--color-text-muted); font-weight: 600;">Gıda Atığı Kontrolü</span>
-                  <p style="font-size: 13px; margin: 4px 0 0; line-height: 1.4; color: var(--color-text-muted);">Yemek porsiyonlarını planlayarak gıda israfını sıfıra indir.</p>
-                </div>
-                <div class="glass-card" style="margin:0; padding:16px; border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 6px; border-radius: 12px;">
-                  <span style="font-size: 14px; font-weight: 700; color: #f472b6;">🛍️ Sıfır Plastik Sorumlusu</span>
-                  <span style="font-size: 11px; color: var(--color-text-muted); font-weight: 600;">Alışveriş Görevlisi</span>
-                  <p style="font-size: 13px; margin: 4px 0 0; line-height: 1.4; color: var(--color-text-muted);">Alışverişlerde bez çanta ve file kullanarak poşet kullanımını bitir.</p>
-                </div>
-              </div>
+            <div id="hhTasksList" style="padding: 0 24px 20px;">
+              <div style="text-align:center;padding:24px 0;color:var(--color-text-muted);font-size:14px;">Yükleniyor…</div>
             </div>
           </div>
 

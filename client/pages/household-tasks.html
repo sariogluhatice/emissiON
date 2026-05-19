@@ -6,7 +6,7 @@
     <title>Hane Görevleri – emissiON</title>
     <link rel="stylesheet" href="../css/main.css" />
     <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
-  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+    <link rel="icon" type="image/png" href="../assets/favicon.png" />
   </head>
   <body>
     <div class="app-shell">
@@ -19,107 +19,43 @@
           <div class="page-header">
             <div>
               <h1>Hane Görevleri</h1>
-              <p>Üyelere karbon azaltım görevleri atayın ve ilerlemeyi takip edin.</p>
+              <p id="pageSubtitle">Karbon azaltım görevlerini takip edin.</p>
             </div>
-            <a href="household.html" class="btn-secondary btn-nowrap">← Hane Paneli</a>
-          </div>
-
-          <!-- ── Create task form ─────────────────────────────────────── -->
-          <div class="content-card glass-card" style="margin-bottom:var(--spacing-lg);">
-            <div class="content-card-header">
-              <span class="content-card-title">Yeni Görev Oluştur</span>
-            </div>
-
-            <div class="hh-task-form-grid">
-              <div class="form-group full-width">
-                <label class="form-label" for="taskTitle">Görev Başlığı <span style="color:var(--color-error)">*</span></label>
-                <input class="input" type="text" id="taskTitle" placeholder="Örn: Bu ay araç kullanımını %20 azalt" maxlength="200" />
-              </div>
-
-              <div class="form-group full-width">
-                <label class="form-label" for="taskDesc">Açıklama <span style="color:var(--color-text-muted);font-weight:400;">— İsteğe Bağlı</span></label>
-                <textarea class="input" id="taskDesc" rows="2" placeholder="Görevin detayları…" style="resize:vertical;"></textarea>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="taskAssignee">Atanan Üye</label>
-                <select class="input" id="taskAssignee">
-                  <option value="">🏠 Tüm Hane</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="taskDueDate">Son Tarih <span style="color:var(--color-text-muted);font-weight:400;">— İsteğe Bağlı</span></label>
-                <input class="input" type="date" id="taskDueDate" />
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="taskReduction">Hedef Azaltım (kg CO₂) <span style="color:var(--color-text-muted);font-weight:400;">— İsteğe Bağlı</span></label>
-                <input class="input" type="number" id="taskReduction" placeholder="Örn: 15" min="0.01" step="0.01" />
-              </div>
-
-              <!-- ── Emisyon Takibi (isteğe bağlı) ───────────────────── -->
-              <div class="form-group full-width" style="border-top:1px solid var(--color-border);padding-top:14px;margin-top:4px;">
-                <span style="font-size:12px;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.5px;">Emisyon Takibi <span style="font-weight:400;text-transform:none;letter-spacing:0;">— İsteğe Bağlı</span></span>
-                <p style="margin:4px 0 0;font-size:12px;color:var(--color-text-muted);line-height:1.5;">
-                  Kategori ve hedef seçilirse sistem, önceki ayı başlangıç değeri olarak alır ve bu ayın verilerine göre ilerlemeyi otomatik hesaplar.
-                </p>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="taskEmCat">Emisyon Kategorisi</label>
-                <select class="input" id="taskEmCat">
-                  <option value="">— Seçin</option>
-                  <option value="energy">Enerji</option>
-                  <option value="water">Su</option>
-                  <option value="gas">Doğalgaz</option>
-                  <option value="transport">Ulaşım</option>
-                  <option value="food">Gıda</option>
-                  <option value="shopping">Alışveriş</option>
-                  <option value="waste">Atık</option>
-                  <option value="materials">Malzeme</option>
-                  <option value="other">Diğer</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="taskTargetPct">Azaltım Hedefi (%)</label>
-                <input class="input" type="number" id="taskTargetPct" placeholder="Örn: 20" min="1" max="99" step="1" />
-                <span style="font-size:11px;color:var(--color-text-muted);margin-top:4px;display:block;">Önceki aya göre yüzde azaltım (1–99)</span>
-              </div>
-
-              <div class="form-group" style="display:flex;align-items:flex-end;">
-                <button class="btn-primary" id="createTaskBtn" style="width:100%;">Görev Oluştur</button>
-              </div>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <a href="household.html" class="btn-secondary btn-nowrap">← Hane Paneli</a>
+              <!-- Shown only for admin via JS -->
+              <a href="create-household-task.html" class="btn-primary btn-nowrap" id="newTaskBtn" style="display:none;">
+                + Yeni Görev
+              </a>
             </div>
           </div>
 
-          <!-- ── Tasks list ───────────────────────────────────────────── -->
-          <div class="content-card glass-card">
-            <div class="content-card-header">
-              <span class="content-card-title">Görev Listesi</span>
-              <span id="taskCountEl" style="font-size:13px;color:var(--color-text-muted);"></span>
-            </div>
+          <!-- ── Filter tabs ────────────────────────────────────────────── -->
+          <div class="hh-filter-bar" id="filterBar" style="display:none;">
+            <button class="hh-filter-btn active" data-filter="all">Tümü <span class="hh-filter-count" id="fcAll"></span></button>
+            <button class="hh-filter-btn" data-filter="pending">Bekliyor <span class="hh-filter-count" id="fcPending"></span></button>
+            <button class="hh-filter-btn" data-filter="in_progress">Devam Ediyor <span class="hh-filter-count" id="fcInProgress"></span></button>
+            <button class="hh-filter-btn" data-filter="completed">Tamamlandı <span class="hh-filter-count" id="fcCompleted"></span></button>
+            <button class="hh-filter-btn" data-filter="mine" id="filterMine" style="display:none;">Benim Görevlerim <span class="hh-filter-count" id="fcMine"></span></button>
+          </div>
 
-            <div id="tasksContainer">
-              <div class="hh-loading">Yükleniyor…</div>
-            </div>
+          <!-- ── Task cards grid ────────────────────────────────────────── -->
+          <div id="tasksContainer">
+            <div class="hh-loading">Yükleniyor…</div>
           </div>
 
         </main>
       </div>
     </div>
 
-    <!-- ── No-records modal ───────────────────────────────────────── -->
-    <div id="noRecordsModal" class="modal-backdrop" style="display:none;">
-      <div class="modal-box glass-card" style="max-width:440px;width:100%;">
-        <h2 class="modal-title">Önce Emisyon Kaydı Girmelisin</h2>
-        <p class="modal-body">
-          Bu görev emisyon verilerine göre takip edilir. Henüz kayıt bulunmadığı için önce tüketim/emisyon kaydı eklemelisin.
-        </p>
+    <!-- ── Add-data modal ─────────────────────────────────────────────── -->
+    <div id="addDataModal" class="modal-backdrop" style="display:none;">
+      <div class="modal-box glass-card" style="max-width:460px;width:100%;">
+        <h2 class="modal-title" id="addDataTitle"></h2>
+        <p class="modal-body" id="addDataMsg"></p>
         <div class="modal-actions">
-          <button class="btn-secondary" id="noRecordsVazgecBtn">Vazgeç</button>
-          <a href="add-entry.html" class="btn-primary">Kayıt Ekle</a>
+          <button class="btn-secondary" id="addDataCancel">İptal</button>
+          <button class="btn-primary"   id="addDataConfirm">Kayıt Ekle</button>
         </div>
       </div>
     </div>

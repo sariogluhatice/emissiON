@@ -1,4 +1,5 @@
-const pool = require('../config/db');
+const pool            = require('../config/db');
+const gamService      = require('../services/gamificationService');
 
 const PROFILE_TABLES = {
     individual: 'individual_profiles',
@@ -150,6 +151,7 @@ const updateCarbonProfile = async (req, res) => {
             );
         }
 
+        gamService.awardXp(userId, 'carbon_profile_updated').catch(() => {});
         return res.status(200).json({ message: 'Karbon profili başarıyla güncellendi.' });
     } catch (err) {
         console.error('[updateCarbonProfile]', err.message);

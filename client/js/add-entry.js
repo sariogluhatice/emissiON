@@ -410,7 +410,7 @@ function setFormMode(mode) {
 
     default:
       flightRow.style.display = "none";
-      quantityRow.style.display = "block";
+      quantityRow.style.display = "none";
       amountRow.style.display = "none";
       quantityEl.required = false;
       totalAmountEl.required = false;
@@ -997,7 +997,7 @@ entryForm.addEventListener("submit", async (e) => {
             setTimeout(() => showLevelUp(gam.stats.level), 800);
           }
         }
-      } catch (gamErr) { console.warn('[gamification] processEntry failed:', gamErr?.message); }
+      } catch (gamErr) { console.warn('[gamification] awardXp failed:', gamErr?.message); }
     }
 
     setTimeout(() => {
@@ -1081,6 +1081,8 @@ let cbamPeriodState = {
   total_kg: null, monthly_prod_tons: null, carbon_price_default: null,
   auto_factor: null, has_records: false,
 };
+let _factorIsManual = false;
+let _priceIsManual  = false;
 
 const ceCategoryEl         = document.getElementById('ceCategory');
 const cePeriodEl           = document.getElementById('cePeriod');
@@ -1094,10 +1096,33 @@ const ceSaveBtnEl          = document.getElementById('ceSaveBtn');
 const ceEmissionsInfoEl    = document.getElementById('ceEmissionsInfo');
 const ceEmissionsInfoContent = document.getElementById('ceEmissionsInfoContent');
 const ceFactorSourceBadge  = document.getElementById('ceFactorSourceBadge');
+const cePriceBadge         = document.getElementById('cePriceBadge');
 const previewFactorEl      = document.getElementById('previewFactor');
 const previewEmissionEl    = document.getElementById('previewEmission');
 const previewCostEl        = document.getElementById('previewCost');
 const previewRiskEl        = document.getElementById('previewRisk');
+
+async function cbamLoadCategoryDefaults(category) {
+  if (!category) {
+    if (!_factorIsManual) {
+      if (ceEmissionFactorEl) ceEmissionFactorEl.value = '';
+      if (ceFactorSourceBadge) ceFactorSourceBadge.innerHTML = '';
+    }
+    return;
+  }
+  try {
+    const res  = await companyService.getCbamDefaultFactor(category);
+    const data = res.data || {};
+    if (data.factor !== null && !_factorIsManual) {
+      if (ceEmissionFactorEl) ceEmissionFactorEl.value = data.factor;
+      if (ceFactorSourceBadge) ceFactorSourceBadge.innerHTML =
+        '<span style="color:#16a34a;font-weight:700;">⟳ Otomatik (EU varsayılan)</span>';
+      cbamUpdatePreview();
+    }
+  } catch {
+    // silently skip — user can fill manually
+  }
+}
 
 async function cbamLoadPeriodEmissions(period) {
   if (!period) {
@@ -1130,21 +1155,29 @@ async function cbamLoadPeriodEmissions(period) {
 
     const [y, m] = period.split('-');
     const label  = new Date(parseInt(y), parseInt(m) - 1, 1).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long' });
-    let html = `<div style="font-weight:700;margin-bottom:6px;">${label} emisyon verileri:</div>`;
+
+    // Always neutral/info styling — this box is supplementary, not the main calculation source
+    ceEmissionsInfoEl.style.borderColor = 'var(--color-border)';
+    ceEmissionsInfoEl.style.background  = 'var(--color-surface)';
+
+    let html = `<div style="font-weight:700;margin-bottom:4px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);">Operasyonel emisyon özeti — ${label}</div>`;
 
     if (hasRecords) {
-      ceEmissionsInfoEl.style.borderColor = '#16a34a60';
-      ceEmissionsInfoEl.style.background  = '#16a34a08';
-      html += `<div style="color:#16a34a;font-weight:600;">✓ ${(totalKg / 1000).toFixed(4)} tCO₂e bulundu</div>`;
+      html += `<div style="color:var(--color-text-secondary);">${(totalKg / 1000).toFixed(4)} tCO₂e kayıtlı operasyonel emisyon</div>`;
       if (monthlyTons) html += `<div style="color:var(--color-text-muted);">Aylık üretim: ${monthlyTons.toLocaleString('tr-TR', {maximumFractionDigits:2})} ton</div>`;
-      if (autoFactor !== null) html += `<div>Tahmini faktör: <strong>${autoFactor.toFixed(6)} tCO₂/ton</strong></div>`;
     } else {
-      ceEmissionsInfoEl.style.borderColor = '#f59e0b60';
-      ceEmissionsInfoEl.style.background  = '#f59e0b08';
-      html += `<div style="color:#f59e0b;font-weight:600;">⚠ Bu dönemde emisyon kaydı bulunamadı</div>`;
-      html += `<div style="color:var(--color-text-muted);">Manuel faktör girmeniz gereklidir.</div>`;
+      html += `<div style="color:var(--color-text-muted);">Bu dönemde kayıtlı operasyonel emisyon bulunmuyor.</div>`;
     }
-    if (cpDefault !== null) html += `<div style="color:var(--color-text-muted);">Karbon fiyatı: <strong>€${cpDefault.toFixed(2)}</strong></div>`;
+    html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--color-border);font-size:11px;color:var(--color-text-muted);">ℹ CBAM hesabı ürün bazlı emisyon faktörü üzerinden yapılır. Bu özet yalnızca bilgi amaçlıdır.</div>`;
+
+    if (cpDefault !== null) {
+      html += `<div style="color:var(--color-text-muted);margin-top:4px;font-size:12px;">Yapılandırılmış karbon fiyatı: <strong>€${cpDefault.toFixed(2)}/tCO₂</strong></div>`;
+      if (!_priceIsManual) {
+        if (ceCarbonPriceEl) ceCarbonPriceEl.value = cpDefault.toFixed(2);
+        if (cePriceBadge) cePriceBadge.innerHTML =
+          '<span style="color:#16a34a;font-weight:700;">⟳ Otomatik (yönetici yapılandırması)</span>';
+      }
+    }
     if (ceEmissionsInfoContent) ceEmissionsInfoContent.innerHTML = html;
   } catch {
     if (ceEmissionsInfoContent) ceEmissionsInfoContent.innerHTML = '<span style="color:var(--color-error);">⚠ Dönem bilgisi yüklenemedi.</span>';
@@ -1178,11 +1211,14 @@ function cbamUpdatePreview() {
   const isManualFactor = Number.isFinite(manualFactor) && manualFactor > 0;
 
   if (ceFactorSourceBadge) {
-    ceFactorSourceBadge.innerHTML = ef > 0
-      ? (isManualFactor
-          ? '<span style="color:#f59e0b;font-weight:700;">✎ Manuel faktör</span>'
-          : '<span style="color:#16a34a;font-weight:700;">⟳ Emisyon kayıtlarından türetildi</span>')
-      : '';
+    if (ef <= 0) {
+      ceFactorSourceBadge.innerHTML = '';
+    } else if (isManualFactor) {
+      ceFactorSourceBadge.innerHTML = '<span style="color:#f59e0b;font-weight:700;">✎ Manuel</span>';
+    } else if (cbamPeriodState.auto_factor !== null && ef === cbamPeriodState.auto_factor) {
+      ceFactorSourceBadge.innerHTML = '<span style="color:#16a34a;font-weight:700;">⟳ Emisyon kayıtlarından türetildi</span>';
+    }
+    // If EU default was auto-filled, the badge is already set by cbamLoadCategoryDefaults
   }
 
   if (totalEm > 0 && ef > 0) {
@@ -1199,8 +1235,34 @@ function cbamUpdatePreview() {
   }
 }
 
+ceCategoryEl?.addEventListener('change', () => {
+  _factorIsManual = false;
+  cbamLoadCategoryDefaults(ceCategoryEl.value);
+});
 cePeriodEl?.addEventListener('change', () => cbamLoadPeriodEmissions(cePeriodEl.value));
-[ceExportAmountEl, ceDeclPaidPriceEl, ceEmissionFactorEl, ceCarbonPriceEl].forEach(el => {
+
+ceEmissionFactorEl?.addEventListener('input', () => {
+  _factorIsManual = ceEmissionFactorEl.value.trim() !== '';
+  if (!_factorIsManual && ceFactorSourceBadge) {
+    // user cleared it — re-show EU default badge if category is set
+    cbamLoadCategoryDefaults(ceCategoryEl?.value || '');
+  } else if (_factorIsManual && ceFactorSourceBadge) {
+    ceFactorSourceBadge.innerHTML = '<span style="color:#f59e0b;font-weight:700;">✎ Manuel</span>';
+  }
+  cbamUpdatePreview();
+});
+
+ceCarbonPriceEl?.addEventListener('input', () => {
+  _priceIsManual = ceCarbonPriceEl.value.trim() !== '';
+  if (cePriceBadge) {
+    cePriceBadge.innerHTML = _priceIsManual
+      ? '<span style="color:#f59e0b;font-weight:700;">✎ Manuel</span>'
+      : '<span style="color:#16a34a;font-weight:700;">⟳ Otomatik (yönetici yapılandırması)</span>';
+  }
+  cbamUpdatePreview();
+});
+
+[ceExportAmountEl, ceDeclPaidPriceEl].forEach(el => {
   el?.addEventListener('input', cbamUpdatePreview);
 });
 

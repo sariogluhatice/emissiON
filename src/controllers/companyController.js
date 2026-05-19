@@ -117,6 +117,18 @@ const getCbamSummary = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 3b. GET /api/company/cbam/default-factor?category=...
+// ─────────────────────────────────────────────────────────────────────────────
+const getCbamDefaultFactor = async (req, res) => {
+    const category = str(req.query.category);
+    if (!category) return res.status(400).json({ success: false, message: 'category parametresi gereklidir.' });
+    try {
+        const data = svc.getCbamDefaultFactor(category);
+        return ok(res, data);
+    } catch (err) { return handle(res, err); }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 4. GET /api/company/cbam/period-emissions
 // ─────────────────────────────────────────────────────────────────────────────
 const getPeriodEmissions = async (req, res) => {
@@ -413,11 +425,38 @@ const getCompanyDashboard = async (req, res) => {
     }
 };
 
+// ── REPORT MANAGEMENT ──────────────────────────────────────────────────────────
+
+const generateReport = async (req, res) => {
+    const report_type  = str(req.body.report_type)  || 'full';
+    const period_start = dateStr(req.body.period_start);
+    const period_end   = dateStr(req.body.period_end);
+    if (!['full', 'cbam_only', 'emission_only'].includes(report_type))
+        return res.status(400).json({ success: false, message: 'Geçersiz rapor türü.' });
+    try {
+        const report = await svc.generateCompanyReport(req.user.id, { report_type, period_start, period_end });
+        return ok(res, { report }, 'Rapor oluşturuldu.', 201);
+    } catch (err) { return handle(res, err); }
+};
+
+const getMyReports = async (req, res) => {
+    try {
+        const reports = await svc.getMyReports(req.user.id);
+        return ok(res, { reports });
+    } catch (err) { return handle(res, err); }
+};
+
 // ── REPORT SHARING ─────────────────────────────────────────────────────────────
 
 const requestReportAccess = async (req, res) => {
     const reportNo = str(req.body.report_no);
     if (!reportNo) return res.status(400).json({ success: false, message: 'Rapor numarası gereklidir.' });
+    if (!/^EMR-\d{4}-\d{4}$/.test(reportNo.toUpperCase())) {
+        return res.status(400).json({
+            success: false,
+            message: 'Geçersiz rapor numarası formatı. Simülasyon sayfasındaki EMR-YYYY-NNNN numarasını kullanın.'
+        });
+    }
     try {
         const result = await svc.requestReportAccess(req.user.id, reportNo.toUpperCase());
         return ok(res, result, 'Erişim talebi oluşturuldu.', 201);
@@ -435,6 +474,15 @@ const getOutgoingAccessRequests = async (req, res) => {
     try {
         const requests = await svc.getOutgoingAccessRequests(req.user.id);
         return ok(res, { requests });
+    } catch (err) { return handle(res, err); }
+};
+
+const revokeReportAccess = async (req, res) => {
+    const id = posInt(req.params.id);
+    if (!id) return res.status(400).json({ success: false, message: 'Geçersiz talep ID.' });
+    try {
+        await svc.revokeReportAccess(req.user.id, id);
+        return ok(res, null, 'Erişim talebi kaldırıldı.');
     } catch (err) { return handle(res, err); }
 };
 
@@ -484,7 +532,11 @@ module.exports = {
     runSimulation,
     getSavedSimulations,
     getCompanyDashboard,
+    generateReport,
+    getCbamDefaultFactor,
+    getMyReports,
     requestReportAccess,
+    revokeReportAccess,
     getIncomingAccessRequests,
     getOutgoingAccessRequests,
     respondToAccessRequest,

@@ -314,21 +314,6 @@ function renderSimulations(sims, total, page, limit) {
         if (currentPage < totalPages) { currentPage++; loadSimulations(); }
     });
 
-    // Copy report_no to clipboard on badge click
-    simsContainer.querySelectorAll('.cs-report-no-badge').forEach(badge => {
-        badge.addEventListener('click', async () => {
-            const no = badge.dataset.reportNo;
-            if (!no) return;
-            try {
-                await navigator.clipboard.writeText(no);
-                const orig = badge.textContent;
-                badge.textContent = 'Kopyalandı!';
-                setTimeout(() => { badge.textContent = orig; }, 1500);
-            } catch {
-                showToast('Kopyalanamadı', 'Rapor numarası kopyalanamadı.', 'error');
-            }
-        });
-    });
 }
 
 function simRow(s) {
@@ -346,19 +331,9 @@ function simRow(s) {
         ? fmtChange(inp.emission_factor_change_pct, '%')
         : '—';
 
-    const reportNoBadge = s.report_no
-        ? `<div style="margin-top:3px;">
-             <code style="font-size:10px;background:#f3f4f6;padding:1px 5px;border-radius:3px;
-                          color:#6b7280;cursor:pointer;"
-                   title="Kopyala: ${s.report_no}"
-                   data-report-no="${s.report_no}"
-                   class="cs-report-no-badge">${s.report_no}</code>
-           </div>`
-        : '';
-
     return `
       <tr>
-        <td style="font-weight:600;">${name}${reportNoBadge}</td>
+        <td style="font-weight:600;">${name}</td>
         <td style="text-align:right;font-size:13px;">€${parseFloat(inp.carbon_price ?? 0).toFixed(2)}</td>
         <td style="text-align:right;font-size:13px;">${exportStr}</td>
         <td style="text-align:right;font-size:13px;">${factorStr}</td>

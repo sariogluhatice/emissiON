@@ -1,4 +1,5 @@
-const pool = require('../config/db');
+const pool       = require('../config/db');
+const gamService = require('../services/gamificationService');
 
 // POST /api/onboarding
 // Accepts the full flat-JSON answers object from the wizard.
@@ -60,6 +61,9 @@ const saveOnboarding = async (req, res) => {
 
         // ── 4. Final step: Mark complete (Crucial for redirection) ──────────
         await pool.query('UPDATE users SET onboarding_completed = true WHERE id = $1', [userId]);
+
+        // Award XP for completing carbon profile for the first time (lifetime limit: 1)
+        gamService.awardXp(userId, 'carbon_profile_completed').catch(() => {});
 
         return res.status(200).json({ message: 'Profil başarıyla oluşturuldu.' });
 

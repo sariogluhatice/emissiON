@@ -49,7 +49,7 @@ function render(notifications) {
   if (markAllBtn && unreadCount > 0) markAllBtn.style.display = "block";
 
   list.innerHTML = notifications.map(n => {
-    const url  = _notifTargetUrl(n);
+    const url  = n.targetUrl || _notifTargetUrl(n);
     const icon = TYPE_ICON[n.type] || "🔔";
     return `
       <div class="notif-page-item ${n.read ? "read" : "unread"}"

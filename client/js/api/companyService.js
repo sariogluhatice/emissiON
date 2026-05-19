@@ -8,8 +8,9 @@ export const companyService = {
     upsertProfile: (data) => client.put('/company/profile', data),
 
     // ── CBAM summary + entries ───────────────────────────────────────────────
-    getCbamSummary:     ()       => client.get('/company/cbam/summary'),
-    getPeriodEmissions: (period) => client.get(`/company/cbam/period-emissions?period=${period}`),
+    getCbamSummary:       ()         => client.get('/company/cbam/summary'),
+    getCbamDefaultFactor: (category) => client.get(`/company/cbam/default-factor?category=${encodeURIComponent(category)}`),
+    getPeriodEmissions:   (period)   => client.get(`/company/cbam/period-emissions?period=${period}`),
 
     getEntries:  ({ page = 1, limit = 20 } = {}) =>
         client.get(`/company/cbam/entries?page=${page}&limit=${limit}`),
@@ -39,4 +40,34 @@ export const companyService = {
 
     getSavedSimulations: ({ page = 1, limit = 20 } = {}) =>
         client.get(`/company/simulate/saved?page=${page}&limit=${limit}`),
+
+    // ── Company reports ──────────────────────────────────────────────────────
+    generateReport: (data) => client.post('/company/reports', data),
+
+    getMyReports: () => client.get('/company/reports'),
+
+    // ── Report sharing ───────────────────────────────────────────────────────
+    requestReportAccess: (report_no) =>
+        client.post('/company/reports/request-access', { report_no }),
+
+    getIncomingAccessRequests: () =>
+        client.get('/company/reports/access-requests/incoming'),
+
+    getOutgoingAccessRequests: () =>
+        client.get('/company/reports/access-requests/outgoing'),
+
+    getPendingIncomingCount: () =>
+        client.get('/company/reports/access-requests/pending-count'),
+
+    respondToAccessRequest: (id, decision) =>
+        client.request(`/company/reports/access-requests/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ decision }),
+        }),
+
+    revokeReportAccess: (id) =>
+        client.request(`/company/reports/access-requests/${id}`, { method: 'DELETE' }),
+
+    getSharedReport: (reportId) =>
+        client.get(`/company/reports/${reportId}/shared`),
 };

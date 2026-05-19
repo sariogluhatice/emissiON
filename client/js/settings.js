@@ -3,7 +3,7 @@ import { TokenManager }   from './api/tokenManager.js';
 import { getCurrentUser, renderTopbarUser, showToast } from './utils/uiUtils.js';
 import { renderLayout } from './layout.js';
 
-const user = renderLayout({ activeNav: 'nav-settings', title: 'Sistem Ayarları' });
+const user = renderLayout({ activeNav: 'nav-settings', title: 'Profil Ayarları' });
 if (!user) throw new Error('redirect');
 document.getElementById('settingsLogoutBtn')?.addEventListener('click', forceLogout);
 

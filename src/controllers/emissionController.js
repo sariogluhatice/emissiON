@@ -2,6 +2,7 @@ const pool = require('../config/db');
 const climatiqService = require('../services/climatiqService');
 const aiService = require('../services/aiService');
 const textractService = require('../services/textractService');
+const gamService = require('../services/gamificationService');
 const { normalizeCategory, isCanonical } = require('../utils/categoryNormalizer');
 
 const normalizeExtractedBillData = (raw = {}) => {
@@ -140,6 +141,7 @@ const extractOcrFromImage = async (req, res) => {
         const extracted = await aiService.extractUtilityBillData(ocrText);
         const normalized = normalizeExtractedBillData(extracted);
 
+        gamService.awardXp(req.user.id, 'ocr_invoice_processed').catch(() => {});
         return res.status(200).json({ ocrText, extracted: normalized, source: uploaded });
     } catch (err) {
         console.error('[emissions.extractOcrFromImage]', err.message);
@@ -491,6 +493,7 @@ const getSimulationRoadmap = async (req, res) => {
         }
 
         const roadmap = await aiService.generateSimulationRoadmap(reductions, role);
+        gamService.awardXp(req.user.id, 'what_if_simulation_used').catch(() => {});
         return res.status(200).json(roadmap);
     } catch (err) {
         console.error('[emissions.getSimulationRoadmap]', err.message);

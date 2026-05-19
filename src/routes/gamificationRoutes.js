@@ -14,8 +14,7 @@ router.get('/stats', async (req, res) => {
     catch (err) { handle(res, err); }
 });
 
-// POST /api/gamification/process-entry
-// Call after a successful emission entry save — awards XP, updates streak, unlocks badges.
+// POST /api/gamification/process-entry  (backward-compat alias)
 router.post('/process-entry', async (req, res) => {
     try { ok(res, await gamService.processEntry(req.user.id)); }
     catch (err) { handle(res, err); }

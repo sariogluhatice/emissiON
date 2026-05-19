@@ -1,7 +1,7 @@
-import { renderLayout } from './layout.js';
-import { showToast }    from './utils/uiUtils.js';
-import { ApiClient }    from './api/apiClient.js';
-import { updateGlobe } from './utils/globe.js';
+import { renderLayout }    from './layout.js';
+import { showToast }       from './utils/uiUtils.js';
+import { ApiClient }       from './api/apiClient.js';
+import { updateGlobe }     from './utils/globe.js';
 import { emissionService } from './api/emissionService.js';
 import { householdService } from './api/householdService.js';
 import { getCategoryLabel } from './utils/labelUtils.js';

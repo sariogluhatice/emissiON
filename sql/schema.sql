@@ -1,6 +1,6 @@
 -- ============================================================
 -- emissiON — Consolidated Database Schema
--- Incorporates all migrations 001–016.
+-- Incorporates all migrations 001–020.
 -- Safe to apply to a fresh PostgreSQL database.
 -- ============================================================
 
@@ -42,7 +42,8 @@ CREATE TABLE IF NOT EXISTS emission_records (
     source        VARCHAR(100)  NOT NULL,
     amount        NUMERIC(10,2) NOT NULL CHECK (amount > 0),
     date          DATE          NOT NULL,
-    category      VARCHAR(50),
+    category      VARCHAR(50) CHECK (category IS NULL OR category IN
+                      ('energy','water','gas','transport','food','shopping','waste','materials','other')),
     activity_type VARCHAR(50),
     created_at    TIMESTAMP     NOT NULL DEFAULT NOW()
 );
@@ -375,3 +376,51 @@ DROP TRIGGER IF EXISTS company_profiles_updated_at ON company_profiles;
 CREATE TRIGGER company_profiles_updated_at
     BEFORE UPDATE ON company_profiles
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- ─────────────────────────────────────────────────────────────
+-- company_report_seq  (migration_018 — kept in migration_019)
+-- Used to generate EMR-YYYY-NNNN report numbers.
+-- ─────────────────────────────────────────────────────────────
+CREATE SEQUENCE IF NOT EXISTS company_report_seq START 1;
+
+-- ─────────────────────────────────────────────────────────────
+-- company_reports  (migration_019)
+-- Immutable snapshot reports — one row per generated report.
+-- ─────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS company_reports (
+    id           SERIAL        PRIMARY KEY,
+    user_id      INTEGER       NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    report_no    VARCHAR(20)   NOT NULL UNIQUE,
+    report_type  VARCHAR(50)   NOT NULL DEFAULT 'full'
+                     CHECK (report_type IN ('full', 'cbam_only', 'emission_only')),
+    period_start DATE,
+    period_end   DATE,
+    snapshot     JSONB         NOT NULL DEFAULT '{}',
+    created_at   TIMESTAMPTZ   NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_company_reports_user
+    ON company_reports (user_id, created_at DESC);
+
+-- ─────────────────────────────────────────────────────────────
+-- company_report_access_requests  (migration_019)
+-- Access-control layer: requester asks owner for read access.
+-- ─────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS company_report_access_requests (
+    id                  SERIAL      PRIMARY KEY,
+    report_id           INTEGER     NOT NULL REFERENCES company_reports(id) ON DELETE CASCADE,
+    requester_user_id   INTEGER     NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    owner_user_id       INTEGER     NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    status              VARCHAR(20) NOT NULL DEFAULT 'pending'
+                            CHECK (status IN ('pending', 'approved', 'rejected')),
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    approved_at         TIMESTAMPTZ,
+    rejected_at         TIMESTAMPTZ,
+    UNIQUE (report_id, requester_user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_rpt_access_requester
+    ON company_report_access_requests (requester_user_id);
+CREATE INDEX IF NOT EXISTS idx_rpt_access_owner
+    ON company_report_access_requests (owner_user_id, status);

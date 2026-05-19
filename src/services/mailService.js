@@ -34,7 +34,7 @@ const sendVerificationEmail = async (email, code) => {
             from:    process.env.EMAIL_FROM || '"emissiON" <noreply@emission.com>',
             to:      email,
             subject: 'emissiON – E-posta Doğrulama Kodunuz',
-            text:    `Doğrulama kodunuz: ${code}\n\nBu kod 10 dakika geçerlidir.`,
+            text:    `Doğrulama kodunuz: ${code}\n\nBu kod 120 saniye geçerlidir.`,
             html: `
                 <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:24px">
                     <h2 style="color:#2d6a4f;margin-bottom:4px">emissiON</h2>
@@ -45,7 +45,7 @@ const sendVerificationEmail = async (email, code) => {
                         ${code}
                     </div>
                     <p style="color:#888;font-size:0.85rem">
-                        Bu kod 10 dakika geçerlidir.<br>
+                        Bu kod 120 saniye geçerlidir.<br>
                         Eğer bu işlemi siz yapmadıysanız lütfen dikkate almayın.
                     </p>
                 </div>

@@ -376,13 +376,15 @@ function renderComparison(comp) {
     return;
   }
 
-  const { member_breakdown, current_month_total, previous_month_total, month_change_pct, task_stats } = comp;
+  const { member_breakdown, current_month_total, previous_month_total, month_change_pct, is_first_period, task_stats } = comp;
 
   const changeColor = month_change_pct == null ? 'var(--color-text-muted)'
     : month_change_pct < 0 ? '#16a34a'
     : 'var(--color-error)';
   const changeSign  = month_change_pct != null && month_change_pct > 0 ? '+' : '';
-  const changeDisp  = month_change_pct != null ? `${changeSign}${month_change_pct}%` : '—';
+  const changeDisp  = month_change_pct != null
+    ? `${changeSign}${month_change_pct}%`
+    : is_first_period ? 'İlk dönem' : '—';
 
   const maxEm = member_breakdown.length
     ? Math.max(...member_breakdown.map(m => m.current_month_emissions), 0.01)
@@ -428,7 +430,7 @@ function renderComparison(comp) {
       <div style="flex:1;min-width:100px;background:rgba(0,0,0,0.03);border-radius:8px;padding:10px 12px;">
         <div style="font-size:11px;color:var(--color-text-muted);margin-bottom:3px;">Değişim</div>
         <div style="font-size:20px;font-weight:700;color:${changeColor};">${changeDisp}</div>
-        <div style="font-size:11px;color:${changeColor};">${month_change_pct == null ? 'Veri yok' : month_change_pct < 0 ? 'Azaldı' : month_change_pct === 0 ? 'Değişim yok' : 'Arttı'}</div>
+        <div style="font-size:11px;color:${changeColor};">${month_change_pct == null ? (is_first_period ? 'Geçen ay kayıt yok' : 'Veri yok') : month_change_pct < 0 ? 'Azaldı' : month_change_pct === 0 ? 'Değişim yok' : 'Arttı'}</div>
       </div>
     </div>
     ${member_breakdown.length ? `

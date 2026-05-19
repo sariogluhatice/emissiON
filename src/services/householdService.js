@@ -508,13 +508,20 @@ const _addProgressToTasks = async (tasks, householdId) => {
             (emMap[row.category].byUser[row.user_id] || 0) + parseFloat(row.current_amount);
     });
 
-    const now = new Date();
-    const todayStr    = now.toISOString().split('T')[0];
-    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-    const daysElapsed  = now.getDate();
+    const now      = new Date();
+    const todayStr = now.toISOString().split('T')[0];
 
     const progressById = {};
     trackingTasks.forEach(t => {
+        // Pending tasks are not yet started — no comparison, neutral status only.
+        if (t.status === 'pending') {
+            progressById[t.id] = {
+                current_amount:  null,
+                progress_status: 'not_started',
+            };
+            return;
+        }
+
         // Normalize task's category key before emMap lookup
         const catKey  = _canonCategory(t.emission_category);
         const catData = emMap[catKey];
@@ -552,18 +559,14 @@ const _addProgressToTasks = async (tasks, householdId) => {
         const deadlinePassed = dueStr && dueStr < todayStr;
 
         let progress_status;
-        if (current === null) {
-            // No emission records entered yet this period — not the same as achieving target
+        if (current === null || current === 0) {
             progress_status = 'no_data';
-        } else if (current <= target) {
-            progress_status = 'successful';
-        } else if (deadlinePassed) {
-            progress_status = 'failed';
+        } else if (t.status === 'completed' || deadlinePassed) {
+            progress_status = current <= target ? 'successful' : 'failed';
         } else {
-            const expectedMax = target * (daysElapsed / daysInMonth);
-            if (current <= expectedMax)              progress_status = 'on_track';
-            else if (current <= expectedMax * 1.15)  progress_status = 'at_risk';
-            else                                     progress_status = 'off_track';
+            if (current <= target * 0.75) progress_status = 'on_track';
+            else if (current <= target)   progress_status = 'at_risk';
+            else                          progress_status = 'off_track';
         }
 
         progressById[t.id] = {
@@ -766,6 +769,7 @@ const getHouseholdComparison = async (householdId) => {
     const monthChangePct = previousTotal > 0
         ? parseFloat(((currentTotal - previousTotal) / previousTotal * 100).toFixed(1))
         : null;
+    const isFirstPeriod = previousTotal === 0 && currentTotal > 0;
 
     const taskMap = {};
     taskRes.rows.forEach(r => { taskMap[r.status] = r.count; });
@@ -780,6 +784,7 @@ const getHouseholdComparison = async (householdId) => {
         current_month_total:  parseFloat(currentTotal.toFixed(2)),
         previous_month_total: parseFloat(previousTotal.toFixed(2)),
         month_change_pct:     monthChangePct,
+        is_first_period:      isFirstPeriod,
         task_stats: {
             pending:     taskMap['pending']     || 0,
             in_progress: taskMap['in_progress'] || 0,
