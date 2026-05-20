@@ -211,8 +211,8 @@ function renderKpiTrends(dashboard) {
     const trend = dashboard.trend;
     if (trend.length < 2) return;
 
-    const latest   = parseFloat(trend[trend.length - 1]?.total_cost ?? 0);
-    const previous = parseFloat(trend[trend.length - 2]?.total_cost ?? 0);
+    const latest   = parseFloat(trend[trend.length - 1]?.cbam_cost ?? 0);
+    const previous = parseFloat(trend[trend.length - 2]?.cbam_cost ?? 0);
     const pct      = previous > 0 ? ((latest - previous) / previous * 100).toFixed(1) : null;
 
     if (pct === null) return;

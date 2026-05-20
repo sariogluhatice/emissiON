@@ -289,13 +289,37 @@ ${String(ocrText).slice(0, 4000)}`;
 // Giriş yapmış kullanıcının tüm emisyon kayıtlarını döndürür (en yeni en başta).
 const getAll = async (req, res) => {
     try {
-        const result = await pool.query(
-            `SELECT id, source, amount, date, category, activity_type, created_at
-             FROM emission_records
-             WHERE user_id = $1
-             ORDER BY date DESC`,
-            [req.user.id]
-        );
+        let result;
+        if (req.user.role === 'household') {
+            // Find user's household
+            const membershipResult = await pool.query(
+                `SELECT household_id FROM household_members WHERE user_id = $1`,
+                [req.user.id]
+            );
+            const householdId = membershipResult.rows[0]?.household_id;
+            if (householdId) {
+                // Return all household records, including member name who added it
+                result = await pool.query(
+                    `SELECT er.id, er.user_id, er.source, er.amount, er.date, er.category, er.activity_type, er.created_at, u.name as member_name
+                     FROM emission_records er
+                     JOIN household_members hm ON hm.user_id = er.user_id
+                     JOIN users u ON u.id = er.user_id
+                     WHERE hm.household_id = $1
+                     ORDER BY er.date DESC`,
+                    [householdId]
+                );
+            } else {
+                result = { rows: [] };
+            }
+        } else {
+            result = await pool.query(
+                `SELECT id, user_id, source, amount, date, category, activity_type, created_at
+                 FROM emission_records
+                 WHERE user_id = $1
+                 ORDER BY date DESC`,
+                [req.user.id]
+            );
+        }
         return res.status(200).json({ records: result.rows });
     } catch (err) {
         console.error('[emissions.getAll]', err.message);
@@ -435,29 +459,67 @@ const getSmartInsights = async (req, res) => {
     const role   = req.user.role;
 
     try {
-        // 1. Geçmiş Verileri Çek (Aylık Toplamlar)
-        const historyResult = await pool.query(
-            `SELECT 
-                TO_CHAR(date, 'YYYY-MM') as month, 
-                SUM(amount) as total_amount
-             FROM emission_records
-             WHERE user_id = $1
-             GROUP BY month
-             ORDER BY month DESC
-             LIMIT 6`,
-            [userId]
-        );
-        
+        let householdId = null;
+        if (role === 'household') {
+            const membershipResult = await pool.query(
+                `SELECT household_id FROM household_members WHERE user_id = $1`,
+                [userId]
+            );
+            householdId = membershipResult.rows[0]?.household_id || null;
+        }
 
-        // 1b. Kategori Dağılımını Çek (Hangi kaynaklardan ne kadar salınım yapılmış?)
-        const categoryResult = await pool.query(
-            `SELECT source as category, SUM(amount) as total
-             FROM emission_records
-             WHERE user_id = $1
-             GROUP BY source
-             ORDER BY total DESC`,
-            [userId]
-        );
+        let historyResult;
+        let categoryResult;
+
+        if (role === 'household' && householdId) {
+            // 1. Geçmiş Verileri Çek (Hane Aylık Toplamlar)
+            historyResult = await pool.query(
+                `SELECT 
+                    TO_CHAR(er.date, 'YYYY-MM') as month, 
+                    SUM(er.amount) as total_amount
+                 FROM emission_records er
+                 JOIN household_members hm ON hm.user_id = er.user_id
+                 WHERE hm.household_id = $1
+                 GROUP BY month
+                 ORDER BY month DESC
+                 LIMIT 6`,
+                [householdId]
+            );
+
+            // 1b. Kategori Dağılımını Çek (Hane Toplam Kaynaklar)
+            categoryResult = await pool.query(
+                `SELECT er.source as category, SUM(er.amount) as total
+                 FROM emission_records er
+                 JOIN household_members hm ON hm.user_id = er.user_id
+                 WHERE hm.household_id = $1
+                 GROUP BY er.source
+                 ORDER BY total DESC`,
+                [householdId]
+            );
+        } else {
+            // 1. Geçmiş Verileri Çek (Bireysel/Şirket Aylık Toplamlar)
+            historyResult = await pool.query(
+                `SELECT 
+                    TO_CHAR(date, 'YYYY-MM') as month, 
+                    SUM(amount) as total_amount
+                 FROM emission_records
+                 WHERE user_id = $1
+                 GROUP BY month
+                 ORDER BY month DESC
+                 LIMIT 6`,
+                [userId]
+            );
+
+            // 1b. Kategori Dağılımını Çek (Bireysel/Şirket Toplam Kaynaklar)
+            categoryResult = await pool.query(
+                `SELECT source as category, SUM(amount) as total
+                 FROM emission_records
+                 WHERE user_id = $1
+                 GROUP BY source
+                 ORDER BY total DESC`,
+                [userId]
+            );
+        }
 
         // 2. Kullanıcı Profilini Çek
         const tableMap = {

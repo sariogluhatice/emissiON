@@ -523,8 +523,23 @@ async function loadHouseholdTasks() {
           Tüm Görevleri Gör →
         </a>
       </div>`;
-  } catch {
-    // Kullanıcı henüz bir haneye katılmamış — kartı gizle
+  } catch (err) {
+    console.warn('[dashboard] loadHouseholdTasks failed:', err);
+    if (err.message?.includes('üye olmanız') || err.message?.includes('Hane bulunamadı') || err.message?.includes('yetkiniz yok')) {
+      card.style.display = 'block';
+      listEl.innerHTML = `
+        <div style="text-align:center;padding:24px 12px;background:rgba(0,0,0,0.02);border-radius:12px;border:1px dashed var(--color-border);">
+          <span style="font-size:32px;display:block;margin-bottom:8px;">🏠</span>
+          <p style="font-size:13px;color:var(--color-text-muted);margin:0 0 14px;line-height:1.5;">
+            Henüz bir haneye katılmadınız veya yeni bir hane oluşturmadınız. Hane görevlerini ve takibini etkinleştirmek için lütfen hanenizi oluşturun veya bir davet kodu ile katılın.
+          </p>
+          <a href="household.html" class="btn-primary" style="display:inline-block;font-size:12px;padding:8px 16px;text-decoration:none;border-radius:8px;">
+            Hanemi Kur / Katıl →
+          </a>
+        </div>`;
+    } else {
+      card.style.display = 'none';
+    }
   }
 }
 

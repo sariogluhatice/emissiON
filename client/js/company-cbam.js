@@ -453,7 +453,7 @@ function openEditModal(entryId) {
     const data = btn?._entryData;
     if (data) {
         document.getElementById('ceEditProductName').value = data.product_name        ?? '';
-        document.getElementById('ceEditPeriodEnd').value   = data.period_end          ?? '';
+        document.getElementById('ceEditPeriodEnd').value   = data.period_end ? data.period_end.split('T')[0] : '';
         document.getElementById('ceEditPaidPrice').value   = parseFloat(data.paid_carbon_price ?? 0).toFixed(2);
         document.getElementById('ceEditRegion').value      = data.destination_region  ?? '';
         document.getElementById('ceEditNotes').value       = data.notes               ?? '';

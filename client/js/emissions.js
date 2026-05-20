@@ -115,8 +115,31 @@ function render() {
     const catLabel = getCategoryLabel(catKey);
     const actLabel = getActivityTypeLabel(record);
 
+    const isOwner = record.user_id === undefined || String(record.user_id) === String(user.id);
+    const memberLabel = record.member_name
+      ? `<span style="font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;margin-right:6px;${
+          isOwner
+            ? 'background:rgba(91,173,142,0.15);color:#2F7A5C;'
+            : 'background:rgba(30,128,240,0.12);color:#1e80f0;'
+        }">👤 ${escapeHtml(isOwner ? 'Sen' : record.member_name)}</span>`
+      : '';
+
     const commentBtn = user.role === 'household'
       ? `<button class="btn-action btn-edit comment-view-btn" data-id="${record.id}" style="font-size:12px;" title="Yönetici Yorumları">💬 Yorum</button>`
+      : '';
+
+    const editBtn = isOwner
+      ? `<a href="add-entry.html?edit=${record.id}" class="btn-action btn-edit" title="Düzenle">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path></svg>
+            Düzenle
+         </a>`
+      : '';
+
+    const deleteBtn = isOwner
+      ? `<button class="btn-action btn-delete" data-id="${record.id}" title="Sil">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+            Sil
+         </button>`
       : '';
 
     return `
@@ -124,18 +147,12 @@ function render() {
       <td>${formatDate(record.date)}</td>
       <td>${catLabel}</td>
       <td>${actLabel}</td>
-      <td style="color:var(--color-text-muted);font-size:13px;">—</td>
+      <td style="font-size:13px;color:var(--color-text);">${memberLabel}${escapeHtml(record.source || '—')}</td>
       <td><strong>${parseFloat(record.amount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</strong></td>
       <td>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <a href="add-entry.html?edit=${record.id}" class="btn-action btn-edit" title="Düzenle">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path></svg>
-            Düzenle
-          </a>
-          <button class="btn-action btn-delete" data-id="${record.id}" title="Sil">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-            Sil
-          </button>
+          ${editBtn}
+          ${deleteBtn}
           ${commentBtn}
         </div>
       </td>

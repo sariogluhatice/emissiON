@@ -719,7 +719,13 @@ async function submitOnboarding() {
     setApiMessage(isRetake ? 'Karbon profili başarıyla güncellendi!' : 'Profiliniz kaydedildi! Yönlendiriliyorsunuz...', false);
     
     setTimeout(() => {
-      window.location.href = isRetake ? 'profile.html' : 'dashboard.html';
+      let target = 'dashboard.html';
+      if (isRetake) {
+        target = 'profile.html';
+      } else if (role === 'household') {
+        target = 'household.html';
+      }
+      window.location.href = target;
     }, 1000);
   } catch (err) {
     console.error('Onboarding Hatası:', err);
