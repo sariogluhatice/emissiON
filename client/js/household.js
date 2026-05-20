@@ -79,7 +79,7 @@ function renderHeader(household) {
     hhInviteCodeEl.textContent = household.invite_code;
     show(hhInviteBox);
     show(hhAdminLinks);
-    if (allTasksLink) show(allTasksLink);
+    // allTasksLink removed (nav already has Görevler link)
   }
 
   statMembers.textContent     = household.member_count ?? '—';

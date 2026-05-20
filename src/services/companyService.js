@@ -676,14 +676,17 @@ const _addProgressToCompanyTasks = async (tasks, userId) => {
                 const { baselineDays, periodTarget } = tp.calcPeriodTarget(
                     rawTco2, period, pct, startStr, tp.toDateStr(t.due_date)
                 );
+                const targetEmission = parseFloat((rawTco2 * (1 - pct / 100)).toFixed(4));
                 await pool.query(
                     `UPDATE company_tasks
                      SET baseline_emission = $1, baseline_period = $2,
-                         baseline_days = $3, period_target_emission = $4
-                     WHERE id = $5`,
-                    [rawTco2, period, baselineDays, periodTarget, t.id]
+                         baseline_days = $3, period_target_emission = $4,
+                         target_emission = $5
+                     WHERE id = $6`,
+                    [rawTco2, period, baselineDays, periodTarget, targetEmission, t.id]
                 );
                 t.baseline_emission       = rawTco2;
+                t.target_emission         = targetEmission;
                 t.baseline_period         = period;
                 t.baseline_days           = baselineDays;
                 t.period_target_emission  = periodTarget;

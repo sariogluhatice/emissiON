@@ -1,11 +1,16 @@
-import { emissionService }    from "./api/emissionService.js";
-import { TokenManager }        from "./api/tokenManager.js";
-import { renderLayout }        from "./layout.js";
-import { showToast }           from "./utils/uiUtils.js";
-import { companyService }      from "./api/companyService.js";
+import { emissionService } from "./api/emissionService.js";
+import { TokenManager } from "./api/tokenManager.js";
+import { renderLayout } from "./layout.js";
+import { showToast } from "./utils/uiUtils.js";
+import { companyService } from "./api/companyService.js";
 import { gamificationService } from "./api/gamificationService.js";
-import { triggerConfetti, showXpGain, showLevelUp, showBadgeUnlock } from "./utils/confetti.js";
-import { normalizeCategory }   from "./utils/categoryNormalizer.js";
+import {
+  triggerConfetti,
+  showXpGain,
+  showLevelUp,
+  showBadgeUnlock,
+} from "./utils/confetti.js";
+import { normalizeCategory } from "./utils/categoryNormalizer.js";
 import { RISK_LABELS, RISK_COLORS } from "./utils/labelUtils.js";
 
 // Edit mode: check for ?edit=<id> URL param
@@ -19,9 +24,9 @@ const user = renderLayout({
 });
 if (!user) throw new Error("redirect");
 
-if (user.role === 'company') {
-  const _cbamCard = document.getElementById('cardCbam');
-  if (_cbamCard) _cbamCard.style.display = '';
+if (user.role === "company") {
+  const _cbamCard = document.getElementById("cardCbam");
+  if (_cbamCard) _cbamCard.style.display = "";
 }
 
 // ── Data model ────────────────────────────────────────────────────────────────
@@ -56,7 +61,7 @@ const ACTIVITY_MAP = {
   transport: [
     {
       id: "car_petrol",
-      label: "Benzinli Araç",
+      label: "Benzinli Araç ",
       units: ["km"],
       inputType: "quantity",
     },
@@ -66,6 +71,7 @@ const ACTIVITY_MAP = {
       units: ["km"],
       inputType: "quantity",
     },
+
     { id: "bus", label: "Otobüs", units: ["km"], inputType: "quantity" },
     { id: "train", label: "Tren", units: ["km"], inputType: "quantity" },
     {
@@ -94,10 +100,25 @@ const ACTIVITY_MAP = {
     },
   ],
   food: [
-    { id: "beef_red_meat", label: "Sığır / Kırmızı Et", units: ["kg"], inputType: "quantity" },
-    { id: "chicken",       label: "Tavuk",               units: ["kg"], inputType: "quantity" },
-    { id: "vegetables",    label: "Sebze / Meyve / Kuruyemiş", units: ["TRY"], inputType: "spend" },
-    { id: "rice_grains",   label: "Pirinç / Tahıl",      units: ["kg"], inputType: "quantity" },
+    {
+      id: "beef_red_meat",
+      label: "Sığır / Kırmızı Et",
+      units: ["kg"],
+      inputType: "quantity",
+    },
+    { id: "chicken", label: "Tavuk", units: ["kg"], inputType: "quantity" },
+    {
+      id: "vegetables",
+      label: "Sebze / Meyve / Kuruyemiş",
+      units: ["TRY"],
+      inputType: "spend",
+    },
+    {
+      id: "rice_grains",
+      label: "Pirinç / Tahıl",
+      units: ["kg"],
+      inputType: "quantity",
+    },
   ],
   shopping: [
     {
@@ -149,6 +170,14 @@ const CLIMATIQ_MAP = {
       "passenger_vehicle-vehicle_type_car-fuel_source_diesel-engine_size_na-vehicle_age_na-vehicle_weight_na",
     apiUnit: "km",
   },
+  petrol_vehicle: {
+    activityId: "fuel_combustion-type_motor_gasoline",
+    apiUnit: "l",
+  },
+  diesel_vehicle: {
+    activityId: "fuel_combustion-type_automotive_diesel_oil",
+    apiUnit: "l",
+  },
   bus: {
     activityId:
       "passenger_vehicle-vehicle_type_bus-fuel_source_na-engine_size_na-vehicle_age_na-vehicle_weight_na",
@@ -178,7 +207,11 @@ const CLIMATIQ_MAP = {
     activityId: "waste_management-type_recycling-disposal_method_recycling_na",
     apiUnit: "kg",
   },
-  vegetables:    { activityId: "arable_farming-type_vegetables_fruit_nuts",  apiUnit: "usd", spendBased: true },
+  vegetables: {
+    activityId: "arable_farming-type_vegetables_fruit_nuts",
+    apiUnit: "usd",
+    spendBased: true,
+  },
   office_supplies: {
     activityId: "general_retail-type_nonstore_retailers",
     apiUnit: "usd",
@@ -204,14 +237,15 @@ const TRY_USD_FALLBACK = 38;
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const cardManual = document.getElementById("cardManual");
 const cardVisual = document.getElementById("cardVisual");
-const cardCbam   = document.getElementById("cardCbam");
+const cardCbam = document.getElementById("cardCbam");
 const uploadSection = document.getElementById("uploadSection");
-const cbamSection   = document.getElementById("cbamSection");
+const cbamSection = document.getElementById("cbamSection");
 const uploadZone = document.getElementById("uploadZone");
 const fileInput = document.getElementById("fileInput");
 const scanStatus = document.getElementById("scanStatus");
 const categoryEl = document.getElementById("category");
 const activityEl = document.getElementById("activityType");
+const fuelReceiptHint = document.getElementById("fuelReceiptHint");
 const flightRow = document.getElementById("flightRow");
 const originEl = document.getElementById("origin");
 const destEl = document.getElementById("dest");
@@ -235,7 +269,10 @@ let currentMethod = "manual";
 let calculatedCo2 = null;
 let lastOcrData = null;
 
-const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+const setText = (id, value) => {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+};
 
 // ── Date bounds ───────────────────────────────────────────────────────────────
 const today = new Date().toISOString().split("T")[0];
@@ -257,10 +294,16 @@ if (isEditMode) {
       if (record.date) entryDateEl.value = record.date.slice(0, 10);
 
       // Kategori + aktivite
-      if (record.category && categoryEl.querySelector(`option[value="${record.category}"]`)) {
+      if (
+        record.category &&
+        categoryEl.querySelector(`option[value="${record.category}"]`)
+      ) {
         categoryEl.value = record.category;
         onCategoryChange();
-        if (record.activity_type && activityEl.querySelector(`option[value="${record.activity_type}"]`)) {
+        if (
+          record.activity_type &&
+          activityEl.querySelector(`option[value="${record.activity_type}"]`)
+        ) {
           activityEl.value = record.activity_type;
           onActivityChange();
         }
@@ -282,7 +325,7 @@ if (isEditMode) {
 
 // ── Category prefill from ?category= param (e.g. task CTA redirect) ──────────
 if (!isEditMode) {
-  const prefillCat = _urlParams.get('category');
+  const prefillCat = _urlParams.get("category");
   if (prefillCat && categoryEl.querySelector(`option[value="${prefillCat}"]`)) {
     categoryEl.value = prefillCat;
     onCategoryChange();
@@ -305,7 +348,8 @@ function setMethod(m) {
   if (upperRow) upperRow.style.display = m === "cbam" ? "none" : "";
   if (debugCol) debugCol.style.display = m === "cbam" ? "none" : "";
   if (cbamSection) cbamSection.style.display = m === "cbam" ? "block" : "none";
-  if (m === "cbam" && cePeriodEl?.value) cbamLoadPeriodEmissions(cePeriodEl.value);
+  if (m === "cbam" && cePeriodEl?.value)
+    cbamLoadPeriodEmissions(cePeriodEl.value);
   updateDebug();
 }
 
@@ -542,7 +586,8 @@ async function scanImageGeneric(file) {
     localCat !== null ? "local-regex" : "groq",
   );
 
-  const isUtilityOrTransport = detected && ["energy", "water", "gas", "transport"].includes(detected);
+  const isUtilityOrTransport =
+    detected && ["energy", "water", "gas", "transport"].includes(detected);
 
   if (isUtilityOrTransport) {
     // ── Utility bill / Transport path ──────────────────
@@ -557,6 +602,38 @@ async function scanImageGeneric(file) {
         categoryEl.value = mappedCat;
         onCategoryChange();
       }
+
+      // ── Fuel receipt handling ──────────────────────────────────
+      // fuelType comes from Textract normalizeExpenseData or AI activity_type
+      const fuelType =
+        ext.fuelType || // from Textract path
+        (ext.activity_type === "petrol_vehicle" ? "petrol" : null) ||
+        (ext.activity_type === "diesel_vehicle" ? "diesel" : null);
+
+      if (
+        detected === "transport" &&
+        fuelType &&
+        ext.unit === "l" &&
+        ext.quantity
+      ) {
+        // Set the volume-based fuel activity
+        const fuelActivityId =
+          fuelType === "petrol" ? "petrol_vehicle" : "diesel_vehicle";
+        if (activityEl.querySelector(`option[value="${fuelActivityId}"]`)) {
+          activityEl.value = fuelActivityId;
+          activityEl.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+        // Show litre→m³ conversion hint
+        const litres = parseFloat(ext.quantity);
+        const m3 = (litres / 1000).toFixed(4);
+        if (fuelReceiptHint) {
+          fuelReceiptHint.textContent = `Yakıt fişi algılandı: ${litres} L → ${m3} m³ olarak emisyon hesabına dönüştürüldü.`;
+          fuelReceiptHint.style.display = "block";
+        }
+      } else if (fuelReceiptHint) {
+        fuelReceiptHint.style.display = "none";
+      }
+
       if (ext.quantity) {
         quantityEl.value = String(parseFloat(ext.quantity));
         quantityEl.dispatchEvent(new Event("input", { bubbles: true }));
@@ -589,7 +666,7 @@ async function scanImageGeneric(file) {
 
   // ── Shopping / Food / receipt path ─────────────────────────────────────────────
   categoryEl.value = detected || "shopping";
-  onCategoryChange(); 
+  onCategoryChange();
   if (detected === "food") {
     // Select a 'spend' based food activity to trigger amountRow
     activityEl.value = "vegetables";
@@ -695,14 +772,20 @@ function detectCategoryFromText(text) {
   if (/sayaç/i.test(t) && /\bgaz\b/.test(t)) return "gas";
 
   // 4. Transport & Fuel
-  const hasTransport = /akaryak[ıi]t|benzin|motorin|lpg|otogaz|ta[şs][ıi]t tan[ıi]ma|yak[ıi]t|petrol|istasyon|kur[şs]unsuz/i.test(t);
+  const hasTransport =
+    /akaryak[ıi]t|benzin|motorin|lpg|otogaz|ta[şs][ıi]t tan[ıi]ma|yak[ıi]t|petrol|istasyon|kur[şs]unsuz/i.test(
+      t,
+    );
   if (hasTransport) {
     console.log("[detectCategoryFromText] reason=transport_signals");
     return "transport";
   }
 
   // 5. Food & Dining
-  const hasFood = /restoran|lokanta|cafe|yemek|g[ıi]da|market|s[üu]permarket|f[ıi]r[ıi]n|pastane|kasap|manav|yiyecek|i[çc]ecek/i.test(t);
+  const hasFood =
+    /restoran|lokanta|cafe|yemek|g[ıi]da|market|s[üu]permarket|f[ıi]r[ıi]n|pastane|kasap|manav|yiyecek|i[çc]ecek/i.test(
+      t,
+    );
   if (hasFood) {
     console.log("[detectCategoryFromText] reason=food_signals");
     return "food";
@@ -810,7 +893,11 @@ function validate() {
     }
   } else if (mode === "flight") {
     if (originEl.value.trim().length < 3 || destEl.value.trim().length < 3) {
-      showToast("Eksik Alan", "Kalkış ve varış bilgilerini girin (örn. IST, LHR).", "error");
+      showToast(
+        "Eksik Alan",
+        "Kalkış ve varış bilgilerini girin (örn. IST, LHR).",
+        "error",
+      );
       ok = false;
     }
   }
@@ -903,7 +990,10 @@ calcBtn.addEventListener("click", runCalculate);
 async function runCalculate() {
   if (!validate()) return;
 
-  if (calcStatusEl) { calcStatusEl.className = "calc-status loading"; calcStatusEl.textContent = "Karbon ayak izi hesaplanıyor…"; }
+  if (calcStatusEl) {
+    calcStatusEl.className = "calc-status loading";
+    calcStatusEl.textContent = "Karbon ayak izi hesaplanıyor…";
+  }
   if (calcBtn) calcBtn.disabled = true;
   resultBanner?.classList.remove("visible");
   if (saveBtn) saveBtn.disabled = true;
@@ -914,10 +1004,19 @@ async function runCalculate() {
 
     // Yerel katsayı → Climatiq çağrısı yok
     if ("localCoefficient" in payload) {
-      calculatedCo2 = parseFloat((payload.quantity * payload.localCoefficient).toFixed(6));
-      if (calcStatusEl) { calcStatusEl.className = "calc-status"; calcStatusEl.textContent = ""; }
+      calculatedCo2 = parseFloat(
+        (payload.quantity * payload.localCoefficient).toFixed(6),
+      );
+      if (calcStatusEl) {
+        calcStatusEl.className = "calc-status";
+        calcStatusEl.textContent = "";
+      }
       showResult(calculatedCo2);
-      updateDebug({ payload, co2e: calculatedCo2, method: "local_coefficient" });
+      updateDebug({
+        payload,
+        co2e: calculatedCo2,
+        method: "local_coefficient",
+      });
       return;
     }
 
@@ -934,11 +1033,17 @@ async function runCalculate() {
       throw new Error(data.message || `Hesaplama hatası (${res.status})`);
 
     calculatedCo2 = parseFloat(data.co2e);
-    if (calcStatusEl) { calcStatusEl.className = "calc-status"; calcStatusEl.textContent = ""; }
+    if (calcStatusEl) {
+      calcStatusEl.className = "calc-status";
+      calcStatusEl.textContent = "";
+    }
     showResult(calculatedCo2);
     updateDebug({ payload, calcResult: data, co2e: calculatedCo2 });
   } catch (err) {
-    if (calcStatusEl) { calcStatusEl.className = "calc-status error"; calcStatusEl.textContent = `⚠ ${err.message}`; }
+    if (calcStatusEl) {
+      calcStatusEl.className = "calc-status error";
+      calcStatusEl.textContent = `⚠ ${err.message}`;
+    }
     showToast("Hesaplama Hatası", err.message, "error");
     updateDebug({ error: err.message });
   } finally {
@@ -994,7 +1099,7 @@ entryForm.addEventListener("submit", async (e) => {
     };
 
     let didLevelUp = false;
-    let newLevel   = null;
+    let newLevel = null;
 
     if (isEditMode) {
       await emissionService.update(editId, payload);
@@ -1004,9 +1109,9 @@ entryForm.addEventListener("submit", async (e) => {
       showToast("Kaydedildi!", "Emisyon kaydı oluşturuldu.", "success");
 
       // Mark today as logged (for daily reminder suppression)
-      const todayKey = `gam_logged_${new Date().toISOString().slice(0,10)}`;
+      const todayKey = `gam_logged_${new Date().toISOString().slice(0, 10)}`;
       const isFirstEntryToday = !localStorage.getItem(todayKey);
-      localStorage.setItem(todayKey, '1');
+      localStorage.setItem(todayKey, "1");
 
       // Award XP and show celebrations
       try {
@@ -1016,28 +1121,40 @@ entryForm.addEventListener("submit", async (e) => {
           showXpGain(gam.xpGained, saveBtn);
           if (gam.newBadges?.length > 0) {
             triggerConfetti();
-            gam.newBadges.forEach(b => showBadgeUnlock(b, showToast));
+            gam.newBadges.forEach((b) => showBadgeUnlock(b, showToast));
           }
           if (gam.leveledUp) {
             didLevelUp = true;
-            newLevel   = gam.stats.level;
+            newLevel = gam.stats.level;
           } else if (isFirstEntryToday && gam.stats?.streak >= 2) {
-            showToast(`🔥 ${gam.stats.streak} günlük seri!`, 'Harika gidiyorsun, devam et!', 'success');
+            showToast(
+              `🔥 ${gam.stats.streak} günlük seri!`,
+              "Harika gidiyorsun, devam et!",
+              "success",
+            );
           }
         } else if (gam && gam.xpGained === 0 && gam.stats) {
-          showToast('Günlük limit', 'Bugün bu etkinlik için maksimum XP kazandın.', 'info');
+          showToast(
+            "Günlük limit",
+            "Bugün bu etkinlik için maksimum XP kazandın.",
+            "info",
+          );
         }
-      } catch (gamErr) { console.warn('[gamification] awardXp failed:', gamErr?.message); }
+      } catch (gamErr) {
+        console.warn("[gamification] awardXp failed:", gamErr?.message);
+      }
     }
 
     if (didLevelUp) {
       // Redirect only after user dismisses the level-up popup
       setTimeout(() => {
-        showLevelUp(newLevel, () => { window.location.href = 'emissions.html'; });
+        showLevelUp(newLevel, () => {
+          window.location.href = "emissions.html";
+        });
       }, 600);
     } else {
       setTimeout(() => {
-        window.location.href = 'emissions.html';
+        window.location.href = "emissions.html";
       }, 1800);
     }
   } catch (err) {
@@ -1070,7 +1187,10 @@ function resetCalc() {
   calculatedCo2 = null;
   resultBanner?.classList.remove("visible");
   if (saveBtn) saveBtn.disabled = true;
-  if (calcStatusEl) { calcStatusEl.className = "calc-status"; calcStatusEl.textContent = ""; }
+  if (calcStatusEl) {
+    calcStatusEl.className = "calc-status";
+    calcStatusEl.textContent = "";
+  }
 }
 
 function updateDebug(extra = {}) {
@@ -1106,52 +1226,58 @@ function fileToBase64(file) {
 const CBAM_RISK_THRESHOLDS = { medium: 10000, high: 50000, critical: 200000 };
 
 function cbamClientRisk(cost) {
-  if (cost < CBAM_RISK_THRESHOLDS.medium)   return 'low';
-  if (cost < CBAM_RISK_THRESHOLDS.high)     return 'medium';
-  if (cost < CBAM_RISK_THRESHOLDS.critical) return 'high';
-  return 'critical';
+  if (cost < CBAM_RISK_THRESHOLDS.medium) return "low";
+  if (cost < CBAM_RISK_THRESHOLDS.high) return "medium";
+  if (cost < CBAM_RISK_THRESHOLDS.critical) return "high";
+  return "critical";
 }
 
 let cbamPeriodState = {
-  total_kg: null, monthly_prod_tons: null, carbon_price_default: null,
-  auto_factor: null, has_records: false,
+  total_kg: null,
+  monthly_prod_tons: null,
+  carbon_price_default: null,
+  auto_factor: null,
+  has_records: false,
 };
 let _factorIsManual = false;
-let _priceIsManual  = false;
+let _priceIsManual = false;
 
-const ceCategoryEl         = document.getElementById('ceCategory');
-const cePeriodEl           = document.getElementById('cePeriod');
-const ceExportAmountEl     = document.getElementById('ceExportAmount');
-const ceDestinationEl      = document.getElementById('ceDestinationRegion');
-const ceDeclPaidPriceEl    = document.getElementById('ceDeclPaidPrice');
-const ceEmissionFactorEl   = document.getElementById('ceEmissionFactor');
-const ceCarbonPriceEl      = document.getElementById('ceCarbonPrice');
-const ceNotesEl            = document.getElementById('ceNotes');
-const ceSaveBtnEl          = document.getElementById('ceSaveBtn');
-const ceEmissionsInfoEl    = document.getElementById('ceEmissionsInfo');
-const ceEmissionsInfoContent = document.getElementById('ceEmissionsInfoContent');
-const ceFactorSourceBadge  = document.getElementById('ceFactorSourceBadge');
-const cePriceBadge         = document.getElementById('cePriceBadge');
-const previewFactorEl      = document.getElementById('previewFactor');
-const previewEmissionEl    = document.getElementById('previewEmission');
-const previewCostEl        = document.getElementById('previewCost');
-const previewRiskEl        = document.getElementById('previewRisk');
+const ceCategoryEl = document.getElementById("ceCategory");
+const cePeriodEl = document.getElementById("cePeriod");
+const ceExportAmountEl = document.getElementById("ceExportAmount");
+const ceDestinationEl = document.getElementById("ceDestinationRegion");
+const ceDeclPaidPriceEl = document.getElementById("ceDeclPaidPrice");
+const ceEmissionFactorEl = document.getElementById("ceEmissionFactor");
+const ceCarbonPriceEl = document.getElementById("ceCarbonPrice");
+const ceNotesEl = document.getElementById("ceNotes");
+const ceSaveBtnEl = document.getElementById("ceSaveBtn");
+const ceEmissionsInfoEl = document.getElementById("ceEmissionsInfo");
+const ceEmissionsInfoContent = document.getElementById(
+  "ceEmissionsInfoContent",
+);
+const ceFactorSourceBadge = document.getElementById("ceFactorSourceBadge");
+const cePriceBadge = document.getElementById("cePriceBadge");
+const previewFactorEl = document.getElementById("previewFactor");
+const previewEmissionEl = document.getElementById("previewEmission");
+const previewCostEl = document.getElementById("previewCost");
+const previewRiskEl = document.getElementById("previewRisk");
 
 async function cbamLoadCategoryDefaults(category) {
   if (!category) {
     if (!_factorIsManual) {
-      if (ceEmissionFactorEl) ceEmissionFactorEl.value = '';
-      if (ceFactorSourceBadge) ceFactorSourceBadge.innerHTML = '';
+      if (ceEmissionFactorEl) ceEmissionFactorEl.value = "";
+      if (ceFactorSourceBadge) ceFactorSourceBadge.innerHTML = "";
     }
     return;
   }
   try {
-    const res  = await companyService.getCbamDefaultFactor(category);
+    const res = await companyService.getCbamDefaultFactor(category);
     const data = res.data || {};
     if (data.factor !== null && !_factorIsManual) {
       if (ceEmissionFactorEl) ceEmissionFactorEl.value = data.factor;
-      if (ceFactorSourceBadge) ceFactorSourceBadge.innerHTML =
-        '<span style="color:#16a34a;font-weight:700;">⟳ Otomatik (EU varsayılan)</span>';
+      if (ceFactorSourceBadge)
+        ceFactorSourceBadge.innerHTML =
+          '<span style="color:#16a34a;font-weight:700;">⟳ Otomatik (EU varsayılan)</span>';
       cbamUpdatePreview();
     }
   } catch {
@@ -1161,45 +1287,69 @@ async function cbamLoadCategoryDefaults(category) {
 
 async function cbamLoadPeriodEmissions(period) {
   if (!period) {
-    if (ceEmissionsInfoEl) ceEmissionsInfoEl.style.display = 'none';
-    cbamPeriodState = { total_kg: null, monthly_prod_tons: null, carbon_price_default: null, auto_factor: null, has_records: false };
+    if (ceEmissionsInfoEl) ceEmissionsInfoEl.style.display = "none";
+    cbamPeriodState = {
+      total_kg: null,
+      monthly_prod_tons: null,
+      carbon_price_default: null,
+      auto_factor: null,
+      has_records: false,
+    };
     cbamUpdatePreview();
     return;
   }
 
-  if (ceEmissionsInfoEl)    ceEmissionsInfoEl.style.display = 'block';
-  if (ceEmissionsInfoContent) ceEmissionsInfoContent.innerHTML = '<span style="color:var(--color-text-muted);">Yükleniyor…</span>';
+  if (ceEmissionsInfoEl) ceEmissionsInfoEl.style.display = "block";
+  if (ceEmissionsInfoContent)
+    ceEmissionsInfoContent.innerHTML =
+      '<span style="color:var(--color-text-muted);">Yükleniyor…</span>';
 
   try {
-    const res  = await companyService.getPeriodEmissions(period);
+    const res = await companyService.getPeriodEmissions(period);
     const data = res.data || {};
 
-    const totalKg     = parseFloat(data.total_kg  ?? 0);
-    const monthlyTons = data.monthly_prod_tons ? parseFloat(data.monthly_prod_tons) : null;
-    const cpDefault   = data.carbon_price_default ? parseFloat(data.carbon_price_default) : null;
-    const hasRecords  = totalKg > 0;
+    const totalKg = parseFloat(data.total_kg ?? 0);
+    const monthlyTons = data.monthly_prod_tons
+      ? parseFloat(data.monthly_prod_tons)
+      : null;
+    const cpDefault = data.carbon_price_default
+      ? parseFloat(data.carbon_price_default)
+      : null;
+    const hasRecords = totalKg > 0;
 
     let autoFactor = null;
     if (hasRecords) {
       const exportAmt = parseFloat(ceExportAmountEl?.value);
-      const denom     = monthlyTons ?? (Number.isFinite(exportAmt) && exportAmt > 0 ? exportAmt : null);
+      const denom =
+        monthlyTons ??
+        (Number.isFinite(exportAmt) && exportAmt > 0 ? exportAmt : null);
       if (denom && denom > 0) autoFactor = totalKg / 1000 / denom;
     }
 
-    cbamPeriodState = { total_kg: totalKg, monthly_prod_tons: monthlyTons, carbon_price_default: cpDefault, auto_factor: autoFactor, has_records: hasRecords };
+    cbamPeriodState = {
+      total_kg: totalKg,
+      monthly_prod_tons: monthlyTons,
+      carbon_price_default: cpDefault,
+      auto_factor: autoFactor,
+      has_records: hasRecords,
+    };
 
-    const [y, m] = period.split('-');
-    const label  = new Date(parseInt(y), parseInt(m) - 1, 1).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long' });
+    const [y, m] = period.split("-");
+    const label = new Date(parseInt(y), parseInt(m) - 1, 1).toLocaleDateString(
+      "tr-TR",
+      { year: "numeric", month: "long" },
+    );
 
     // Always neutral/info styling — this box is supplementary, not the main calculation source
-    ceEmissionsInfoEl.style.borderColor = 'var(--color-border)';
-    ceEmissionsInfoEl.style.background  = 'var(--color-surface)';
+    ceEmissionsInfoEl.style.borderColor = "var(--color-border)";
+    ceEmissionsInfoEl.style.background = "var(--color-surface)";
 
     let html = `<div style="font-weight:700;margin-bottom:4px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);">Operasyonel emisyon özeti — ${label}</div>`;
 
     if (hasRecords) {
       html += `<div style="color:var(--color-text-secondary);">${(totalKg / 1000).toFixed(4)} tCO₂e kayıtlı operasyonel emisyon</div>`;
-      if (monthlyTons) html += `<div style="color:var(--color-text-muted);">Aylık üretim: ${monthlyTons.toLocaleString('tr-TR', {maximumFractionDigits:2})} ton</div>`;
+      if (monthlyTons)
+        html += `<div style="color:var(--color-text-muted);">Aylık üretim: ${monthlyTons.toLocaleString("tr-TR", { maximumFractionDigits: 2 })} ton</div>`;
     } else {
       html += `<div style="color:var(--color-text-muted);">Bu dönemde kayıtlı operasyonel emisyon bulunmuyor.</div>`;
     }
@@ -1209,13 +1359,16 @@ async function cbamLoadPeriodEmissions(period) {
       html += `<div style="color:var(--color-text-muted);margin-top:4px;font-size:12px;">Yapılandırılmış karbon fiyatı: <strong>€${cpDefault.toFixed(2)}/tCO₂</strong></div>`;
       if (!_priceIsManual) {
         if (ceCarbonPriceEl) ceCarbonPriceEl.value = cpDefault.toFixed(2);
-        if (cePriceBadge) cePriceBadge.innerHTML =
-          '<span style="color:#16a34a;font-weight:700;">⟳ Otomatik (yönetici yapılandırması)</span>';
+        if (cePriceBadge)
+          cePriceBadge.innerHTML =
+            '<span style="color:#16a34a;font-weight:700;">⟳ Otomatik (yönetici yapılandırması)</span>';
       }
     }
     if (ceEmissionsInfoContent) ceEmissionsInfoContent.innerHTML = html;
   } catch {
-    if (ceEmissionsInfoContent) ceEmissionsInfoContent.innerHTML = '<span style="color:var(--color-error);">⚠ Dönem bilgisi yüklenemedi.</span>';
+    if (ceEmissionsInfoContent)
+      ceEmissionsInfoContent.innerHTML =
+        '<span style="color:var(--color-error);">⚠ Dönem bilgisi yüklenemedi.</span>';
   }
 
   cbamUpdatePreview();
@@ -1223,72 +1376,96 @@ async function cbamLoadPeriodEmissions(period) {
 
 function cbamUpdatePreview() {
   const manualFactor = parseFloat(ceEmissionFactorEl?.value);
-  const effectiveFactor = (Number.isFinite(manualFactor) && manualFactor > 0)
-    ? manualFactor
-    : cbamPeriodState.auto_factor;
+  const effectiveFactor =
+    Number.isFinite(manualFactor) && manualFactor > 0
+      ? manualFactor
+      : cbamPeriodState.auto_factor;
 
   if (cbamPeriodState.has_records && !cbamPeriodState.monthly_prod_tons) {
     const amt = parseFloat(ceExportAmountEl?.value);
-    if (Number.isFinite(amt) && amt > 0) cbamPeriodState.auto_factor = cbamPeriodState.total_kg / 1000 / amt;
+    if (Number.isFinite(amt) && amt > 0)
+      cbamPeriodState.auto_factor = cbamPeriodState.total_kg / 1000 / amt;
   }
 
-  const amount  = parseFloat(ceExportAmountEl?.value) || 0;
-  const ef      = effectiveFactor ?? 0;
+  const amount = parseFloat(ceExportAmountEl?.value) || 0;
+  const ef = effectiveFactor ?? 0;
   const manualPrice = parseFloat(ceCarbonPriceEl?.value);
-  const price   = (Number.isFinite(manualPrice) && manualPrice >= 0)
-    ? manualPrice
-    : (cbamPeriodState.carbon_price_default ?? 0);
-  const paid    = parseFloat(ceDeclPaidPriceEl?.value) || 0;
+  const price =
+    Number.isFinite(manualPrice) && manualPrice >= 0
+      ? manualPrice
+      : (cbamPeriodState.carbon_price_default ?? 0);
+  const paid = parseFloat(ceDeclPaidPriceEl?.value) || 0;
 
   const totalEm = amount * ef;
-  const netP    = Math.max(0, price - paid);
-  const cost    = totalEm * netP;
+  const netP = Math.max(0, price - paid);
+  const cost = totalEm * netP;
   const isManualFactor = Number.isFinite(manualFactor) && manualFactor > 0;
 
   if (ceFactorSourceBadge) {
     if (ef <= 0) {
-      ceFactorSourceBadge.innerHTML = '';
+      ceFactorSourceBadge.innerHTML = "";
     } else if (isManualFactor) {
-      ceFactorSourceBadge.innerHTML = '<span style="color:#f59e0b;font-weight:700;">✎ Manuel</span>';
-    } else if (cbamPeriodState.auto_factor !== null && ef === cbamPeriodState.auto_factor) {
-      ceFactorSourceBadge.innerHTML = '<span style="color:#16a34a;font-weight:700;">⟳ Emisyon kayıtlarından türetildi</span>';
+      ceFactorSourceBadge.innerHTML =
+        '<span style="color:#f59e0b;font-weight:700;">✎ Manuel</span>';
+    } else if (
+      cbamPeriodState.auto_factor !== null &&
+      ef === cbamPeriodState.auto_factor
+    ) {
+      ceFactorSourceBadge.innerHTML =
+        '<span style="color:#16a34a;font-weight:700;">⟳ Emisyon kayıtlarından türetildi</span>';
     }
     // If EU default was auto-filled, the badge is already set by cbamLoadCategoryDefaults
   }
 
   if (totalEm > 0 && ef > 0) {
-    if (previewFactorEl)   previewFactorEl.textContent   = ef.toFixed(6);
+    if (previewFactorEl) previewFactorEl.textContent = ef.toFixed(6);
     if (previewEmissionEl) previewEmissionEl.textContent = totalEm.toFixed(4);
-    if (previewCostEl)     previewCostEl.textContent     = '€' + cost.toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    if (previewCostEl)
+      previewCostEl.textContent =
+        "€" +
+        cost.toLocaleString("tr-TR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
     const risk = cbamClientRisk(cost);
-    if (previewRiskEl) { previewRiskEl.textContent = RISK_LABELS[risk]; previewRiskEl.style.color = RISK_COLORS[risk]; }
+    if (previewRiskEl) {
+      previewRiskEl.textContent = RISK_LABELS[risk];
+      previewRiskEl.style.color = RISK_COLORS[risk];
+    }
   } else {
-    if (previewFactorEl)   previewFactorEl.textContent   = ef > 0 ? ef.toFixed(6) : '—';
-    if (previewEmissionEl) previewEmissionEl.textContent = '—';
-    if (previewCostEl)     previewCostEl.textContent     = '—';
-    if (previewRiskEl)   { previewRiskEl.textContent = '—'; previewRiskEl.style.color = ''; }
+    if (previewFactorEl)
+      previewFactorEl.textContent = ef > 0 ? ef.toFixed(6) : "—";
+    if (previewEmissionEl) previewEmissionEl.textContent = "—";
+    if (previewCostEl) previewCostEl.textContent = "—";
+    if (previewRiskEl) {
+      previewRiskEl.textContent = "—";
+      previewRiskEl.style.color = "";
+    }
   }
 }
 
-ceCategoryEl?.addEventListener('change', () => {
+ceCategoryEl?.addEventListener("change", () => {
   _factorIsManual = false;
   cbamLoadCategoryDefaults(ceCategoryEl.value);
 });
-cePeriodEl?.addEventListener('change', () => cbamLoadPeriodEmissions(cePeriodEl.value));
+cePeriodEl?.addEventListener("change", () =>
+  cbamLoadPeriodEmissions(cePeriodEl.value),
+);
 
-ceEmissionFactorEl?.addEventListener('input', () => {
-  _factorIsManual = ceEmissionFactorEl.value.trim() !== '';
+ceEmissionFactorEl?.addEventListener("input", () => {
+  _factorIsManual = ceEmissionFactorEl.value.trim() !== "";
   if (!_factorIsManual && ceFactorSourceBadge) {
     // user cleared it — re-show EU default badge if category is set
-    cbamLoadCategoryDefaults(ceCategoryEl?.value || '');
+    cbamLoadCategoryDefaults(ceCategoryEl?.value || "");
   } else if (_factorIsManual && ceFactorSourceBadge) {
-    ceFactorSourceBadge.innerHTML = '<span style="color:#f59e0b;font-weight:700;">✎ Manuel</span>';
+    ceFactorSourceBadge.innerHTML =
+      '<span style="color:#f59e0b;font-weight:700;">✎ Manuel</span>';
   }
   cbamUpdatePreview();
 });
 
-ceCarbonPriceEl?.addEventListener('input', () => {
-  _priceIsManual = ceCarbonPriceEl.value.trim() !== '';
+ceCarbonPriceEl?.addEventListener("input", () => {
+  _priceIsManual = ceCarbonPriceEl.value.trim() !== "";
   if (cePriceBadge) {
     cePriceBadge.innerHTML = _priceIsManual
       ? '<span style="color:#f59e0b;font-weight:700;">✎ Manuel</span>'
@@ -1297,57 +1474,87 @@ ceCarbonPriceEl?.addEventListener('input', () => {
   cbamUpdatePreview();
 });
 
-[ceExportAmountEl, ceDeclPaidPriceEl].forEach(el => {
-  el?.addEventListener('input', cbamUpdatePreview);
+[ceExportAmountEl, ceDeclPaidPriceEl].forEach((el) => {
+  el?.addEventListener("input", cbamUpdatePreview);
 });
 
-ceSaveBtnEl?.addEventListener('click', async () => {
-  const category  = ceCategoryEl?.value;
-  const period    = cePeriodEl?.value;
+ceSaveBtnEl?.addEventListener("click", async () => {
+  const category = ceCategoryEl?.value;
+  const period = cePeriodEl?.value;
   const exportAmt = ceExportAmountEl?.value;
 
-  if (!category) { showToast('Hata', 'CBAM kategorisi seçilmelidir.', 'error'); ceCategoryEl?.focus(); return; }
-  if (!period)   { showToast('Hata', 'Dönem seçilmelidir.', 'error'); cePeriodEl?.focus(); return; }
+  if (!category) {
+    showToast("Hata", "CBAM kategorisi seçilmelidir.", "error");
+    ceCategoryEl?.focus();
+    return;
+  }
+  if (!period) {
+    showToast("Hata", "Dönem seçilmelidir.", "error");
+    cePeriodEl?.focus();
+    return;
+  }
   if (!exportAmt || parseFloat(exportAmt) <= 0) {
-    showToast('Hata', 'İhracat miktarı pozitif olmalıdır.', 'error'); ceExportAmountEl?.focus(); return;
+    showToast("Hata", "İhracat miktarı pozitif olmalıdır.", "error");
+    ceExportAmountEl?.focus();
+    return;
   }
 
   const manualFactor = ceEmissionFactorEl?.value.trim();
-  if (manualFactor && (isNaN(parseFloat(manualFactor)) || parseFloat(manualFactor) <= 0)) {
-    showToast('Hata', 'Manuel emisyon faktörü pozitif olmalıdır.', 'error'); ceEmissionFactorEl?.focus(); return;
+  if (
+    manualFactor &&
+    (isNaN(parseFloat(manualFactor)) || parseFloat(manualFactor) <= 0)
+  ) {
+    showToast("Hata", "Manuel emisyon faktörü pozitif olmalıdır.", "error");
+    ceEmissionFactorEl?.focus();
+    return;
   }
   const manualPrice = ceCarbonPriceEl?.value.trim();
-  if (manualPrice && (isNaN(parseFloat(manualPrice)) || parseFloat(manualPrice) < 0)) {
-    showToast('Hata', 'Manuel karbon fiyatı sıfır veya pozitif olmalıdır.', 'error'); ceCarbonPriceEl?.focus(); return;
+  if (
+    manualPrice &&
+    (isNaN(parseFloat(manualPrice)) || parseFloat(manualPrice) < 0)
+  ) {
+    showToast(
+      "Hata",
+      "Manuel karbon fiyatı sıfır veya pozitif olmalıdır.",
+      "error",
+    );
+    ceCarbonPriceEl?.focus();
+    return;
   }
 
-  ceSaveBtnEl.disabled    = true;
-  ceSaveBtnEl.textContent = 'Hesaplanıyor…';
+  ceSaveBtnEl.disabled = true;
+  ceSaveBtnEl.textContent = "Hesaplanıyor…";
 
   try {
     await companyService.createEntry({
-      export_category:    category,
-      period_start:       period + '-01',
-      export_amount:      exportAmt,
+      export_category: category,
+      period_start: period + "-01",
+      export_amount: exportAmt,
       destination_region: ceDestinationEl?.value.trim() || undefined,
-      paid_carbon_price:  ceDeclPaidPriceEl?.value || '0',
-      emission_factor:    manualFactor || undefined,
-      carbon_price:       manualPrice  || undefined,
-      notes:              ceNotesEl?.value.trim() || undefined,
+      paid_carbon_price: ceDeclPaidPriceEl?.value || "0",
+      emission_factor: manualFactor || undefined,
+      carbon_price: manualPrice || undefined,
+      notes: ceNotesEl?.value.trim() || undefined,
     });
 
-    showToast('Başarılı', 'CBAM beyanı kaydedildi ve Emisyon Takibi\'ne eklendi.', 'success');
-    setTimeout(() => { window.location.href = 'company-cbam.html'; }, 1200);
+    showToast(
+      "Başarılı",
+      "CBAM beyanı kaydedildi ve Emisyon Takibi'ne eklendi.",
+      "success",
+    );
+    setTimeout(() => {
+      window.location.href = "company-cbam.html";
+    }, 1200);
   } catch (err) {
-    showToast('Hata', err.message, 'error');
-    ceSaveBtnEl.disabled    = false;
-    ceSaveBtnEl.textContent = 'Hesapla ve Kaydet';
+    showToast("Hata", err.message, "error");
+    ceSaveBtnEl.disabled = false;
+    ceSaveBtnEl.textContent = "Hesapla ve Kaydet";
   }
 });
 
 // Init CBAM period when section first becomes visible
 if (cePeriodEl) {
   const now = new Date();
-  cePeriodEl.max   = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  cePeriodEl.max = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   cePeriodEl.value = cePeriodEl.max;
 }

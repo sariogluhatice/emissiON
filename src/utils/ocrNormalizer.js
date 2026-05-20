@@ -16,6 +16,50 @@ const SHOPPING_RE = /satış internet üzerinden|mağaza adı|sipariş|kargo|kre
 // Genuine electricity consumption signals — "elektronik" is explicitly excluded.
 const ELEC_CONSUMPTION_RE = /\bkwh\b|kilowatt|aktif enerji|tesisat no|sayaç|dağıtım bedeli|enerji bedeli|elektrik tüketimi|elektrik faturası|electric supply/i;
 
+// Fuel receipt keyword patterns
+const PETROL_RE   = /\b(benzin|kurşunsuz|gasoline|kursunsuz|95\s*oktan|98\s*oktan|super\s*benzin)\b/i;
+const DIESEL_RE   = /\b(motorin|dizel|diesel)\b/i;
+const FUEL_GENERIC_RE = /\b(akaryakıt|akaryakit|yakit|yakıt|fuel)\b/i;
+const LITRE_RE    = /(\d[\d,.]*)[\s]*(litre|liter|(?<!\d)lt(?!\w)|(?<!\w)l(?=\s*\d{0,1}[\r\n\s,]))/i;
+
+/**
+ * Detects if the OCR text is a fuel receipt and extracts fuel type and litre amount.
+ * Returns null if the text is not a fuel receipt.
+ */
+function detectFuelInfo(text) {
+    const isPetrol  = PETROL_RE.test(text);
+    const isDiesel  = DIESEL_RE.test(text);
+    const isGeneric = FUEL_GENERIC_RE.test(text);
+
+    if (!isPetrol && !isDiesel && !isGeneric) return null;
+
+    // Extract litre amount — patterns: "42 L", "35.7 lt", "51 litre"
+    let litreAmount = null;
+    const litrePatterns = [
+        /(\d[\d,.]*)\s*litre/i,
+        /(\d[\d,.]*)\s*liter/i,
+        /(\d[\d,.]*)\s*lt\b/i,
+        /(\d[\d,.]*)\s*L\b/,
+    ];
+    for (const re of litrePatterns) {
+        const m = text.match(re);
+        if (m) {
+            const parsed = parseTurkishNumber(m[1]);
+            if (parsed && parsed > 0 && parsed < 5000) { // sanity check: 0–5000 L
+                litreAmount = parsed;
+                break;
+            }
+        }
+    }
+
+    let fuelType = null;
+    if (isPetrol && !isDiesel) fuelType = 'petrol';
+    else if (isDiesel && !isPetrol) fuelType = 'diesel';
+    // both or only generic → ambiguous → fuelType stays null
+
+    return { fuelType, litreAmount };
+}
+
 function detectCategory(text) {
     const t = text.toLowerCase();
     const isEInvoice  = E_INVOICE_RE.test(t);
@@ -32,6 +76,9 @@ function detectCategory(text) {
     if (!isEInvoice && ELEC_CONSUMPTION_RE.test(t))                             return 'energy';
     // "elektrik" alone is enough only when there's a corroborating consumption word.
     if (!isEInvoice && /\belektrik\b/.test(t) && /kwh|tüketim|sayaç|abonelik|tesisat/.test(t)) return 'energy';
+
+    // Fuel receipts → transport
+    if (PETROL_RE.test(t) || DIESEL_RE.test(t) || FUEL_GENERIC_RE.test(t)) return 'transport';
 
     console.log('[detectCategory] reason=no_match isEInvoice=%s isShopping=%s', isEInvoice, isShopping);
     return null;
@@ -136,6 +183,19 @@ function normalizeExpenseData(expenseDoc) {
     const category = detectCategory(rawText);
     const { quantity, unit } = extractQuantityAndUnit(rawText);
     const date = extractDate(expenseDoc.SummaryFields || [], rawText);
+
+    // Fuel receipt enrichment
+    const fuelInfo = detectFuelInfo(rawText);
+    if (fuelInfo) {
+        return {
+            category: 'transport',
+            quantity: fuelInfo.litreAmount ?? quantity,
+            unit: fuelInfo.litreAmount ? 'l' : unit,
+            date,
+            fuelType: fuelInfo.fuelType,      // 'petrol' | 'diesel' | null
+            litreAmount: fuelInfo.litreAmount, // raw litre value from receipt
+        };
+    }
 
     return { category, quantity, unit, date };
 }
@@ -356,4 +416,4 @@ function extractShoppingData(expenseDoc) {
     return { totalAmount, currency, date };
 }
 
-module.exports = { normalizeExpenseData, extractShoppingData };
+module.exports = { normalizeExpenseData, extractShoppingData, detectFuelInfo };

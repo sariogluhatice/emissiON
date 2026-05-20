@@ -50,6 +50,12 @@ createTaskBtn?.addEventListener("click", async () => {
     return;
   }
 
+  if (!taskDueDateEl?.value) {
+    showToast("Hata", "Son tarih zorunludur.", "error");
+    taskDueDateEl?.focus();
+    return;
+  }
+
   const emCat    = taskEmCatEl?.value || "";
   const targetPct = taskTargetPctEl?.value || "";
 

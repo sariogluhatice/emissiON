@@ -139,8 +139,13 @@ CATEGORY RULES — apply in this exact priority order:
 
 3. Genuine gas: doğalgaz, sm3, gaz faturası, natural gas → category: "gas".
 
-4. Transport & Fuel: akaryakıt, benzin, motorin, lpg, otogaz, taşıt tanıma, yakıt, 
+4. Transport & Fuel: akaryakıt, benzin, motorin, lpg, otogaz, taşıt tanıma, yakıt,
    petrol, istasyon, kurşunsuz → category: "transport".
+   - benzin / kurşunsuz / gasoline / petrol → activity_type: "petrol_vehicle"
+   - motorin / dizel / diesel → activity_type: "diesel_vehicle"
+   - akaryakıt / yakıt / fuel (without specifying petrol or diesel) → activity_type: null
+   - For fuel receipts: extract litre amount as quantity with unit "l".
+     Examples: "42 L" → quantity: 42, unit: "l"
 
 5. Food & Dining: restoran, lokanta, cafe, yemek, gıda, market, süpermarket,
    fırın, pastane, kasap, manav, yiyecek, içecek → category: "food".
