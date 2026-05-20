@@ -745,6 +745,21 @@ const _addProgressToCompanyTasks = async (tasks, userId) => {
     return tasks.map(t => ({ ...t, ...(progressById[t.id] || {}) }));
 };
 
+// Normalizes company task fields to match the household-tasks interface so the
+// frontend can use the same rendering logic for both role types.
+// Converts tCO₂ → kg CO₂e and renames columns to household equivalents.
+const _normalizeCompanyTaskFields = (t) => {
+    const toKg = (val) => val != null ? parseFloat((parseFloat(val) * 1000).toFixed(2)) : null;
+    return {
+        ...t,
+        baseline_amount: toKg(t.baseline_emission),
+        target_amount:   toKg(t.target_emission),
+        period_target:   toKg(t.period_target_emission),
+        current_amount:  toKg(t.current_emission),
+        target_pct:      t.target_reduction_pct,
+    };
+};
+
 const getCompanyTasks = async (userId) => {
     const { rows } = await pool.query(
         `SELECT * FROM company_tasks
@@ -766,7 +781,8 @@ const getCompanyTasks = async (userId) => {
         rows.forEach(t => { if (overdueIds.includes(t.id)) t.status = 'completed'; });
     }
 
-    return _addProgressToCompanyTasks(rows, userId);
+    const tasks = await _addProgressToCompanyTasks(rows, userId);
+    return tasks.map(_normalizeCompanyTaskFields);
 };
 
 const updateCompanyTaskStatus = async (userId, taskId, status) => {

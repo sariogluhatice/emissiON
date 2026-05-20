@@ -149,7 +149,7 @@ function renderMyReports(reports) {
                   ${escHtml(REPORT_TYPE_LABELS[r.report_type] || r.report_type)}
                 </td>
                 <td style="padding:10px 10px;text-align:right;font-weight:600;">
-                  ${r.total_tco2 != null ? parseFloat(r.total_tco2).toFixed(2) + ' tCO₂' : '—'}
+                  ${r.total_tco2 != null ? (parseFloat(r.total_tco2) * 1000).toFixed(2) + ' kg CO₂e' : '—'}
                 </td>
                 <td style="padding:10px 10px;text-align:right;color:var(--color-text-muted);">
                   ${fmtDate(r.created_at)}
@@ -197,7 +197,7 @@ function renderIncoming(requests) {
                 <div style="font-weight:600;font-size:14px;">${escHtml(r.requester_name || '—')}</div>
                 <div style="font-size:12px;color:var(--color-text-muted);">
                   <code style="background:var(--color-surface-alt,#f3f4f6);padding:1px 5px;border-radius:4px;">${escHtml(r.report_no || '—')}</code>
-                  ${r.report_tco2 != null ? `· ${parseFloat(r.report_tco2).toFixed(1)} tCO₂` : ''}
+                  ${r.report_tco2 != null ? `· ${(parseFloat(r.report_tco2) * 1000).toFixed(1)} kg CO₂e` : ''}
                 </div>
               </div>
               ${statusBadge(r.status)}

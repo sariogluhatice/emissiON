@@ -123,7 +123,7 @@ function renderCategories(categories) {
               <div style="background:var(--color-primary);height:100%;width:${pct.toFixed(1)}%;border-radius:99px;"></div>
             </div>
             <div style="font-size:11px;color:var(--color-text-muted);margin-top:3px;">
-              ${formatNum(c.emission, 4)} tCO₂ · ${c.cnt} kayıt
+              ${formatNum(c.emission * 1000, 2)} kg CO₂e · ${c.cnt} kayıt
             </div>
           </div>`;
     }).join('');
@@ -155,7 +155,7 @@ function renderHighestRisk(dashboard) {
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
               <div>
                 <div style="font-size:11px;color:var(--color-text-muted);">Emisyon</div>
-                <div style="font-size:13px;font-weight:600;">${formatNum(topSource.emission, 4)} tCO₂e</div>
+                <div style="font-size:13px;font-weight:600;">${formatNum(topSource.emission * 1000, 2)} kg CO₂e</div>
               </div>
               <div>
                 <div style="font-size:11px;color:var(--color-text-muted);">Kayıt Sayısı</div>
@@ -278,7 +278,7 @@ function renderDashboard(profile, dashboard) {
     const banner = document.getElementById('cpProfileBanner');
     if (banner) banner.style.display = (!profile.cbam_sector) ? 'flex' : 'none';
 
-    if (statEmission) statEmission.textContent = formatNum(dashboard.total_emission, 4);
+    if (statEmission) statEmission.textContent = formatNum(dashboard.total_emission * 1000, 2);
     if (statCost)     statCost.textContent     = formatEur(dashboard.total_cbam_cost);
 
     if (statRisk) {

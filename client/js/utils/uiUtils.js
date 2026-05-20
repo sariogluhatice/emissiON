@@ -87,6 +87,19 @@ const _TASK_STATUS_CLASSES = {
 export function getTaskStatusLabel(status) { return _TASK_STATUS_LABELS[status]  || status; }
 export function getTaskStatusClass(status) { return _TASK_STATUS_CLASSES[status] || 'pending'; }
 
+// Allowed forward-only transitions. Returns option HTML or null (locked state).
+export function buildTaskStatusOptions(currentStatus) {
+  const ALLOWED = {
+    pending:     ['pending',     'in_progress', 'cancelled'],
+    in_progress: ['in_progress', 'completed',   'cancelled'],
+  };
+  const statuses = ALLOWED[currentStatus];
+  if (!statuses) return null;
+  return statuses.map(v =>
+    `<option value="${v}"${v === currentStatus ? ' selected' : ''}>${_TASK_STATUS_LABELS[v]}</option>`
+  ).join('');
+}
+
 /** Modern Toast notification */
 export function showToast(title, message, type = 'success') {
   let container = document.querySelector('.toast-container');

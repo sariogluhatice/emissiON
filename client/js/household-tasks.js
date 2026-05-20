@@ -5,6 +5,7 @@ import {
   formatDate,
   getTaskStatusLabel,
   getTaskStatusClass,
+  buildTaskStatusOptions,
 } from "./utils/uiUtils.js";
 import { getCategoryLabel } from "./utils/labelUtils.js";
 
@@ -186,40 +187,18 @@ function buildProgressSection(t) {
     </div>`;
 }
 
-// ── Status action (member vs admin) ──────────────────────────────────────────
+// ── Status action (admin & assigned member: same constrained dropdown) ───────
 function buildStatusAction(t) {
-  if (_isAdmin) {
-    const options = [
-      ["pending",     getTaskStatusLabel("pending")],
-      ["in_progress", getTaskStatusLabel("in_progress")],
-      ["completed",   getTaskStatusLabel("completed")],
-      ["cancelled",   getTaskStatusLabel("cancelled")],
-    ].map(([v, l]) =>
-      `<option value="${v}"${t.status === v ? " selected" : ""}>${l}</option>`
-    ).join("");
-
-    return `<select class="hh-status-select" data-task-id="${t.id}" data-status="${t.status}">
-      ${options}
-    </select>`;
-  }
-
-  // Member: only their own assigned tasks can transition
   const isAssigned = t.assigned_to && parseInt(t.assigned_to, 10) === parseInt(_myUserId, 10);
-  const MEMBER_TRANSITIONS = { pending: "in_progress", in_progress: "completed" };
-  const nextStatus = MEMBER_TRANSITIONS[t.status];
+  const canEdit    = _isAdmin || isAssigned;
 
-  if (isAssigned && nextStatus) {
-    const btnLabel = nextStatus === "in_progress" ? "Başlat" : "Tamamlandı İşaretle";
-    const btnStyle = nextStatus === "completed"
-      ? "background:var(--color-primary);color:#fff;"
-      : "background:var(--color-surface-blue);color:var(--color-secondary-hover);";
-    return `<button class="hh-member-action-btn" data-task-id="${t.id}" data-status="${nextStatus}"
-                    style="${btnStyle}">${btnLabel}</button>`;
+  const selectOptions = buildTaskStatusOptions(t.status);
+
+  if (canEdit && selectOptions) {
+    return `<select class="hh-status-select" data-task-id="${t.id}" data-status="${t.status}">${selectOptions}</select>`;
   }
 
-  // Static badge
-  const cls = getTaskStatusClass(t.status);
-  return `<span class="status-badge ${cls}">${getTaskStatusLabel(t.status)}</span>`;
+  return `<span class="status-badge ${getTaskStatusClass(t.status)}">${getTaskStatusLabel(t.status)}</span>`;
 }
 
 // ── Task card ─────────────────────────────────────────────────────────────────
@@ -235,18 +214,25 @@ function taskCard(t) {
     ? `<p class="hh-task-card-desc">${t.description}</p>`
     : "";
   const statusCls = getTaskStatusClass(t.status);
+  const catChip = t.emission_category
+    ? `<span class="hh-task-assignee-chip">${getCategoryLabel(t.emission_category)}</span>`
+    : `<span class="hh-task-assignee-chip">${assignee}</span>`;
+  const assigneeRow = t.emission_category
+    ? `<div style="font-size:11px;color:var(--color-text-muted);">${assignee}</div>`
+    : "";
 
   return `
     <div class="hh-task-card${isDimmed ? " hh-task-card--dim" : ""}" data-task-id="${t.id}">
       <div class="hh-task-card-top">
         <span class="status-badge ${statusCls}">${getTaskStatusLabel(t.status)}</span>
-        <span class="hh-task-assignee-chip">${assignee}</span>
+        ${catChip}
       </div>
 
       <h3 class="hh-task-card-title">${t.title}</h3>
+      ${assigneeRow}
       ${desc}
 
-      ${buildProgressSection(t)}
+      ${isCancelled ? "" : buildProgressSection(t)}
 
       <div class="hh-task-card-footer">
         <div style="display:flex;flex-direction:column;gap:2px;">
@@ -318,14 +304,8 @@ function renderTasks() {
 
   tasksContainer.innerHTML = `<div class="hh-task-cards-grid">${tasks.map(taskCard).join("")}</div>`;
 
-  // Bind admin status select
   tasksContainer.querySelectorAll(".hh-status-select").forEach(sel => {
     sel.addEventListener("change", () => handleStatusChange(sel.dataset.taskId, sel.value, sel.dataset.status, sel));
-  });
-
-  // Bind member action buttons
-  tasksContainer.querySelectorAll(".hh-member-action-btn").forEach(btn => {
-    btn.addEventListener("click", () => handleMemberAction(btn));
   });
 
   // Bind add-data CTA buttons
@@ -345,23 +325,6 @@ async function handleStatusChange(taskId, status, prevStatus, selectEl) {
     showToast("Hata", err.message, "error");
     selectEl.value    = prevStatus;
     selectEl.disabled = false;
-  }
-}
-
-// ── Status change (member button) ─────────────────────────────────────────────
-async function handleMemberAction(btn) {
-  const taskId = btn.dataset.taskId;
-  const status = btn.dataset.status;
-  btn.disabled    = true;
-  btn.textContent = "…";
-  try {
-    await householdService.updateTaskStatus(taskId, status);
-    showToast("Güncellendi", `Görev durumu: ${getTaskStatusLabel(status)}`, "success");
-    await loadTasks();
-  } catch (err) {
-    showToast("Hata", err.message, "error");
-    btn.disabled    = false;
-    btn.textContent = status === "completed" ? "Tamamlandı İşaretle" : "Başlat";
   }
 }
 
