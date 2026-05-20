@@ -9,17 +9,11 @@ const {
     sendPasswordChangedAlert,
 } = require('../services/mailService');
 
-const SALT_ROUNDS           = 10;
-const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$/;
-const STRONG_PASSWORD_MSG   = 'Şifre en az 8 karakter olmalı; büyük harf, küçük harf, rakam ve sembol içermelidir.';
-const EMAIL_REGEX           = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const CODE_EXPIRY_MS        = 10 * 60 * 1000; // 10 minutes
+const { EMAIL_REGEX, STRONG_PASSWORD_REGEX, STRONG_PASSWORD_MSG } = require('../utils/validators');
+const PROFILE_TABLES = require('../utils/profileTables');
 
-const PROFILE_TABLES = {
-    individual: 'individual_profiles',
-    household:  'household_profiles',
-    company:    'company_profiles',
-};
+const SALT_ROUNDS    = 10;
+const CODE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
 
 // ── GET /api/profile ─────────────────────────────────────────────────────────
 const getProfile = async (req, res) => {

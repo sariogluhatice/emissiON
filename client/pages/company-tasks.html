@@ -6,7 +6,7 @@
     <title>Şirket Görevleri – emissiON</title>
     <link rel="stylesheet" href="../css/main.css" />
     <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
-  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+    <link rel="icon" type="image/png" href="../assets/favicon.png" />
   </head>
   <body>
     <div class="app-shell">
@@ -19,96 +19,28 @@
           <div class="page-header">
             <div>
               <h1>Şirket Görevleri</h1>
-              <p>Emisyon azaltım görevleri oluşturun ve ilerlemenizi emisyon kayıtlarınızla otomatik takip edin.</p>
+              <p>Emisyon azaltım görevleri oluşturun ve ilerlemenizi otomatik takip edin.</p>
             </div>
-            <a href="company.html" class="btn-secondary btn-nowrap">← Şirket Paneli</a>
-          </div>
-
-          <!-- ── Create task form ────────────────────────────────────────── -->
-          <div class="content-card glass-card mb-lg">
-            <div class="content-card-header">
-              <span class="content-card-title">Yeni Görev Oluştur</span>
-            </div>
-
-            <div class="hh-task-form-grid">
-
-              <div class="form-group full-width">
-                <label class="form-label" for="ctTitle">
-                  Görev Başlığı <span class="required-mark">*</span>
-                </label>
-                <input class="input" type="text" id="ctTitle"
-                       placeholder="Örn: Çelik üretiminde emisyonu %15 azalt" maxlength="200" />
-              </div>
-
-              <div class="form-group full-width">
-                <label class="form-label" for="ctDesc">
-                  Açıklama
-                  <span class="label-optional">— İsteğe Bağlı</span>
-                </label>
-                <textarea class="input textarea-resize-v" id="ctDesc" rows="2"
-                          placeholder="Görevin detayları…"></textarea>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="ctDueDate">
-                  Son Tarih
-                  <span class="label-optional">— İsteğe Bağlı</span>
-                </label>
-                <input class="input" type="date" id="ctDueDate" />
-              </div>
-
-              <!-- Emission tracking section -->
-              <div class="form-group full-width form-section">
-                <span class="form-section-title">
-                  Emisyon Takibi
-                  <span class="label-optional" style="text-transform:none;letter-spacing:0;">— İsteğe Bağlı</span>
-                </span>
-                <p class="form-section-desc">
-                  Kategori ve hedef seçilirse sistem, o kategorinin mevcut emisyon kayıtlarını başlangıç
-                  değeri olarak alır ve ilerlemenizi otomatik takip eder.
-                </p>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="ctEmCat">Emisyon Kaynağı</label>
-                <select class="input" id="ctEmCat">
-                  <option value="">— Seçin</option>
-                  <option value="energy">⚡ Enerji (Elektrik)</option>
-                  <option value="water">💧 Su</option>
-                  <option value="gas">🔥 Doğalgaz</option>
-                  <option value="transport">🚗 Ulaşım</option>
-                  <option value="food">🍽️ Gıda</option>
-                  <option value="shopping">🛒 Alışveriş</option>
-                  <option value="waste">♻️ Atık</option>
-                  <option value="materials">📦 Malzeme</option>
-                  <option value="other">📋 Diğer</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="ctTargetPct">Azaltım Hedefi (%)</label>
-                <input class="input" type="number" id="ctTargetPct"
-                       placeholder="Örn: 20" min="1" max="99" step="1" />
-                <span class="field-hint">Önceki döneme göre yüzde azaltım (1–99)</span>
-              </div>
-
-              <div class="form-group form-group-end">
-                <button class="btn-primary btn-block" id="ctCreateBtn">Görev Oluştur</button>
-              </div>
-
+            <div style="display:flex;gap:10px;align-items:center;">
+              <a href="company.html" class="btn-secondary btn-nowrap">← Şirket Paneli</a>
+              <a href="create-company-task.html" class="btn-primary btn-nowrap" id="newTaskBtn">
+                + Yeni Görev
+              </a>
             </div>
           </div>
 
-          <!-- ── Tasks list ──────────────────────────────────────────────── -->
-          <div class="content-card glass-card">
-            <div class="content-card-header">
-              <span class="content-card-title">Görev Listesi</span>
-              <span id="ctTaskCountEl" class="text-sm-muted"></span>
-            </div>
+          <!-- ── Filter tabs ────────────────────────────────────────────── -->
+          <div class="hh-filter-bar" id="filterBar">
+            <button class="hh-filter-btn active" data-filter="all">Tümü <span class="hh-filter-count" id="fcAll"></span></button>
+            <button class="hh-filter-btn" data-filter="pending">Bekliyor <span class="hh-filter-count" id="fcPending"></span></button>
+            <button class="hh-filter-btn" data-filter="in_progress">Devam Ediyor <span class="hh-filter-count" id="fcInProgress"></span></button>
+            <button class="hh-filter-btn" data-filter="completed">Tamamlandı <span class="hh-filter-count" id="fcCompleted"></span></button>
+            <button class="hh-filter-btn" data-filter="cancelled">İptal Edildi <span class="hh-filter-count" id="fcCancelled"></span></button>
+          </div>
 
-            <div id="ctTasksContainer">
-              <div class="hh-loading">Yükleniyor…</div>
-            </div>
+          <!-- ── Task cards grid ────────────────────────────────────────── -->
+          <div id="ctTasksContainer">
+            <div class="hh-loading">Yükleniyor…</div>
           </div>
 
         </main>

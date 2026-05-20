@@ -1,6 +1,7 @@
 import { companyService } from './api/companyService.js';
 import { renderLayout }   from './layout.js';
 import { showToast }      from './utils/uiUtils.js';
+import { RISK_LABELS, RISK_COLORS } from './utils/labelUtils.js';
 
 const user = renderLayout({ activeNav: 'nav-company', title: 'CBAM Simülasyonu' });
 if (!user) throw new Error('redirect');
@@ -49,8 +50,6 @@ let currentPage  = 1;
 const PAGE_LIMIT = 20;
 
 // ── Display constants ─────────────────────────────────────────────────────────
-const RISK_LABELS     = { low: 'Düşük', medium: 'Orta', high: 'Yüksek', critical: 'Kritik' };
-const RISK_COLORS     = { low: '#16a34a', medium: '#f59e0b', high: '#dc2626', critical: '#7c3aed' };
 const RISK_THRESHOLDS = { medium: 10_000, high: 50_000, critical: 200_000 };
 
 // ── Hazır senaryo tanımları ───────────────────────────────────────────────────

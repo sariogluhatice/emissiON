@@ -6,8 +6,9 @@ const { generateVerificationCode } = require('../utils/codeUtils');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../services/mailService');
 const { normalizeName } = require('../utils/nameUtils');
 
+const { EMAIL_REGEX, STRONG_PASSWORD_REGEX, STRONG_PASSWORD_MSG } = require('../utils/validators');
+
 const SALT_ROUNDS  = 10;
-const EMAIL_REGEX  = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const VALID_ROLES  = ['individual', 'household', 'company'];
 
 // Safely deletes an unverified account. Cascades password_history first to
@@ -28,10 +29,6 @@ const _deleteUnverifiedUser = async (db, userId) => {
 };
 
 const { checkRateLimit: _checkRateLimit } = require('../utils/rateLimiter');
-
-// Password must be ≥8 chars with lowercase, uppercase, digit, and symbol.
-const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$/;
-const STRONG_PASSWORD_MSG   = 'Şifre en az 8 karakter olmalı; büyük harf, küçük harf, rakam ve sembol içermelidir.';
 
 // --- KAYIT (REGISTER) ---
 // POST /api/auth/register

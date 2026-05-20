@@ -1,50 +1,5 @@
 const pool = require('../config/db');
-
-// Kategori → canonical category column values (emission_records.category)
-const CATEGORY_MAP = {
-    energy: {
-        label:      'Enerji (Elektrik)',
-        categories: ['energy'],
-    },
-    gas: {
-        label:      'Doğalgaz',
-        categories: ['gas'],
-    },
-    transport: {
-        label:      'Ulaşım',
-        categories: ['transport'],
-    },
-    water: {
-        label:      'Su',
-        categories: ['water'],
-    },
-    food: {
-        label:      'Gıda',
-        categories: ['food'],
-    },
-    shopping: {
-        label:      'Alışveriş',
-        categories: ['shopping'],
-    },
-    waste: {
-        label:      'Atık',
-        categories: ['waste'],
-    },
-    materials: {
-        label:      'Malzeme',
-        categories: ['materials'],
-    },
-    other: {
-        label:      'Diğer',
-        categories: ['other'],
-    },
-    all: {
-        label:      'Tüm Kategoriler',
-        categories: null, // null → filtre yok
-    },
-};
-
-const VALID_CATEGORIES = Object.keys(CATEGORY_MAP);
+const { isCanonical, getCategoryLabel } = require('../utils/categoryNormalizer');
 
 const PERIOD_LABELS = {
     monthly:  'Bu Ay',
@@ -60,7 +15,7 @@ const simulate = async (req, res) => {
     const { category, reductionPercent, period } = req.body;
 
     // ── Girdi doğrulaması ─────────────────────────────────────────────────────
-    if (!VALID_CATEGORIES.includes(category)) {
+    if (category !== 'all' && !isCanonical(category)) {
         return res.status(400).json({
             success: false,
             message: 'Geçersiz kategori seçimi.',
@@ -92,9 +47,9 @@ const simulate = async (req, res) => {
         `;
 
         // Kategori filtresi (all → tüm kayıtlar)
-        const catInfo = CATEGORY_MAP[category];
-        if (catInfo.categories !== null) {
-            params.push(catInfo.categories);
+        const catFilter = category === 'all' ? null : [category];
+        if (catFilter !== null) {
+            params.push(catFilter);
             query += ` AND LOWER(category) = ANY($${params.length}::text[])`;
         }
 
@@ -123,13 +78,14 @@ const simulate = async (req, res) => {
         const simulatedEmission  = parseFloat((currentEmission - reducedAmount).toFixed(2));
         const periodLabel        = PERIOD_LABELS[period];
 
-        const message = `${catInfo.label} tüketiminizi %${pct} azaltırsanız ${periodLabel} döneminde yaklaşık ${reducedAmount.toFixed(2)} kgCO₂e azaltım sağlayabilirsiniz.`;
+        const categoryLabel = category === 'all' ? 'Tüm Kategoriler' : getCategoryLabel(category);
+        const message = `${categoryLabel} tüketiminizi %${pct} azaltırsanız ${periodLabel} döneminde yaklaşık ${reducedAmount.toFixed(2)} kgCO₂e azaltım sağlayabilirsiniz.`;
 
         return res.status(200).json({
             success:             true,
             simulationAvailable: true,
             category,
-            categoryLabel:       catInfo.label,
+            categoryLabel,
             period,
             periodLabel,
             currentEmission:     parseFloat(currentEmission.toFixed(2)),

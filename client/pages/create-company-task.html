@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Yeni Şirket Görevi – emissiON</title>
+    <link rel="stylesheet" href="../css/main.css" />
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
+    <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar"></aside>
+
+      <div class="main-content">
+        <header class="topbar" id="topbar"></header>
+
+        <main class="page-body">
+          <div class="page-header">
+            <div>
+              <h1>Yeni Görev Oluştur</h1>
+              <p>Şirketiniz için emisyon azaltım görevi tanımlayın.</p>
+            </div>
+            <a href="company-tasks.html" class="btn-secondary btn-nowrap">← Görev Listesi</a>
+          </div>
+
+          <div class="content-card glass-card" style="max-width:680px;">
+            <div class="hh-task-form-grid">
+
+              <div class="form-group full-width">
+                <label class="form-label" for="ctTitle">
+                  Görev Başlığı <span class="required-mark">*</span>
+                </label>
+                <input class="input" type="text" id="ctTitle"
+                       placeholder="Örn: Çelik üretiminde emisyonu %15 azalt" maxlength="200" />
+              </div>
+
+              <div class="form-group full-width">
+                <label class="form-label" for="ctDesc">
+                  Açıklama <span class="field-hint">— İsteğe Bağlı</span>
+                </label>
+                <textarea class="input" id="ctDesc" rows="3"
+                          placeholder="Görevin detayları…" style="resize:vertical;"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="ctDueDate">
+                  Son Tarih <span class="required-mark">*</span>
+                </label>
+                <input class="input" type="date" id="ctDueDate" />
+                <span class="field-hint">Dönem hedefi hesaplaması için gereklidir.</span>
+              </div>
+
+              <!-- Emisyon Takibi -->
+              <div class="form-group full-width" style="border-top:1px solid var(--color-border);padding-top:14px;margin-top:4px;">
+                <span style="font-size:12px;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.5px;">
+                  Emisyon Takibi <span style="font-weight:400;text-transform:none;letter-spacing:0;">— İsteğe Bağlı</span>
+                </span>
+                <p style="margin:4px 0 0;font-size:12px;color:var(--color-text-muted);line-height:1.5;">
+                  Kategori ve hedef seçilirse sistem, o kategorinin en son aylık emisyon kaydını
+                  başlangıç değeri olarak alır ve ilerlemenizi otomatik takip eder.
+                </p>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="ctEmCat">Emisyon Kaynağı</label>
+                <select class="input" id="ctEmCat">
+                  <option value="">— Seçin</option>
+                  <option value="energy">Enerji</option>
+                  <option value="water">Su</option>
+                  <option value="gas">Doğalgaz</option>
+                  <option value="transport">Ulaşım</option>
+                  <option value="food">Gıda</option>
+                  <option value="shopping">Alışveriş</option>
+                  <option value="waste">Atık</option>
+                  <option value="materials">Malzeme</option>
+                  <option value="other">Diğer</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="ctTargetPct">Azaltım Hedefi (%)</label>
+                <input class="input" type="number" id="ctTargetPct"
+                       placeholder="Örn: 20" min="1" max="99" step="1" />
+                <span class="field-hint" style="margin-top:4px;display:block;">
+                  Önceki aya göre yüzde azaltım (1–99)
+                </span>
+              </div>
+
+              <div class="form-group full-width" style="display:flex;justify-content:flex-end;gap:12px;margin-top:4px;">
+                <a href="company-tasks.html" class="btn-secondary">Vazgeç</a>
+                <button class="btn-primary" id="ctCreateBtn" style="min-width:140px;">
+                  Görev Oluştur
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="../js/create-company-task.js"></script>
+  </body>
+</html>

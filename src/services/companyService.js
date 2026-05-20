@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const tp   = require('../utils/taskProgress');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INTERNAL HELPERS
@@ -581,29 +582,49 @@ const createCompanyTask = async (userId, {
         _fail(400, 'Azaltım hedefi 1 ile 99 arasında olmalıdır.');
     }
 
-    let baselineEmission = null;
-    let targetEmission   = null;
+    let baselineEmission        = null;
+    let targetEmission          = null;
+    let baselinePeriodVal       = null;
+    let baselineDaysVal         = null;
+    let periodTargetEmissionVal = null;
+    const taskStartDate         = new Date().toISOString().split('T')[0];
 
     if (cleanCategory && cleanPct !== null) {
+        // Prefer months strictly before the task start month; fall back to any month.
+        const startMonth = taskStartDate.slice(0, 7);
         const { rows: [bRow] } = await pool.query(
-            `SELECT COALESCE(SUM(amount), 0)::float AS baseline_kg
+            `SELECT SUM(amount)::float AS baseline_kg,
+                    TO_CHAR(date, 'YYYY-MM') AS period
              FROM emission_records
-             WHERE user_id = $1 AND COALESCE(category, 'other') = $2`,
-            [userId, cleanCategory]
+             WHERE user_id = $1 AND COALESCE(category, 'other') = $2
+             GROUP BY TO_CHAR(date, 'YYYY-MM')
+             HAVING SUM(amount) > 0
+             ORDER BY
+                 CASE WHEN TO_CHAR(date, 'YYYY-MM') < $3 THEN 0 ELSE 1 END,
+                 TO_CHAR(date, 'YYYY-MM') DESC
+             LIMIT 1`,
+            [userId, cleanCategory, startMonth]
         );
         const rawKg = parseFloat(bRow?.baseline_kg ?? 0);
         if (rawKg > 0) {
             const rawTco2    = rawKg / 1000;
             baselineEmission = parseFloat(rawTco2.toFixed(4));
             targetEmission   = parseFloat((rawTco2 * (1 - cleanPct / 100)).toFixed(4));
+            baselinePeriodVal = bRow.period;
+            const { baselineDays, periodTarget } = tp.calcPeriodTarget(
+                rawTco2, bRow.period, cleanPct, taskStartDate, due_date || null
+            );
+            baselineDaysVal         = baselineDays;
+            periodTargetEmissionVal = periodTarget;
         }
     }
 
     const { rows: [task] } = await pool.query(
         `INSERT INTO company_tasks
              (user_id, title, description, emission_category, target_reduction_pct,
-              baseline_emission, target_emission, due_date)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+              baseline_emission, target_emission, due_date,
+              start_date, baseline_period, baseline_days, period_target_emission)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
          RETURNING *`,
         [
             userId,
@@ -614,6 +635,10 @@ const createCompanyTask = async (userId, {
             baselineEmission,
             targetEmission,
             due_date || null,
+            taskStartDate,
+            baselinePeriodVal,
+            baselineDaysVal,
+            periodTargetEmissionVal,
         ]
     );
     return task;
@@ -623,41 +648,96 @@ const _addProgressToCompanyTasks = async (tasks, userId) => {
     const trackingTasks = tasks.filter(t => t.emission_category);
     if (!trackingTasks.length) return tasks;
 
-    const categories = [...new Set(trackingTasks.map(t => t.emission_category))];
+    // ── Step 0: Retroactively resolve missing period_target_emission ─────────
+    const noTargetTasks = trackingTasks.filter(
+        t => t.target_reduction_pct && (t.period_target_emission == null || t.baseline_period == null)
+    );
+    if (noTargetTasks.length) {
+        await Promise.all(noTargetTasks.map(async t => {
+            const tStartMonth = tp.toDateStr(t.start_date || t.created_at).slice(0, 7);
+            const { rows } = await pool.query(
+                `SELECT SUM(amount)::float AS baseline_kg,
+                        TO_CHAR(date, 'YYYY-MM') AS period
+                 FROM emission_records
+                 WHERE user_id = $1 AND COALESCE(category, 'other') = $2
+                 GROUP BY TO_CHAR(date, 'YYYY-MM')
+                 HAVING SUM(amount) > 0
+                 ORDER BY
+                     CASE WHEN TO_CHAR(date, 'YYYY-MM') < $3 THEN 0 ELSE 1 END,
+                     TO_CHAR(date, 'YYYY-MM') DESC
+                 LIMIT 1`,
+                [userId, t.emission_category, tStartMonth]
+            );
+            if (rows.length && parseFloat(rows[0].baseline_kg) > 0) {
+                const rawTco2  = parseFloat(rows[0].baseline_kg) / 1000;
+                const period   = rows[0].period;
+                const pct      = parseFloat(t.target_reduction_pct);
+                const startStr = tp.toDateStr(t.start_date || t.created_at);
+                const { baselineDays, periodTarget } = tp.calcPeriodTarget(
+                    rawTco2, period, pct, startStr, tp.toDateStr(t.due_date)
+                );
+                await pool.query(
+                    `UPDATE company_tasks
+                     SET baseline_emission = $1, baseline_period = $2,
+                         baseline_days = $3, period_target_emission = $4
+                     WHERE id = $5`,
+                    [rawTco2, period, baselineDays, periodTarget, t.id]
+                );
+                t.baseline_emission       = rawTco2;
+                t.baseline_period         = period;
+                t.baseline_days           = baselineDays;
+                t.period_target_emission  = periodTarget;
+            }
+        }));
+    }
 
+    // ── Step 1: Current emissions per task (start_date → min(due_date, today)) ─
+    const taskIds = trackingTasks.map(t => t.id);
     const { rows: emRows } = await pool.query(
-        `SELECT COALESCE(category, 'other') AS emission_category,
-                COALESCE(SUM(amount), 0)::float / 1000 AS current_tco2
-         FROM emission_records
-         WHERE user_id = $1 AND COALESCE(category, 'other') = ANY($2)
-         GROUP BY COALESCE(category, 'other')`,
-        [userId, categories]
+        `SELECT
+            ct.id                                        AS task_id,
+            COALESCE(SUM(er.amount), 0)::float / 1000   AS current_tco2
+         FROM company_tasks ct
+         JOIN emission_records er
+             ON er.user_id = $1
+            AND COALESCE(er.category, 'other') = ct.emission_category
+            AND er.date >= COALESCE(ct.start_date, ct.created_at::date)
+            AND er.date <= LEAST(COALESCE(ct.due_date, CURRENT_DATE), CURRENT_DATE)
+         WHERE ct.id = ANY($2)
+         GROUP BY ct.id`,
+        [userId, taskIds]
     );
 
-    const currentByCategory = {};
-    emRows.forEach(r => { currentByCategory[r.emission_category] = parseFloat(r.current_tco2); });
+    const currentMap = {};
+    emRows.forEach(r => { currentMap[r.task_id] = parseFloat(r.current_tco2); });
+
+    const now      = new Date();
+    const todayStr = now.toISOString().split('T')[0];
 
     const progressById = {};
     trackingTasks.forEach(t => {
-        const current = currentByCategory[t.emission_category] ?? null;
+        const current = currentMap[t.id] ?? null;
 
-        if (t.target_emission == null) {
+        // Pending tasks: show data but don't compare against target yet
+        if (t.status === 'pending') {
+            progressById[t.id] = { current_emission: current, progress_status: 'not_started' };
+            return;
+        }
+
+        if (t.baseline_emission == null) {
             progressById[t.id] = { current_emission: current, progress_status: 'no_baseline' };
             return;
         }
-        if (current === null) {
-            progressById[t.id] = { current_emission: null, progress_status: 'no_data' };
-            return;
-        }
 
-        const target   = parseFloat(t.target_emission);
-        const baseline = parseFloat(t.baseline_emission);
-        let progress_status;
+        const periodTarget = t.period_target_emission != null
+            ? parseFloat(t.period_target_emission) : null;
 
-        if (current <= target)              progress_status = 'successful';
-        else if (current < baseline)        progress_status = 'on_track';
-        else if (current <= baseline * 1.05) progress_status = 'at_risk';
-        else                                progress_status = 'off_track';
+        const dueStr         = tp.toDateStr(t.due_date);
+        const deadlinePassed = dueStr && dueStr < todayStr;
+
+        const progress_status = tp.calcProgressStatus(current, periodTarget, {
+            deadlinePassed, isCompleted: t.status === 'completed',
+        });
 
         progressById[t.id] = { current_emission: current, progress_status };
     });
@@ -672,11 +752,25 @@ const getCompanyTasks = async (userId) => {
          ORDER BY created_at DESC`,
         [userId]
     );
+
+    // Auto-complete in_progress tasks whose due_date has passed
+    const today      = new Date().toISOString().split('T')[0];
+    const overdueIds = rows
+        .filter(t => t.status === 'in_progress' && t.due_date && tp.toDateStr(t.due_date) < today)
+        .map(t => t.id);
+    if (overdueIds.length) {
+        await pool.query(
+            `UPDATE company_tasks SET status = 'completed', updated_at = NOW() WHERE id = ANY($1)`,
+            [overdueIds]
+        );
+        rows.forEach(t => { if (overdueIds.includes(t.id)) t.status = 'completed'; });
+    }
+
     return _addProgressToCompanyTasks(rows, userId);
 };
 
 const updateCompanyTaskStatus = async (userId, taskId, status) => {
-    const VALID = ['pending', 'in_progress', 'completed'];
+    const VALID = ['pending', 'in_progress', 'completed', 'cancelled'];
     if (!VALID.includes(status)) {
         _fail(400, `Geçersiz durum. İzin verilenler: ${VALID.join(', ')}.`);
     }

@@ -31,6 +31,7 @@ const cbamNetLiability    = document.getElementById('cbamNetLiability');
 const cbamRiskLevel       = document.getElementById('cbamRiskLevel');
 const cbamCarbonPriceLabel = document.getElementById('cbamCarbonPriceLabel');
 const cbamPaidPrice       = document.getElementById('cbamPaidPrice');
+const cbamPaidWarning     = document.getElementById('cbamPaidWarning');
 const cbamCategoryContainer = document.getElementById('cbamCategoryContainer');
 const cbamTrendContainer  = document.getElementById('cbamTrendContainer');
 const cbamSensitivityContainer = document.getElementById('cbamSensitivityContainer');
@@ -81,6 +82,14 @@ function renderAnalysis(summary) {
     if (cbamNetLiability) {
         cbamNetLiability.textContent = fmtEur(netLiability);
         cbamNetLiability.style.color = netLiability <= 0 ? '#16a34a' : '';
+    }
+    if (cbamPaidWarning) {
+        if (paidPerTon > 0 && paidPerTon >= carbonPrice) {
+            cbamPaidWarning.textContent = `Menşe ülkede ödenen vergi (€${paidPerTon.toFixed(2)}/tCO₂), AB ETS fiyatını (€${carbonPrice.toFixed(2)}/tCO₂) karşıladığından net CBAM yükümlülüğünüz €0 olarak hesaplanmıştır. Bu durumda AB sınırında ek vergi ödemezsiniz.`;
+            cbamPaidWarning.style.display = 'block';
+        } else {
+            cbamPaidWarning.style.display = 'none';
+        }
     }
     if (cbamRiskLevel) {
         cbamRiskLevel.textContent = RISK_LABELS[risk] || risk;

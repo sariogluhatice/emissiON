@@ -6,6 +6,7 @@ import { companyService }      from "./api/companyService.js";
 import { gamificationService } from "./api/gamificationService.js";
 import { triggerConfetti, showXpGain, showLevelUp, showBadgeUnlock } from "./utils/confetti.js";
 import { normalizeCategory }   from "./utils/categoryNormalizer.js";
+import { RISK_LABELS, RISK_COLORS } from "./utils/labelUtils.js";
 
 // Edit mode: check for ?edit=<id> URL param
 const _urlParams = new URLSearchParams(window.location.search);
@@ -95,7 +96,7 @@ const ACTIVITY_MAP = {
   food: [
     { id: "beef_red_meat", label: "Sığır / Kırmızı Et", units: ["kg"], inputType: "quantity" },
     { id: "chicken",       label: "Tavuk",               units: ["kg"], inputType: "quantity" },
-    { id: "vegetables",    label: "Sebze",                units: ["kg"], inputType: "quantity" },
+    { id: "vegetables",    label: "Sebze / Meyve / Kuruyemiş", units: ["TRY"], inputType: "spend" },
     { id: "rice_grains",   label: "Pirinç / Tahıl",      units: ["kg"], inputType: "quantity" },
   ],
   shopping: [
@@ -177,10 +178,7 @@ const CLIMATIQ_MAP = {
     activityId: "waste_management-type_recycling-disposal_method_recycling_na",
     apiUnit: "kg",
   },
-  beef_red_meat: { activityId: "food-type_beef-origin_region_multi_region", apiUnit: "kg" },
-  chicken:       { activityId: "food-type_chicken",                          apiUnit: "kg" },
-  vegetables:    { activityId: "food-type_vegetables_average",               apiUnit: "kg" },
-  rice_grains:   { activityId: "food-type_rice-origin_region_multi_region",  apiUnit: "kg" },
+  vegetables:    { activityId: "arable_farming-type_vegetables_fruit_nuts",  apiUnit: "usd", spendBased: true },
   office_supplies: {
     activityId: "general_retail-type_nonstore_retailers",
     apiUnit: "usd",
@@ -819,7 +817,7 @@ function buildPayload() {
     };
   }
 
-  if (cat === "food") {
+  if (cat === "food" && !CLIMATIQ_MAP[actId]?.spendBased) {
     const rawQty = parseFloat(quantityEl.value);
     return {
       category: "food",
@@ -851,13 +849,15 @@ function buildPayload() {
     const rate = lastOcrData?.exchangeRate
       ? parseFloat(lastOcrData.exchangeRate)
       : TRY_USD_FALLBACK;
-    return {
+    const spendPayload = {
       activityId: climatiq.activityId,
       quantity: parseFloat((tryAmt / rate).toFixed(4)),
       unit: "usd",
       activityLabel: label,
       category: cat,
     };
+    console.log("[buildPayload] spend flow →", spendPayload);
+    return spendPayload;
   }
 
   // quantity mode — apply unit conversion if needed (e.g. m³ → l for water, m³ → kWh for gas)
@@ -972,6 +972,9 @@ entryForm.addEventListener("submit", async (e) => {
       method: currentMethod,
     };
 
+    let didLevelUp = false;
+    let newLevel   = null;
+
     if (isEditMode) {
       await emissionService.update(editId, payload);
       showToast("Güncellendi!", "Emisyon kaydı güncellendi.", "success");
@@ -981,6 +984,7 @@ entryForm.addEventListener("submit", async (e) => {
 
       // Mark today as logged (for daily reminder suppression)
       const todayKey = `gam_logged_${new Date().toISOString().slice(0,10)}`;
+      const isFirstEntryToday = !localStorage.getItem(todayKey);
       localStorage.setItem(todayKey, '1');
 
       // Award XP and show celebrations
@@ -994,15 +998,27 @@ entryForm.addEventListener("submit", async (e) => {
             gam.newBadges.forEach(b => showBadgeUnlock(b, showToast));
           }
           if (gam.leveledUp) {
-            setTimeout(() => showLevelUp(gam.stats.level), 800);
+            didLevelUp = true;
+            newLevel   = gam.stats.level;
+          } else if (isFirstEntryToday && gam.stats?.streak >= 2) {
+            showToast(`🔥 ${gam.stats.streak} günlük seri!`, 'Harika gidiyorsun, devam et!', 'success');
           }
+        } else if (gam && gam.xpGained === 0 && gam.stats) {
+          showToast('Günlük limit', 'Bugün bu etkinlik için maksimum XP kazandın.', 'info');
         }
       } catch (gamErr) { console.warn('[gamification] awardXp failed:', gamErr?.message); }
     }
 
-    setTimeout(() => {
-      window.location.href = "emissions.html";
-    }, 1800);
+    if (didLevelUp) {
+      // Redirect only after user dismisses the level-up popup
+      setTimeout(() => {
+        showLevelUp(newLevel, () => { window.location.href = 'emissions.html'; });
+      }, 600);
+    } else {
+      setTimeout(() => {
+        window.location.href = 'emissions.html';
+      }, 1800);
+    }
   } catch (err) {
     showToast("Kayıt Hatası", err.message || "Kayıt yapılamadı.", "error");
     saveBtn.disabled = false;
@@ -1067,8 +1083,6 @@ function fileToBase64(file) {
 // ── CBAM declaration form (company users only) ────────────────────────────────
 
 const CBAM_RISK_THRESHOLDS = { medium: 10000, high: 50000, critical: 200000 };
-const CBAM_RISK_LABELS = { low: 'Düşük', medium: 'Orta', high: 'Yüksek', critical: 'Kritik' };
-const CBAM_RISK_COLORS = { low: '#16a34a', medium: '#f59e0b', high: '#dc2626', critical: '#7c3aed' };
 
 function cbamClientRisk(cost) {
   if (cost < CBAM_RISK_THRESHOLDS.medium)   return 'low';
@@ -1226,7 +1240,7 @@ function cbamUpdatePreview() {
     if (previewEmissionEl) previewEmissionEl.textContent = totalEm.toFixed(4);
     if (previewCostEl)     previewCostEl.textContent     = '€' + cost.toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2});
     const risk = cbamClientRisk(cost);
-    if (previewRiskEl) { previewRiskEl.textContent = CBAM_RISK_LABELS[risk]; previewRiskEl.style.color = CBAM_RISK_COLORS[risk]; }
+    if (previewRiskEl) { previewRiskEl.textContent = RISK_LABELS[risk]; previewRiskEl.style.color = RISK_COLORS[risk]; }
   } else {
     if (previewFactorEl)   previewFactorEl.textContent   = ef > 0 ? ef.toFixed(6) : '—';
     if (previewEmissionEl) previewEmissionEl.textContent = '—';

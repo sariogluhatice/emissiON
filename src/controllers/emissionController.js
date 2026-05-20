@@ -33,7 +33,7 @@ const normalizeExtractedBillData = (raw = {}) => {
 // --- HESAPLA (CALCULATE) ---
 // POST /api/emissions/calculate
 // Gövde (Body): { activityId, quantity, unit, activityLabel } VEYA { from, to, flightClass }
-const VALID_FOOD_TYPES = ['beef_red_meat', 'chicken', 'vegetables', 'rice_grains'];
+const VALID_FOOD_TYPES = Object.keys(climatiqService.FOOD_ACTIVITY_MAP);
 
 const calculate = async (req, res) => {
     const { activityId, quantity, unit, from, to, flightClass, activityLabel, category, activityType } = req.body;
@@ -42,20 +42,26 @@ const calculate = async (req, res) => {
         let result;
         if (from && to) {
             result = await climatiqService.calculateFlightEmission(from, to, flightClass);
+        } else if (activityId) {
+            // Generic Climatiq flow — spend-based activities (vegetables, plastic, shopping…)
+            if (!quantity || !unit) {
+                return res.status(400).json({ message: 'Genel hesaplama için activityId, miktar (quantity) ve birim (unit) gereklidir.' });
+            }
+            console.log('[calculate] generic activityId flow', { activityId, quantity, unit, category });
+            result = await climatiqService.calculateEmission(activityId, quantity, unit);
         } else if (category === 'food') {
+            // kg-based food: beef_red_meat, chicken, rice_grains
             if (!VALID_FOOD_TYPES.includes(activityType)) {
-                return res.status(400).json({ message: 'Geçersiz gıda türü. beef_red_meat, chicken, vegetables veya rice_grains olmalıdır.' });
+                return res.status(400).json({ message: 'Geçersiz gıda türü. beef_red_meat, chicken veya rice_grains olmalıdır.' });
             }
             const amt = parseFloat(quantity);
             if (!Number.isFinite(amt) || amt <= 0) {
                 return res.status(400).json({ message: 'Miktar pozitif bir sayı olmalıdır.' });
             }
+            console.log('[calculate] food kg flow', { activityType, quantity });
             result = await climatiqService.calculateFoodEmission(activityType, amt);
         } else {
-            if (!activityId || !quantity || !unit) {
-                return res.status(400).json({ message: 'Genel hesaplama için activityId, miktar (quantity) ve birim (unit) gereklidir.' });
-            }
-            result = await climatiqService.calculateEmission(activityId, quantity, unit);
+            return res.status(400).json({ message: 'Genel hesaplama için activityId, miktar (quantity) ve birim (unit) gereklidir.' });
         }
         
         // Hızlı yanıt: AI beklemeden sadece sonucu dönüyoruz

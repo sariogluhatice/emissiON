@@ -614,10 +614,14 @@
 }
 
 .hh-prog-bar-track {
-  background: var(--color-border);
+  background: #e2e8f0;
   border-radius: 99px;
   height: 5px;
   overflow: hidden;
+}
+
+[data-theme="dark"] .hh-prog-bar-track {
+  background: #334155;
 }
 
 .hh-prog-bar-fill {

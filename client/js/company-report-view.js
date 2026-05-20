@@ -1,4 +1,5 @@
 import { renderLayout } from './layout.js';
+import { RISK_LABELS, RISK_COLORS, CATEGORY_LABELS } from './utils/labelUtils.js';
 
 const user = renderLayout({ activeNav: 'nav-company', title: 'Rapor Görüntüle' });
 if (!user) throw new Error('redirect');
@@ -48,12 +49,6 @@ function fmtEur(v)  { return Number.isFinite(parseFloat(v)) ? '€' + fmtNum(v) 
 function fmtKg(v)   { return Number.isFinite(parseFloat(v)) ? fmtNum(v) + ' kg' : '—'; }
 function fmtTco2(v) { return Number.isFinite(parseFloat(v)) ? fmtNum(v, 4) + ' tCO₂' : '—'; }
 
-const RISK_LABELS  = { low: 'Düşük', medium: 'Orta', high: 'Yüksek', critical: 'Kritik' };
-const RISK_COLORS  = { low: '#16a34a', medium: '#f59e0b', high: '#dc2626', critical: '#7c3aed' };
-const CAT_LABELS   = {
-    energy: 'Enerji', water: 'Su', gas: 'Gaz', transport: 'Ulaşım',
-    materials: 'Malzeme', waste: 'Atık', food: 'Gıda', shopping: 'Alışveriş', other: 'Diğer',
-};
 const REPORT_TYPE_LABELS = {
     full: 'Tam Rapor', cbam_only: 'Yalnızca CBAM', emission_only: 'Yalnızca Emisyon',
 };
@@ -175,7 +170,7 @@ function renderReport(report) {
                 ${cats.map(c => `
                   <div>
                     <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px;">
-                      <span style="font-weight:600;">${escHtml(CAT_LABELS[c.category] || c.category)}</span>
+                      <span style="font-weight:600;">${escHtml(CATEGORY_LABELS[c.category] || c.category)}</span>
                       <span style="color:var(--color-text-muted);">${fmtTco2(c.total_tco2)} · ${c.share_pct ?? 0}%</span>
                     </div>
                     <div style="height:6px;background:var(--color-border);border-radius:3px;overflow:hidden;">

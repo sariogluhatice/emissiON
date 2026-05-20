@@ -1,11 +1,6 @@
 const pool            = require('../config/db');
 const gamService      = require('../services/gamificationService');
-
-const PROFILE_TABLES = {
-    individual: 'individual_profiles',
-    household:  'household_profiles',
-    company:    'company_profiles',
-};
+const PROFILE_TABLES  = require('../utils/profileTables');
 
 // GET /api/carbon-profile
 const getCarbonProfile = async (req, res) => {

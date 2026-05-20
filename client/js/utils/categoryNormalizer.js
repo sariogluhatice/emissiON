@@ -1,21 +1,11 @@
 // Canonical emission categories — frontend ES module mirror of src/utils/categoryNormalizer.js
 // CLIMATIQ CONSTRAINT: Only affects internal storage / display; never passed to Climatiq.
+import { CATEGORY_LABELS } from './labelUtils.js';
+export { CATEGORY_LABELS };
 
 export const CANONICAL = new Set([
     'energy', 'water', 'gas', 'transport', 'food', 'shopping', 'waste', 'materials', 'other',
 ]);
-
-export const CATEGORY_LABELS = {
-    energy:    'Enerji',
-    water:     'Su',
-    gas:       'Doğalgaz',
-    transport: 'Ulaşım',
-    food:      'Gıda',
-    shopping:  'Alışveriş',
-    waste:     'Atık',
-    materials: 'Malzeme',
-    other:     'Diğer',
-};
 
 const ALIAS_MAP = {
     electricity:    'energy',
@@ -48,11 +38,6 @@ export function normalizeCategory(raw) {
     const c = String(raw).toLowerCase().trim();
     if (CANONICAL.has(c)) return c;
     return ALIAS_MAP[c] || 'other';
-}
-
-/** Returns the Turkish display label for a canonical category key. */
-export function getCategoryLabel(canonical) {
-    return CATEGORY_LABELS[canonical] || CATEGORY_LABELS.other;
 }
 
 /** True when the value is already a valid canonical key. */

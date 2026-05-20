@@ -101,7 +101,7 @@ function render() {
   });
 
   if (totalShown) totalShown.textContent = filtered.length;
-  if (totalCO2)   totalCO2.textContent   = filtered.reduce((s, r) => s + parseFloat(r.amount || 0), 0).toFixed(1);
+  if (totalCO2)   totalCO2.textContent   = filtered.reduce((s, r) => s + parseFloat(r.amount || 0), 0).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
   if (!tbody) return;
 
@@ -125,7 +125,7 @@ function render() {
       <td>${catLabel}</td>
       <td>${actLabel}</td>
       <td style="color:var(--color-text-muted);font-size:13px;">—</td>
-      <td><strong>${parseFloat(record.amount || 0).toFixed(1)}</strong></td>
+      <td><strong>${parseFloat(record.amount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</strong></td>
       <td>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <a href="add-entry.html?edit=${record.id}" class="btn-action btn-edit" title="Düzenle">

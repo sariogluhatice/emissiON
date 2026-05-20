@@ -43,7 +43,7 @@ export const ACTIVITY_TYPE_LABELS = {
   // Gıda
   beef_red_meat:    'Sığır / Kırmızı Et',
   chicken:          'Tavuk',
-  vegetables:       'Sebze',
+  vegetables:       'Sebze / Meyve / Kuruyemiş',
   rice_grains:      'Pirinç / Tahıl',
   // Alışveriş
   shopping_general: 'Genel Alışveriş',
@@ -91,6 +91,7 @@ export const SOURCE_TO_CATEGORY = {
   'Gıda Harcaması':              'food',
   'Sığır / Kırmızı Et':         'food',
   'Tavuk':                       'food',
+  'Sebze / Meyve / Kuruyemiş':   'food',
   'Sebze':                       'food',
   'Pirinç / Tahıl':              'food',
   'Genel Gıda':                  'food',

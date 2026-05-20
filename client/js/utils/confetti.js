@@ -67,7 +67,7 @@ export function showXpGain(amount, anchorEl) {
     setTimeout(() => el.remove(), 1600);
 }
 
-export function showLevelUp(level) {
+export function showLevelUp(level, onDismiss) {
     const overlay = document.createElement('div');
     overlay.style.cssText = `
         position:fixed;inset:0;
@@ -100,8 +100,9 @@ export function showLevelUp(level) {
             ">Muhteşem!</button>
         </div>`;
     document.body.appendChild(overlay);
-    overlay.querySelector('#levelUpDismiss').onclick = () => overlay.remove();
-    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+    const dismiss = () => { overlay.remove(); onDismiss?.(); };
+    overlay.querySelector('#levelUpDismiss').onclick = dismiss;
+    overlay.onclick = (e) => { if (e.target === overlay) dismiss(); };
 }
 
 export function showBadgeUnlock(badge, showToastFn) {

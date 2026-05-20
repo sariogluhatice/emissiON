@@ -34,7 +34,7 @@ const globeSimLabel     = document.getElementById('globeSimLabel');
 // ── Kategoriler ve Konfigürasyonlar (Katsayı & Finansal Maliyetler) ────────────
 const CATEGORIES_CONFIG = {
   'energy': {
-    name: 'Enerji (Elektrik)',
+    name: 'Enerji',
     unit: 'kWh',
     factor: 0.45,       // 1 kWh ~ 0.45 kg CO2
     defaultCo2: 85.0,
@@ -175,31 +175,37 @@ function renderEmptyState() {
 }
 
 // ── Veri İşleme (Mevcut Ortalamaları Al) ────────────────────────────────────────
+const KNOWN_CATS = new Set(['energy','water','gas','transport','food','shopping','waste','materials']);
+
+function _catFromRecord(r) {
+  // 1) canonical category field
+  const c = r.category?.toLowerCase().trim();
+  if (c && KNOWN_CATS.has(c)) return c;
+  // 2) source text fallback
+  const source = (r.source || '').toLowerCase();
+  if (source.includes('elektrik') || source.includes('electricity') || source.includes('energy')) return 'energy';
+  if (source.includes('doğalgaz') || source.includes('gaz') || source.includes('gas')) return 'gas';
+  if (source.includes('su') || source.includes('water')) return 'water';
+  if (source.includes('ulaşım') || source.includes('transport') || source.includes('car') || source.includes('bus')) return 'transport';
+  if (source.includes('alışveriş') || source.includes('shopping')) return 'shopping';
+  if (source.includes('gıda') || source.includes('food')) return 'food';
+  if (source.includes('malzeme') || source.includes('material') || source.includes('plastik') || source.includes('kağıt')) return 'materials';
+  if (source.includes('atık') || source.includes('waste')) return 'waste';
+  return 'other';
+}
+
 function processRecords(records) {
   const now = new Date();
   const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  
+
   const baselineCo2 = {};
-  
+
   records.forEach(r => {
     const amount = parseFloat(r.amount) || 0;
-    const source = (r.source || 'other').toLowerCase();
-    
-    let cat = 'other';
-    if (source.includes('elektrik') || source.includes('electricity') || source.includes('energy')) cat = 'energy';
-    else if (source.includes('gaz') || source.includes('gas')) cat = 'gas';
-    else if (source.includes('su') || source.includes('water')) cat = 'water';
-    else if (source.includes('ulaşım') || source.includes('transport') || source.includes('car') || source.includes('bus')) cat = 'transport';
-    else if (source.includes('alışveriş') || source.includes('shopping')) cat = 'shopping';
-    else if (source.includes('gıda') || source.includes('food')) cat = 'food';
-    else if (source.includes('malzeme') || source.includes('material')) cat = 'materials';
-    else if (source.includes('atık') || source.includes('waste')) cat = 'waste';
-
+    const cat = _catFromRecord(r);
     if (cat !== 'other') {
       if (!baselineCo2[cat]) baselineCo2[cat] = 0;
-      if (r.date.startsWith(thisMonth)) {
-          baselineCo2[cat] += amount;
-      }
+      if (r.date.startsWith(thisMonth)) baselineCo2[cat] += amount;
     }
   });
 
@@ -207,23 +213,12 @@ function processRecords(records) {
   if (Object.keys(baselineCo2).length === 0 || Object.values(baselineCo2).every(v => v === 0)) {
      records.forEach(r => {
         const amount = parseFloat(r.amount) || 0;
-        const source = (r.source || 'other').toLowerCase();
-        let cat = 'other';
-        if (source.includes('elektrik') || source.includes('electricity') || source.includes('energy')) cat = 'energy';
-        else if (source.includes('gaz') || source.includes('gas')) cat = 'gas';
-        else if (source.includes('su') || source.includes('water')) cat = 'water';
-        else if (source.includes('ulaşım') || source.includes('transport') || source.includes('car') || source.includes('bus')) cat = 'transport';
-        else if (source.includes('alışveriş') || source.includes('shopping')) cat = 'shopping';
-        else if (source.includes('gıda') || source.includes('food')) cat = 'food';
-        else if (source.includes('malzeme') || source.includes('material')) cat = 'materials';
-        else if (source.includes('atık') || source.includes('waste')) cat = 'waste';
-
+        const cat = _catFromRecord(r);
         if (cat !== 'other') {
           if (!baselineCo2[cat]) baselineCo2[cat] = 0;
           baselineCo2[cat] += amount;
         }
      });
-     
      const months = new Set(records.map(r => r.date.slice(0, 7))).size || 1;
      Object.keys(baselineCo2).forEach(k => baselineCo2[k] /= months);
   }

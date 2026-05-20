@@ -66,13 +66,13 @@ const PROG_COLORS = {
 
 function progLabel(status) {
   return {
-    not_started: "Görev henüz başlamadı",
+    not_started: "Henüz Başlamadı",
     no_data:     "Takip Ediliyor",
     on_track:    "Hedefe Uygun İlerliyor",
     at_risk:     "Dikkat: Hedef Aşılabilir",
     off_track:   "Limit Aşıldı",
     successful:  "Hedefe Ulaşıldı",
-    failed:      "Hedef Tam Tutmadı",
+    failed:      "Hedef Tutmadı",
   }[status] || "—";
 }
 
@@ -109,7 +109,7 @@ function buildProgressSection(t) {
 
   const catLabel = getCategoryLabel(t.emission_category);
 
-  // A: No baseline
+  // A: No baseline at all
   if (t.target_amount == null) {
     return `
       <div class="hh-task-progress">
@@ -122,62 +122,67 @@ function buildProgressSection(t) {
       </div>`;
   }
 
-  const baseline = parseFloat(t.baseline_amount);
-  const target   = parseFloat(t.target_amount);
-  const hasCurrent = t.current_amount != null && t.progress_status !== "no_data";
-  const current  = hasCurrent ? parseFloat(t.current_amount) : null;
+  const baseline     = parseFloat(t.baseline_amount);
+  const periodTarget = t.period_target != null ? parseFloat(t.period_target) : null;
+  // null = gerçekten kayıt yok; 0 veya pozitif = kayıt var (COALESCE döner)
+  const current      = t.current_amount != null ? parseFloat(t.current_amount) : null;
+  const hasRecords   = current !== null && current > 0;
 
-  // B: Baseline but no current period
-  if (current === null) {
-    return `
-      <div class="hh-task-progress">
-        <div style="font-size:11px;color:var(--color-text-muted);margin-bottom:4px;">
-          Başlangıç: <strong>${baseline.toFixed(1)} kg</strong> → Hedef: <strong>${target.toFixed(1)} kg</strong>
-        </div>
-        <div class="hh-prog-badge" style="background:var(--color-warning-soft);color:#d97706;">
-          🟡 Takip Ediliyor
-        </div>
-        <button class="hh-prog-cta" data-category="${t.emission_category}" data-mode="current">
-          Güncel ${catLabel} Kaydı Ekle
-        </button>
-      </div>`;
-  }
+  const isNotStarted = t.progress_status === "not_started";
+  const hasStatus    = hasRecords && t.progress_status && t.progress_status !== "no_data";
+  const progCol      = hasStatus
+    ? (PROG_COLORS[t.progress_status] || { color: "var(--color-text-muted)", bg: "var(--color-surface-muted)" })
+    : { color: "#d97706", bg: "rgba(217,119,6,0.10)" };
 
-  // C: Full data
-  const progCol = PROG_COLORS[t.progress_status] || { color: "var(--color-text-muted)", bg: "var(--color-surface-muted)" };
+  // Bar: 0 for not_started; otherwise current / period_target
   let barPct = 0;
-  if (baseline > target) {
-    barPct = Math.max(0, Math.min(100,
-      Math.round(((baseline - current) / (baseline - target)) * 100)
-    ));
+  if (!isNotStarted && hasRecords && periodTarget !== null && periodTarget > 0) {
+    barPct = Math.max(0, Math.min(100, Math.round(current / periodTarget * 100)));
   }
-  const achievedPct = baseline > 0
-    ? Math.round(((baseline - current) / baseline) * 100)
-    : null;
+
+  // "12.4 / 30.1 kg"  →  kayıt varsa; "0 / 30.1 kg"  →  kayıt yoksa
+  const displayCurrent = current !== null ? current : 0;
+  const currentStr = periodTarget !== null
+    ? `${displayCurrent.toFixed(1)} / ${periodTarget.toFixed(1)} kg`
+    : `${displayCurrent.toFixed(1)} kg`;
+
+  const remainingHtml = periodTarget !== null
+    ? `<div style="font-size:11px;color:var(--color-text-muted);">Kalan: <strong>${Math.max(0, periodTarget - displayCurrent).toFixed(1)} kg</strong></div>`
+    : "";
 
   const offTrackAlert = (t.progress_status === "off_track" || t.progress_status === "failed")
     ? `<div class="hh-task-alert">⚠️ Bu görev hedeften uzaklaşıyor!</div>`
     : "";
 
+  const statusBadge = hasStatus
+    ? `<span class="hh-prog-badge" style="background:${progCol.bg};color:${progCol.color};">
+         ${progEmoji(t.progress_status)} ${progLabel(t.progress_status)}
+       </span>`
+    : `<span class="hh-prog-badge" style="background:rgba(217,119,6,0.10);color:#d97706;">🟡 Takip Ediliyor</span>`;
+
+  // CTA: sadece kayıt yoksa göster
+  const ctaBtn = !hasRecords
+    ? `<button class="hh-prog-cta" data-category="${t.emission_category}" data-mode="current">
+         Güncel ${catLabel} Kaydı Ekle
+       </button>`
+    : "";
+
   return `
     <div class="hh-task-progress">
       ${offTrackAlert}
-      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--color-text-muted);margin-bottom:4px;">
-        <span>Başlangıç: <strong>${baseline.toFixed(1)} kg</strong></span>
-        <span>Hedef: <strong>${target.toFixed(1)} kg</strong></span>
-        <span>Güncel: <strong>${current.toFixed(1)} kg</strong></span>
+      <div style="font-size:11px;color:var(--color-text-muted);display:flex;flex-direction:column;gap:3px;margin-bottom:6px;">
+        <div>Aylık Baz: <strong>${baseline.toFixed(1)} kg</strong></div>
+        ${periodTarget !== null ? `<div>Dönem Hedefi: <strong>${periodTarget.toFixed(1)} kg</strong></div>` : ""}
+        <div>Güncel: <strong style="color:${hasRecords ? "var(--color-text)" : "var(--color-text-muted)"};">${currentStr}</strong></div>
+        ${remainingHtml}
       </div>
       <div class="hh-prog-bar-track">
         <div class="hh-prog-bar-fill" style="width:${barPct}%;background:${progCol.color};"></div>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
-        <span class="hh-prog-badge" style="background:${progCol.bg};color:${progCol.color};">
-          ${progEmoji(t.progress_status)} ${progLabel(t.progress_status)}
-        </span>
-        ${achievedPct !== null
-          ? `<span style="font-size:11px;color:var(--color-text-muted);">İlerleme: <strong>${achievedPct}%</strong></span>`
-          : ""}
+        ${statusBadge}
       </div>
+      ${ctaBtn}
     </div>`;
 }
 
@@ -272,16 +277,17 @@ function filteredTasks() {
 }
 
 function updateFilterCounts() {
-  const counts = { all: _allTasks.length, pending: 0, in_progress: 0, completed: 0, mine: 0 };
+  const counts = { all: _allTasks.length, pending: 0, in_progress: 0, completed: 0, cancelled: 0, mine: 0 };
   _allTasks.forEach(t => {
     if (counts[t.status] !== undefined) counts[t.status]++;
     if (t.assigned_to && parseInt(t.assigned_to, 10) === parseInt(_myUserId, 10)) counts.mine++;
   });
-  document.getElementById("fcAll").textContent        = counts.all       || "";
-  document.getElementById("fcPending").textContent    = counts.pending   || "";
-  document.getElementById("fcInProgress").textContent = counts.in_progress || "";
-  document.getElementById("fcCompleted").textContent  = counts.completed || "";
-  document.getElementById("fcMine").textContent       = counts.mine      || "";
+  document.getElementById("fcAll").textContent         = counts.all         || "";
+  document.getElementById("fcPending").textContent     = counts.pending     || "";
+  document.getElementById("fcInProgress").textContent  = counts.in_progress || "";
+  document.getElementById("fcCompleted").textContent   = counts.completed   || "";
+  document.getElementById("fcCancelled").textContent   = counts.cancelled   || "";
+  document.getElementById("fcMine").textContent        = counts.mine        || "";
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────

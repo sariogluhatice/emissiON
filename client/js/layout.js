@@ -392,8 +392,10 @@ export async function loadNotifications() {
 
   const currentUser = getCurrentUser();
   const now         = new Date();
-  const today       = now.toISOString().slice(0, 10);
-  const in3Days     = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const _pad        = n => String(n).padStart(2, "0");
+  const today       = `${now.getFullYear()}-${_pad(now.getMonth() + 1)}-${_pad(now.getDate())}`;
+  const _in3        = new Date(now); _in3.setDate(_in3.getDate() + 3);
+  const in3Days     = `${_in3.getFullYear()}-${_pad(_in3.getMonth() + 1)}-${_pad(_in3.getDate())}`;
   const thisMonth   = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const prevMonth   = (() => {
     const d = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -457,10 +459,11 @@ export async function loadNotifications() {
           }
 
           // Due soon (3 days) — same "mine & didn't create" rule
-          if (isActive && isMyTask && !iCreator && t.due_date && t.due_date >= today && t.due_date <= in3Days) {
+          const hhDue = t.due_date ? String(t.due_date).slice(0, 10) : null;
+          if (isActive && isMyTask && !iCreator && hhDue && hhDue >= today && hhDue <= in3Days) {
             const id = `due_soon_${t.id}`;
             activeIds.add(id);
-            notifMeta[id] = { type: "due_soon", title: t.title, dueDate: t.due_date };
+            notifMeta[id] = { type: "due_soon", title: t.title, dueDate: hhDue };
           }
 
           // Admin: a member completed a task I assigned to them specifically
@@ -483,11 +486,12 @@ export async function loadNotifications() {
         const tasks = body?.data?.tasks ?? body?.tasks ?? [];
 
         tasks.forEach(t => {
+          const coDue = t.due_date ? String(t.due_date).slice(0, 10) : null;
           if ((t.status === "pending" || t.status === "in_progress") &&
-              t.due_date && t.due_date >= today && t.due_date <= in3Days) {
+              coDue && coDue >= today && coDue <= in3Days) {
             const id = `co_due_soon_${t.id}`;
             activeIds.add(id);
-            notifMeta[id] = { type: "due_soon", title: t.title, dueDate: t.due_date };
+            notifMeta[id] = { type: "due_soon", title: t.title, dueDate: coDue };
           }
         });
       }
@@ -539,17 +543,18 @@ export async function loadNotifications() {
 
   for (const id of activeIds) {
     const entry = state[id];
+    const now_iso = new Date().toISOString();
     if (id === "no_entry_this_month") {
       if (!entry || entry.month !== thisMonth) {
-        state[id] = { read: false, month: thisMonth };
+        state[id] = { read: false, month: thisMonth, createdAt: now_iso };
         changed = true;
       }
     } else if (id.startsWith("carbon_spike_")) {
-      if (!entry) { state[id] = { read: false, month: thisMonth }; changed = true; }
-      else if (entry.month !== thisMonth) { state[id] = { read: false, month: thisMonth }; changed = true; }
+      if (!entry) { state[id] = { read: false, month: thisMonth, createdAt: now_iso }; changed = true; }
+      else if (entry.month !== thisMonth) { state[id] = { read: false, month: thisMonth, createdAt: now_iso }; changed = true; }
     } else {
       // task_*, due_soon_*, task_done_*, co_due_soon_*, rpt_access_*, rpt_approved_*, rpt_rejected_*
-      if (!entry) { state[id] = { read: false }; changed = true; }
+      if (!entry) { state[id] = { read: false, createdAt: now_iso }; changed = true; }
     }
   }
 
@@ -567,7 +572,7 @@ export async function loadNotifications() {
       id: "no_entry_this_month", type: "reminder",
       title: "Aylık Kayıt Eksik",
       desc:  `${now.toLocaleDateString("tr-TR", { month: "long", year: "numeric" })} için henüz emisyon kaydı eklemediniz.`,
-      date: new Date().toISOString(), read: state["no_entry_this_month"].read,
+      date: state["no_entry_this_month"].createdAt || new Date().toISOString(), read: state["no_entry_this_month"].read,
     });
   }
 
@@ -577,7 +582,7 @@ export async function loadNotifications() {
       id: spikeId, type: "warning",
       title: "Karbon Artışı Tespit Edildi",
       desc:  `Bu ay karbon salımın geçen aya göre %${notifMeta[spikeId]?.pct || ""} arttı.`,
-      date: new Date().toISOString(), read: state[spikeId].read,
+      date: state[spikeId].createdAt || new Date().toISOString(), read: state[spikeId].read,
     });
   }
 
@@ -588,28 +593,28 @@ export async function loadNotifications() {
         id, type: "task",
         title: "Yeni Görev Atandı",
         desc:  `"${meta.title}" görevi ${meta.assignedBy} tarafından sana atandı.`,
-        date: new Date().toISOString(), read: state[id].read,
+        date: state[id].createdAt || new Date().toISOString(), read: state[id].read,
       });
     } else if (meta.type === "due_soon") {
       notifications.push({
         id, type: "warning",
         title: "Görev Son Tarihi Yaklaşıyor",
         desc:  `"${meta.title}" görevinin son tarihi ${new Date(meta.dueDate).toLocaleDateString("tr-TR")}.`,
-        date: new Date().toISOString(), read: state[id].read,
+        date: state[id].createdAt || new Date().toISOString(), read: state[id].read,
       });
     } else if (meta.type === "done") {
       notifications.push({
         id, type: "success",
         title: "Görev Tamamlandı",
         desc:  `"${meta.title}" görevi ${meta.assigneeName} tarafından tamamlandı.`,
-        date: new Date().toISOString(), read: state[id].read,
+        date: state[id].createdAt || new Date().toISOString(), read: state[id].read,
       });
     } else if (meta.type === "rpt_request") {
       notifications.push({
         id, type: "task",
         title: "Rapor Erişim İsteği",
         desc:  `${meta.requesterName} raporunuzu (${meta.reportNo}) görüntülemek istiyor.`,
-        date: new Date().toISOString(), read: state[id].read,
+        date: state[id].createdAt || new Date().toISOString(), read: state[id].read,
         targetUrl: "company-reports.html",
       });
     } else if (meta.type === "rpt_approved") {
@@ -617,7 +622,7 @@ export async function loadNotifications() {
         id, type: "success",
         title: "Rapor Erişimi Onaylandı",
         desc:  `${meta.reportNo} nolu rapora erişiminiz onaylandı.`,
-        date: new Date().toISOString(), read: state[id].read,
+        date: state[id].createdAt || new Date().toISOString(), read: state[id].read,
         targetUrl: `company-report-view.html?reportId=${meta.reportId}`,
       });
     } else if (meta.type === "rpt_rejected") {
@@ -625,7 +630,7 @@ export async function loadNotifications() {
         id, type: "warning",
         title: "Rapor Erişimi Reddedildi",
         desc:  `${meta.reportNo} nolu rapor için erişim talebiniz reddedildi.`,
-        date: new Date().toISOString(), read: state[id].read,
+        date: state[id].createdAt || new Date().toISOString(), read: state[id].read,
         targetUrl: "company-reports.html",
       });
     }

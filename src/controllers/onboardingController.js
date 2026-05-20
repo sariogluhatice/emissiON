@@ -81,11 +81,7 @@ const getOnboarding = async (req, res) => {
     const userId = req.user.id;
     const role   = req.user.role;
 
-    const tableMap = {
-        individual: 'individual_profiles',
-        household:  'household_profiles',
-        company:    'company_profiles',
-    };
+    const tableMap = require('../utils/profileTables');
 
     const table = tableMap[role];
     if (!table) return res.status(400).json({ message: 'Geçersiz kullanıcı rolü.' });
