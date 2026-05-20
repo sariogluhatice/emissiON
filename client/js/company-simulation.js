@@ -269,7 +269,13 @@ function renderSimulations(sims, total, page, limit) {
     if (!sims.length) {
         simsContainer.innerHTML = `
           <div class="hh-empty">
-            <div class="hh-empty-icon">🔬</div>
+            <div class="hh-empty-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-text-muted); opacity: 0.7;">
+                <path d="M4.7 21h14.6c.9 0 1.6-.7 1.4-1.6L15 6V3H9v3L3.3 19.4c-.2.9.5 1.6 1.4 1.6z"></path>
+                <path d="M9 3h6"></path>
+                <path d="M6 14h12"></path>
+              </svg>
+            </div>
             <p>Henüz kayıtlı senaryo yok. Formu kullanarak ilk simülasyonu çalıştırın.</p>
           </div>`;
         return;

@@ -47,7 +47,7 @@ async function loadMembers() {
     if (memberCountEl) memberCountEl.textContent = `${members.length} kişi`;
 
     if (!members.length) {
-      membersListEl.innerHTML = `<div class="hh-empty"><div class="hh-empty-icon">👥</div><p>Henüz üye yok.</p></div>`;
+      membersListEl.innerHTML = `<div class="hh-empty"><div class="hh-empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-text-muted); opacity: 0.7;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div><p>Henüz üye yok.</p></div>`;
       return;
     }
 
@@ -91,7 +91,7 @@ async function loadMemberEmissions(memberId, memberName) {
     const emissions = res.data?.emissions ?? [];
 
     if (!emissions.length) {
-      emissionsWrapper.innerHTML = `<div class="hh-empty"><div class="hh-empty-icon">📭</div><p>Bu üyenin emisyon kaydı yok.</p></div>`;
+      emissionsWrapper.innerHTML = `<div class="hh-empty"><div class="hh-empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-text-muted); opacity: 0.7;"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg></div><p>Bu üyenin emisyon kaydı yok.</p></div>`;
       return;
     }
 

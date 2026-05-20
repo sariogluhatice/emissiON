@@ -199,7 +199,8 @@ function processRecords(records) {
   const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
   const baselineCo2 = {};
-
+  
+  // Önce bu ayın verilerini topla
   records.forEach(r => {
     const amount = parseFloat(r.amount) || 0;
     const cat = _catFromRecord(r);
@@ -209,27 +210,53 @@ function processRecords(records) {
     }
   });
 
-  // Eğer bu ay hiç veri yoksa, tüm zamanların ortalamasını al
+  // Eğer BU AY HİÇ VERİ YOKSA, geçen ayların etkisinin azalarak gittiği ağırlıklı ortalamayı hesapla (Fallback)
   if (Object.keys(baselineCo2).length === 0 || Object.values(baselineCo2).every(v => v === 0)) {
-     records.forEach(r => {
-        const amount = parseFloat(r.amount) || 0;
-        const cat = _catFromRecord(r);
-        if (cat !== 'other') {
-          if (!baselineCo2[cat]) baselineCo2[cat] = 0;
-          baselineCo2[cat] += amount;
-        }
-     });
-     const months = new Set(records.map(r => r.date.slice(0, 7))).size || 1;
-     Object.keys(baselineCo2).forEach(k => baselineCo2[k] /= months);
+    const monthlyTotals = {};
+    records.forEach(r => {
+      const amount = parseFloat(r.amount) || 0;
+      const cat = _catFromRecord(r);
+      if (cat === 'other') return;
+
+      const monthStr = r.date.slice(0, 7);
+      if (!monthlyTotals[monthStr]) monthlyTotals[monthStr] = {};
+      if (!monthlyTotals[monthStr][cat]) monthlyTotals[monthStr][cat] = 0;
+      monthlyTotals[monthStr][cat] += amount;
+    });
+
+    const sortedMonths = Object.keys(monthlyTotals).sort().reverse();
+
+    if (sortedMonths.length > 0) {
+      const DECAY_FACTOR = 0.7; // Geçmiş ayların etkisini geriye doğru %30 azaltır
+      let totalWeight = 0;
+      const categoryWeightedSums = {};
+      
+      Object.keys(CATEGORIES_CONFIG).forEach(cat => {
+        categoryWeightedSums[cat] = 0;
+        baselineCo2[cat] = 0;
+      });
+
+      sortedMonths.forEach((monthStr, index) => {
+        const weight = Math.pow(DECAY_FACTOR, index);
+        totalWeight += weight;
+
+        Object.keys(CATEGORIES_CONFIG).forEach(cat => {
+          const val = monthlyTotals[monthStr][cat] || 0;
+          categoryWeightedSums[cat] += val * weight;
+        });
+      });
+
+      Object.keys(CATEGORIES_CONFIG).forEach(cat => {
+        baselineCo2[cat] = categoryWeightedSums[cat] / totalWeight;
+      });
+    }
   }
 
-  // State Oluştur (Role özel emisyon ölçeklendirmesi ekledik: Bireysel 1x, Hane 2.5x, Şirket 12x)
-  const roleScale = user.role === 'company' ? 12.0 : user.role === 'household' ? 2.5 : 1.0;
-
+  // State Oluştur
   Object.keys(CATEGORIES_CONFIG).forEach(cat => {
     const config = CATEGORIES_CONFIG[cat];
-    const co2 = (baselineCo2[cat] && baselineCo2[cat] > 0) ? baselineCo2[cat] : (config.defaultCo2 * roleScale);
-    const qty = co2 / config.factor;
+    const co2 = (baselineCo2[cat] && baselineCo2[cat] > 0) ? baselineCo2[cat] : 0;
+    const qty = (co2 > 0) ? co2 / config.factor : 0;
     
     baselines[cat] = { qty, co2 };
     changes[cat] = 0; // Başlangıçta değişim %0
@@ -245,8 +272,19 @@ function renderSliders() {
     const baseline = baselines[cat];
     const val = changes[cat];
     
-    const targetQty = baseline.qty * (1 + val / 100);
-    const targetCo2 = baseline.co2 * (1 + val / 100);
+    const roleScale = user.role === 'company' ? 12.0 : user.role === 'household' ? 2.5 : 1.0;
+    let targetQty = 0;
+    let targetCo2 = 0;
+    
+    if (baseline.co2 === 0) {
+      if (val > 0) {
+        targetCo2 = (val / 100) * config.defaultCo2 * roleScale;
+        targetQty = targetCo2 / config.factor;
+      }
+    } else {
+      targetQty = baseline.qty * (1 + val / 100);
+      targetCo2 = baseline.co2 * (1 + val / 100);
+    }
 
     const item = document.createElement('div');
     item.className = 'cat-slider-item';
@@ -293,8 +331,19 @@ function updateProjection() {
     const baseline = baselines[cat];
     const changePct = changes[cat];
 
-    const targetQty = baseline.qty * (1 + changePct / 100);
-    const targetCo2 = baseline.co2 * (1 + changePct / 100);
+    const roleScale = user.role === 'company' ? 12.0 : user.role === 'household' ? 2.5 : 1.0;
+    let targetQty = 0;
+    let targetCo2 = 0;
+    
+    if (baseline.co2 === 0) {
+      if (changePct > 0) {
+        targetCo2 = (changePct / 100) * config.defaultCo2 * roleScale;
+        targetQty = targetCo2 / config.factor;
+      }
+    } else {
+      targetQty = baseline.qty * (1 + changePct / 100);
+      targetCo2 = baseline.co2 * (1 + changePct / 100);
+    }
 
     currentTotal += baseline.co2;
     projectedTotal += targetCo2;
@@ -405,15 +454,27 @@ const aiPlannerSteps = document.getElementById('aiPlannerSteps');
 
 if (getAiRoadmapBtn && aiPlannerContent && aiPlannerSteps) {
   getAiRoadmapBtn.addEventListener('click', async () => {
-    // Yalnızca negatif (azaltım) değerleri filtrele
+    // Yalnızca negatif (azaltım) değerleri ve gerçekten tüketimi olanları filtrele
     const selectedChanges = {};
+    let draggedZeroBaseline = false;
+
     Object.entries(changes).forEach(([cat, val]) => {
-      if (Number(val) < 0) selectedChanges[cat] = val;
+      if (Number(val) < 0) {
+        if (baselines[cat] && baselines[cat].co2 > 0) {
+          selectedChanges[cat] = val;
+        } else {
+          draggedZeroBaseline = true;
+        }
+      }
     });
 
     if (Object.keys(selectedChanges).length === 0) {
       aiPlannerContent.style.display = 'block';
-      aiPlannerSteps.innerHTML = '<li style="list-style:none;margin-left:-20px;color:var(--color-text-muted);">Kişisel azaltım yol haritası oluşturmak için en az bir kategori için azaltım hedefi seçin (sürgüyü sola kaydırın).</li>';
+      if (draggedZeroBaseline) {
+        aiPlannerSteps.innerHTML = '<li style="list-style:none;margin-left:-20px;color:var(--color-text-muted);">Tüketiminiz olmayan (0 kg) bir kategoriden tasarruf edemezsiniz. Yol haritası oluşturabilmek için lütfen gerçekten karbon ayak iziniz olan bir kategorinin sürgüsünü sola kaydırın.</li>';
+      } else {
+        aiPlannerSteps.innerHTML = '<li style="list-style:none;margin-left:-20px;color:var(--color-text-muted);">Kişisel azaltım yol haritası oluşturmak için en az bir kategori için azaltım hedefi seçin (sürgüyü sola kaydırın).</li>';
+      }
       aiPlannerContent.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       return;
     }

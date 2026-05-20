@@ -176,24 +176,22 @@ Return valid JSON only. No markdown. No explanation.
 
 CATEGORY RULES — read carefully, apply in this exact priority order:
 
-STEP 1 — Shopping detection (highest priority):
-If ANY of these phrases appear in the OCR text, category MUST be "shopping":
-  "satış internet üzerinden", "mağaza adı", "sipariş", "kargo", "kredi kartı",
-  "birim fiyat", "web adresi", "ürün", "mal hizmet", "adet"
-SHOPPING WINS even if "elektronik" or "e-fatura" also appears.
-
-STEP 2 — E-invoice document markers (NOT electricity signals):
+STEP 1 — E-invoice document markers (NOT electricity signals):
 The following words indicate the document FORMAT is digital — they are NOT electricity signals.
 NEVER classify as electricity based on these alone:
   "elektronik", "e-fatura", "e-arşiv", "efatura", "earsiv", "belge tipi elektronik",
   "elektronik olarak iletilmiştir", "e-archive", "e-invoice", "ELEKTRONIK"
 
-STEP 3 — Genuine utility signals only:
+STEP 2 — Genuine specific signals only:
 - category "energy": ONLY if you see kWh, aktif enerji, tesisat no, sayaç, dağıtım bedeli,
   enerji bedeli, elektrik tüketimi, elektrik faturası, electric supply.
-  "elektronik" alone is NEVER an energy signal.
 - category "water": ONLY if you see su tüketimi, m³ (for water), water supply, su faturası.
 - category "gas": ONLY if you see doğalgaz, sm3, gaz faturası, natural gas.
+- category "transport": akaryakıt, benzin, motorin, lpg, otogaz, taşıt tanıma, yakıt, petrol, istasyon, kurşunsuz.
+- category "food": restoran, lokanta, cafe, yemek, gıda, market, süpermarket, fırın, pastane, kasap, manav, yiyecek, içecek.
+
+STEP 3 — Shopping fallback:
+- If ANY of these phrases appear: "satış internet üzerinden", "mağaza adı", "sipariş", "kargo", "birim fiyat", "ürün", "mal hizmet", "adet", giyim, teknoloji, fatura → category: "shopping".
 - Otherwise → category: "shopping".
 
 AMOUNT RULES:
@@ -332,6 +330,7 @@ const create = async (req, res) => {
              RETURNING id, source, amount, date, category, activity_type, created_at`,
             [req.user.id, source, parsedAmount, date, cat, actType]
         );
+
         return res.status(201).json({
             message: 'Kayıt oluşturuldu.',
             record: result.rows[0],
@@ -477,8 +476,8 @@ const getSmartInsights = async (req, res) => {
             profile = profileResult.rows[0] || null;
         }
 
-        // 3. AI Servisini Çağır (Geçmiş, Profil ve Kategori verilerini gönderiyoruz)
-        const insights = await aiService.getSmartInsights(historyResult.rows, profile, categoryResult.rows);
+        // 3. AI Servisini Çağır (Geçmiş, Profil, Kategori ve Rol verilerini gönderiyoruz)
+        const insights = await aiService.getSmartInsights(historyResult.rows, profile, categoryResult.rows, role);
 
         return res.status(200).json(insights);
     } catch (err) {
@@ -498,7 +497,24 @@ const getSimulationRoadmap = async (req, res) => {
             return res.status(400).json({ message: 'Azaltım verileri (reductions) gereklidir.' });
         }
 
-        const roadmap = await aiService.generateSimulationRoadmap(reductions, role);
+        // Kullanıcı profilini (onboarding cevaplarını) çek
+        const tableMap = {
+            individual: 'individual_profiles',
+            household:  'household_profiles',
+            company:    'company_profiles',
+        };
+        const profileTable = tableMap[role];
+        let profile = null;
+
+        if (profileTable) {
+            const profileResult = await pool.query(
+                `SELECT * FROM ${profileTable} WHERE user_id = $1`,
+                [req.user.id]
+            );
+            profile = profileResult.rows[0] || null;
+        }
+
+        const roadmap = await aiService.generateSimulationRoadmap(reductions, role, profile);
         gamService.awardXp(req.user.id, 'what_if_simulation_used').catch(() => {});
         return res.status(200).json(roadmap);
     } catch (err) {

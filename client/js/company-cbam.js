@@ -244,7 +244,12 @@ function renderEntries(entries, total, page, limit) {
     if (!entries.length) {
         entriesContainer.innerHTML = `
           <div class="hh-empty">
-            <div class="hh-empty-icon">📋</div>
+            <div class="hh-empty-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-text-muted); opacity: 0.7;">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+              </svg>
+            </div>
             <p>Henüz ihracat beyanı yok.</p>
           </div>`;
         return;

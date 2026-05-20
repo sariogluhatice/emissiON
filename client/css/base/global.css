@@ -216,3 +216,10 @@ textarea::placeholder {
   overflow: hidden;
   background: var(--gradient-card-soft);
 }
+
+/* Sizing utility helpers for SVG icons */
+.w-4 { width: 16px; }
+.h-4 { height: 16px; }
+.w-5 { width: 20px; }
+.h-5 { height: 20px; }
+

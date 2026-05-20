@@ -132,26 +132,32 @@ Return ONLY valid JSON. No markdown. No explanation.
 
 CATEGORY RULES — apply in this exact priority order:
 
-1. If you see "satış internet üzerinden", "mağaza adı", "sipariş", "kargo", "birim fiyat",
-   "ürün", "mal hizmet", "adet" → category: "shopping". Stop here.
-
-2. "elektronik", "e-fatura", "e-arşiv", "belge tipi elektronik", "elektronik olarak iletilmiştir"
-   describe the DOCUMENT FORMAT — they are NOT electricity signals. Never use them to decide
-   category: "electricity".
-
-3. Genuine electricity: kWh, aktif enerji, tesisat no, sayaç, dağıtım bedeli, enerji bedeli,
+1. Genuine electricity: kWh, aktif enerji, tesisat no, sayaç, dağıtım bedeli, enerji bedeli,
    elektrik tüketimi, elektrik faturası → category: "energy".
 
-4. Genuine water: su tüketimi, m³ (water), su faturası, water supply → category: "water".
+2. Genuine water: su tüketimi, m³ (water), su faturası, water supply → category: "water".
 
-5. Genuine gas: doğalgaz, sm3, gaz faturası, natural gas → category: "gas".
+3. Genuine gas: doğalgaz, sm3, gaz faturası, natural gas → category: "gas".
 
-6. Anything else (retail, e-commerce, services) → category: "shopping".
+4. Transport & Fuel: akaryakıt, benzin, motorin, lpg, otogaz, taşıt tanıma, yakıt, 
+   petrol, istasyon, kurşunsuz → category: "transport".
+
+5. Food & Dining: restoran, lokanta, cafe, yemek, gıda, market, süpermarket,
+   fırın, pastane, kasap, manav, yiyecek, içecek → category: "food".
+
+6. Shopping & Retail: "satış internet üzerinden", "mağaza adı", "sipariş", "kargo", "birim fiyat",
+   "ürün", "mal hizmet", "adet", giyim, teknoloji, fatura → category: "shopping".
+
+7. "elektronik", "e-fatura", "e-arşiv", "belge tipi elektronik", "elektronik olarak iletilmiştir"
+   describe the DOCUMENT FORMAT — they are NOT electricity signals. Never use them to decide
+   category: "energy".
+
+8. Anything else (retail, e-commerce, services) → category: "shopping".
 
 Fields to extract:
-- category: "energy" | "water" | "gas" | "shopping"
+- category: "energy" | "water" | "gas" | "transport" | "food" | "shopping"
 - activity_type: specific activity string matching category
-- quantity: numeric consumption value (kWh / m³ / litre). null for shopping.
+- quantity: numeric consumption value (kWh / m³ / litre). null for shopping/food.
 - unit: "kWh" | "m3" | "l" | null
 - date: YYYY-MM (billing period) or null
 
@@ -180,8 +186,9 @@ OCR TEXT: ${ocrText.slice(0, 8000)}`;
     /**
      * 3. Akıllı İçgörüler (Dashboard Analysis)
      */
-    async getSmartInsights(history, profile, categories = []) {
+    async getSmartInsights(history, profile, categories, role = 'individual') {
         const hasData = history && history.length > 0;
+        const roleName = role === 'company' ? 'Şirket (Kurumsal)' : role === 'household' ? 'Hane (Aile)' : 'Bireysel Kullanıcı';
         let prompt;
 
         if (hasData) {
@@ -190,16 +197,20 @@ OCR TEXT: ${ocrText.slice(0, 8000)}`;
             
             prompt = `Sen kullanıcının kişisel 'Dijital Karbon İkizi' ve veri analisti uzmanısın. Projenin amacı kullanıcıyı profesyonel bir karbon analiz raporuyla aydınlatmaktır. Bu yüzden tahmin ve gidişat analizleri sığ ve kuru tek cümleler yerine, DERİNLEMESİNE, VERİYE DAYALI, DOLU ve SON DERECE PROFESYONEL paragraflar olmalıdır.
         
+KULLANICI TİPİ (ÖNEMLİ): Bu bir "${roleName}" hesabıdır. Tüm tavsiyeleri, öngörüleri ve trend analizini KESİNLİKLE bu role uygun yap!
+- Şirket ise: Ofis, enerji maliyetleri, tedarik zinciri ve personel verimliliği üzerinden kurumsal bir dille konuş.
+- Hane ise: Ev içi faturalar, aile bireyleri, çocuklar ve ortak yaşam üzerinden konuş.
+- Bireysel ise: Kişisel hedefler ve günlük alışkanlıklar üzerinden konuş.
+
 VERİLER:
 - Geçmiş Emisyon Kayıtları: ${historyText}
 - Kategorik Dağılım: ${categoriesText}
-- Kullanıcı Profil Bilgileri (Onboarding): ${JSON.stringify(profile)}
+- Kullanıcı Profil Bilgileri (Onboarding anketi): ${JSON.stringify(profile)}
 
 ZORUNLU ANALİZ VE HESAPLAMA KURALLARI:
 1. GELECEK AY ÖNGÖRÜSÜ (DETAYLI VE DOLU): Kullanıcının geçmiş emisyon hızına ve profilindeki tüketim alışkanlıklarına bakarak gelecek ay için bilimsel bir tahmin modeli sun. Cümleler sığ ve kuru ("tasarruf sağlayabilirsiniz" gibi) KESİNLİKLE olmamalıdır. Tam olarak 2 zengin cümleyle, emisyonların yüzde kaç değişebileceğini, bu değişimi hangi kategorilerin tetikleyeceğini ve bu trendi kırmak için atılması gereken stratejik adımları derinlemesine analiz et.
 2. GİDİŞAT ANALİZİ (DETAYLI VE DOLU): Kullanıcının en yüksek emisyon ürettiği kategoriyi (örn: Sığır/Kırmızı Et veya Elektrik) ve geçmiş aylardaki matematiksel emisyon değişim trendini bilimsel olarak analiz et. Bu salınımın büyüklüğünü açıklamak için somut veriler, profil bilgileriyle kurulan bağlar ve tam olarak 2 zengin, ufuk açıcı cümle kullan.
 3. MATEMATİKSEL REALİTE (TL HESABI): Tasarruflardaki TL hesapları KESİNLİKLE gerçekçi olmalı. Aşağıdaki formülleri temel alarak hesaplama yap:
-   - Benzin / Mazot (Ulaşım) azaltımında: Azaltılan her 1 kg CO2 = ~18.5 TL tasarruftur. (Örn: 4.88 kg CO2 azaltımı = ~90 TL tasarruftur).
    - Elektrik azaltımında: Azaltılan her 1 kg CO2 = ~5.5 TL tasarruftur. (Örn: 48.80 kg CO2 azaltımı = ~268 TL tasarruftur).
    - Doğalgaz (Isınma) azaltımında: Azaltılan her 1 kg CO2 = ~5.2 TL tasarruftur.
    - Atık / Geri Dönüşüm azaltımında: Azaltılan her 1 kg CO2 = ~3.0 TL tasarruftur. (Örn: 168 kg CO2 azaltımı = ~504 TL tasarruftur).
@@ -274,7 +285,7 @@ ZORUNLU JSON FORMATI:
     /**
      * 4. Simülasyon Yol Haritası (What-If Roadmap)
      */
-    async generateSimulationRoadmap(reductions, role = 'individual') {
+    async generateSimulationRoadmap(reductions, role = 'individual', profile = null) {
         const CATEGORY_NAMES = {
             energy:    'Enerji',
             water:     'Su Kullanımı',
@@ -308,30 +319,31 @@ ZORUNLU JSON FORMATI:
             .join(', ');
 
         const roleNote = role === 'company'
-            ? 'Şirket ofisi, filo ve tedarik zinciri bağlamında öneriler ver.'
+            ? 'Şirket ofisi, kurumsal operasyonlar, tedarik zinciri ve personel bağlamında YALNIZCA ŞİRKETLERE UYGUN öneriler ver.'
             : role === 'household'
-            ? 'Aile içi işbirliğine yönelik öneriler ver.'
-            : 'Kişisel günlük alışkanlıklara yönelik öneriler ver.';
+            ? 'Ev içi bütçe, faturalar ve aile içi işbirliğine yönelik YALNIZCA HANELERE UYGUN öneriler ver.'
+            : 'Kişisel günlük alışkanlıklara yönelik bireysel öneriler ver.';
 
         const prompt = `Görevin: Kullanıcının karbon emisyon simülasyonunda seçtiği azaltım hedefleri için kişisel bir yol haritası üret.
 
 KULLANICI VERİLERİ:
 ${selectedLines}
-Kullanıcı Rolü: ${role}
+Kullanıcı Rolü: ${role} (${roleNote})
+Kullanıcı Profil Bilgileri (Onboarding Anketi): ${JSON.stringify(profile)}
 
 ZORUNLU KURALLAR:
-1. YALNIZCA şu kategoriler için bölüm oluştur: ${selectedNames}
-2. Şu kategoriler seçilmedi — bunlar hakkında HİÇBİR ŞEY yazma, başlık ekleme: ${notSelected}
-3. Her kategoriye yalnızca o kategoriyle doğrudan ilgili, pratik, uygulanabilir öneriler yaz:
-   - Enerji → elektrik tasarrufu, standby cihaz, LED aydınlatma, yenilenebilir enerji
-   - Su Kullanımı → duş süresi, akan musluk, debi sınırlayıcı, bahçe sulama zamanlaması
-   - Doğalgaz → ısıtma termostatı, yalıtım, kombi bakımı, petek havalandırması
-   - Ulaşım → toplu taşıma, bisiklet, yürüme, araç paylaşımı, yakıt verimliliği
-   - Gıda → et tüketimi azaltma, yerel ve mevsim ürünleri, yemek israfını önleme
-   - Atık → geri dönüşüm, kompost, ambalaj azaltımı, sıfır atık alışkanlıkları
-   - Malzeme → tamir, yeniden kullanım, ikinci el tercih
-   - Alışveriş → gereksiz satın alma azaltımı, kalıcı ürün tercihi, geri dönüştürülebilir ambalaj
-4. Doğrulanamayan iddiaları (buzul erimesi miktarı gibi) yazma. Sadece somut, günlük hayata uygulanabilir öneriler.
+1. KESİN KURAL: YALNIZCA şu kategoriler için bölüm oluştur: ${selectedNames}
+2. DİĞER KATEGORİLER YASAK: ${notSelected} (Eğer bu yasaklı kategoriler hakkında tek bir bölüm veya öneri dahi eklersen sistem hata verecektir).
+3. Her kategoriye yalnızca o kategoriyle doğrudan ilgili, pratik, uygulanabilir öneriler yaz. Öneriler KESİNLİKLE Kullanıcı Rolü (${role}) ve Profiline tam uyumlu olmalıdır:
+   - Enerji → Şirketse cihaz verimliliği ve ofis kuralları, Haneyse fatura tasarrufu ve ev aletleri kullanımı.
+   - Su Kullanımı → Şirketse sensörlü musluk ve endüstriyel filtreler, Haneyse duş süresi ve musluk kullanımı.
+   - Doğalgaz → Şirketse merkezi ısıtma optimizasyonu, Haneyse kombi bakımı ve petek kullanımı.
+   - Ulaşım → Şirketse araç filosu ve personel servisleri, Haneyse toplu taşıma ve bisiklet.
+   - Gıda → Şirketse yemekhane israfı ve sürdürülebilir catering, Haneyse porsiyon kontrolü ve et tüketimi.
+   - Atık → Şirketse sıfır atık ofis sertifikasyonu ve toplu geri dönüşüm, Haneyse ev içi kompost ve ayırma.
+   - Malzeme → Şirketse toplu ofis malzemesi alımı ve sarfiyat, Haneyse tamir ve ikinci el kullanımı.
+   - Alışveriş → Şirketse kurumsal tedarik zinciri tercihleri, Haneyse kişisel ihtiyaç analizi.
+4. "Kısa açıklama", "Giriş" veya benzeri genel özet metinleri KESİNLİKLE YAZMA. Sadece doğrudan, net ve aksiyon içeren adımları (önerileri) listele.
 5. ${roleNote}
 
 ZORUNLU JSON FORMATI (SADECE JSON, MARKDOWN KOD BLOĞU KULLANMA):
@@ -341,16 +353,15 @@ ZORUNLU JSON FORMATI (SADECE JSON, MARKDOWN KOD BLOĞU KULLANMA):
     {
       "kategori": "[Kategori Adı] %[oran] Azaltım Hedefi",
       "adimlar": [
-        "Kısa açıklama: Bu hedefe ulaşmak için yapılabilecekler.",
-        "1. Spesifik, uygulanabilir öneri.",
-        "2. Spesifik, uygulanabilir öneri.",
-        "3. Spesifik, uygulanabilir öneri."
+        "Spesifik, doğrudan ve eyleme geçirilebilir 1. öneri.",
+        "Spesifik, doğrudan ve eyleme geçirilebilir 2. öneri.",
+        "Spesifik, doğrudan ve eyleme geçirilebilir 3. öneri."
       ]
     }
   ]
 }
 
-ÖNEMLİ: steps dizisinde YALNIZCA ${selectedNames} kategorileri olmalı. Toplam ${selected.length} bölüm üret.`;
+ÖNEMLİ: steps dizisinde KESİNLİKLE VE YALNIZCA şu kategoriler olmalıdır: ${selectedNames}. Diğer kategorileri ekleme!`;
 
         let response = await this.callGroq(prompt, true);
         if (!response) response = await this.callGemini(prompt, true);

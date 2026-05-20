@@ -140,7 +140,7 @@ function renderCategories(breakdown) {
   if (!categoryList) return;
 
   if (!breakdown?.length) {
-    categoryList.innerHTML = `<div class="hh-empty"><div class="hh-empty-icon">📊</div><p>Henüz emisyon kaydı yok.</p></div>`;
+    categoryList.innerHTML = `<div class="hh-empty"><div class="hh-empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-text-muted); opacity: 0.7;"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div><p>Henüz emisyon kaydı yok.</p></div>`;
     return;
   }
 
@@ -173,7 +173,7 @@ function renderRecentTasks(tasks, isAdmin) {
     : tasks.filter(t => t.assigned_to == null || String(t.assigned_to) === String(user.id));
 
   if (!visible.length) {
-    recentTasksList.innerHTML = `<div class="hh-empty"><div class="hh-empty-icon">✅</div><p>Henüz görev yok.</p></div>`;
+    recentTasksList.innerHTML = `<div class="hh-empty"><div class="hh-empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-text-muted); opacity: 0.7;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div><p>Henüz görev yok.</p></div>`;
     return;
   }
 
@@ -372,7 +372,7 @@ function renderComparison(comp) {
   if (!comparisonEl) return;
 
   if (!comp || !comp.comparison_available) {
-    comparisonEl.innerHTML = `<div class="hh-empty"><div class="hh-empty-icon">📈</div><p>Hane içi karşılaştırma için yeterli veri bulunmuyor.</p></div>`;
+    comparisonEl.innerHTML = `<div class="hh-empty"><div class="hh-empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-text-muted); opacity: 0.7;"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg></div><p>Hane içi karşılaştırma için yeterli veri bulunmuyor.</p></div>`;
     return;
   }
 

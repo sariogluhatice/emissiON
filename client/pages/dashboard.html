@@ -117,15 +117,15 @@
 
             <!-- Left/Right Floating Stats (Visual only for layout, JS will update) -->
             <div style="position: absolute; left: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 24px; z-index: 2;">
-                <div class="stat-card glass-card stat-card--link" style="width: 180px; margin: 0;" tabindex="0" role="link" aria-label="Emisyon kayıtlarına git" onclick="window.location.href='emissions.html'" onkeydown="if(event.key==='Enter')window.location.href='emissions.html'">
-                    <span class="stat-label">Toplam Karbon</span>
+                <div class="stat-card glass-card stat-card--link" id="cardTotal" style="width: 180px; margin: 0;" tabindex="0" role="link" aria-label="Emisyon kayıtlarına git" onclick="window.location.href='emissions.html'" onkeydown="if(event.key==='Enter')window.location.href='emissions.html'" data-tooltip="Tüm zamanlar hesaplanıyor...">
+                    <span class="stat-label">Aylık Karbon</span>
                     <span class="stat-value" id="statTotal" style="font-size: 24px;">—</span>
                     <span class="stat-unit">kg CO₂e</span>
                 </div>
-                <div class="stat-card glass-card stat-card--link" style="width: 180px; margin: 0; border-left: 3px solid var(--color-error);" tabindex="0" role="link" aria-label="Emisyon kayıtlarına git" onclick="window.location.href='emissions.html'" onkeydown="if(event.key==='Enter')window.location.href='emissions.html'">
+                <div class="stat-card glass-card stat-card--link" id="cardSavings" style="width: 180px; margin: 0; border-left: 3px solid var(--color-error);" tabindex="0" role="link" aria-label="Emisyon kayıtlarına git" onclick="window.location.href='emissions.html'" onkeydown="if(event.key==='Enter')window.location.href='emissions.html'" data-tooltip="Tüm zamanlar hesaplanıyor..." border-left="3px solid var(--color-error)">
                     <span class="stat-label">Karbonun Maliyeti</span>
                     <span class="stat-value" id="statSavings" style="font-size: 24px; color: var(--color-error);">—</span>
-                    <span class="stat-unit">TL Tahmini Gider</span>
+                    <span class="stat-unit">Aylık Tahmini Gider</span>
                 </div>
             </div>
 
@@ -217,7 +217,13 @@
           <!-- Badges showcase -->
           <div id="badgesCard" class="content-card glass-card" style="display:none; margin-bottom:32px;">
             <div class="content-card-header">
-              <span class="content-card-title">🏅 Başarılar / Rozetler</span>
+              <span class="content-card-title" style="display:flex; align-items:center; gap:8px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #f59e0b;">
+                  <circle cx="12" cy="8" r="7"></circle>
+                  <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                </svg>
+                Başarılar / Rozetler
+              </span>
               <span id="badgesEarnedCount" style="font-size:12px;color:var(--color-text-muted);margin-left:auto;"></span>
             </div>
             <div id="badgesList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;padding:0 24px 24px;"></div>

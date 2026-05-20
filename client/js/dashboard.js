@@ -107,14 +107,32 @@ async function initDashboard() {
     
     // 1. İstatistikleri Hesapla ve Göster
     const stats = calculateStats(records);
-    if (document.getElementById('statTotal'))   document.getElementById('statTotal').textContent   = stats.total;
+    if (document.getElementById('statTotal')) {
+      const el = document.getElementById('statTotal');
+      el.textContent = stats.month;
+      const card = document.getElementById('cardTotal');
+      if (card) {
+        card.setAttribute('data-tooltip', `Tüm zamanlar: ${stats.total.toLocaleString('tr-TR')} kg CO₂e`);
+      }
+    }
     if (document.getElementById('statEntries')) document.getElementById('statEntries').textContent = stats.entries;
     if (document.getElementById('statTopCat'))  document.getElementById('statTopCat').textContent  = stats.topCat;
 
-    // 1b. Karbon Maliyeti Hesapla
-    const carbonCost = calculateCarbonCost(records, user.role);
+    // 1b. Karbon Maliyeti Hesapla (Sadece Bu Ay)
+    const now = new Date();
+    const monthRecords = records.filter(r => {
+      const d = new Date(r.date);
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    });
+    const carbonCost = calculateCarbonCost(monthRecords, user.role);
+    const lifetimeCost = calculateCarbonCost(records, user.role);
     if (document.getElementById('statSavings')) {
-      document.getElementById('statSavings').textContent = Math.round(carbonCost).toLocaleString('tr-TR');
+      const el = document.getElementById('statSavings');
+      el.textContent = Math.round(carbonCost).toLocaleString('tr-TR');
+      const card = document.getElementById('cardSavings');
+      if (card) {
+        card.setAttribute('data-tooltip', `Tüm zamanlar: ${Math.round(lifetimeCost).toLocaleString('tr-TR')} TL`);
+      }
     }
 
     // 1c. 🌍 Dünya Globunu Aylık Performansa Göre Güncelle (Türkiye Ortalaması: 450kg)
@@ -232,8 +250,10 @@ const BADGE_DESC = {
   data_expert:   '20+ kayıtla verilerini titizlikle izleyen bir analiz uzmanısın.',
   streak_3:      '3 gün üst üste emisyon kaydı girerek alışkanlık oluşturdun.',
   streak_7:      '7 günlük kesintisiz seri — haftalık şampiyon unvanını kazandın!',
+  streak_14:     'İki haftalık istikrarlı kayıt ile sarsılmaz bir çevre dostusun.',
   streak_30:     '30 günlük devasa seri — emisyon takibinde efsane oldun!',
   carbon_aware:  '300 XP biriktirerek yüksek karbon bilincine sahip olduğunu gösterdin.',
+  eco_warrior:   'Seviye 5\'e ulaşarak eko-savaşçı rütbesine terfi ettin!'
 };
 
 // ── Gamification Skeleton helpers ─────────────────────────────────────────────
@@ -325,6 +345,19 @@ function renderGamification(stats) {
     const earned   = stats.badge_defs.filter(b => b.earned);
     const unearned = stats.badge_defs.filter(b => !b.earned);
     if (badgesCount) badgesCount.textContent = `${earned.length} / ${stats.badge_defs.length} kazanıldı`;
+    const BADGE_SVG_ICONS = {
+      earth_friend: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>',
+      first_step:   '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>',
+      data_pro:     '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>',
+      data_expert:  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>',
+      streak_3:     '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>',
+      streak_7:     '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+      streak_14:    '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="m9 16 2 2 4-4"/></svg>',
+      streak_30:    '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 3.84-10.06M15 12l3 3a22 22 0 0 0-10.06-3.84"/><path d="M9 11l6 6"/><path d="M22 2s-1.5 5-2 5-5-1.5-5-2"/></svg>',
+      carbon_aware: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+      eco_warrior:  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2-1 4-2 7-2 2.5 0 4.5 1 6.5 2a1 1 0 0 1 1 1v7z"/><path d="m9 12 2 2 4-4"/></svg>'
+    };
+
     badgesList.innerHTML = '';
     [...earned, ...unearned].forEach(b => {
       const el = document.createElement('div');
@@ -332,8 +365,11 @@ function renderGamification(stats) {
       const desc = b.earned
         ? (BADGE_DESC[b.id] || '')
         : 'Henüz kazanılmadı';
+        
+      const uiIcon = BADGE_SVG_ICONS[b.id] || '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+      
       el.innerHTML = `
-        <div class="badge-icon">${b.icon}</div>
+        <div class="badge-icon">${uiIcon}</div>
         <div class="badge-info">
           <div class="badge-name">${b.name}</div>
           <div class="badge-desc">${desc}</div>

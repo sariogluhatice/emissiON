@@ -542,8 +542,10 @@ async function scanImageGeneric(file) {
     localCat !== null ? "local-regex" : "groq",
   );
 
-  if (detected && detected !== "shopping") {
-    // ── Utility bill path (electricity / water / gas) ──────────────────
+  const isUtilityOrTransport = detected && ["energy", "water", "gas", "transport"].includes(detected);
+
+  if (isUtilityOrTransport) {
+    // ── Utility bill / Transport path ──────────────────
     categoryEl.value = detected;
     onCategoryChange();
 
@@ -585,10 +587,15 @@ async function scanImageGeneric(file) {
     return;
   }
 
-  // ── Shopping / receipt path ─────────────────────────────────────────────
-  categoryEl.value = "shopping";
-  onCategoryChange(); // populates activityEl, auto-selects shopping_general (first option)
-  activityEl.value = "shopping_general";
+  // ── Shopping / Food / receipt path ─────────────────────────────────────────────
+  categoryEl.value = detected || "shopping";
+  onCategoryChange(); 
+  if (detected === "food") {
+    // Select a 'spend' based food activity to trigger amountRow
+    activityEl.value = "vegetables";
+  } else {
+    activityEl.value = "shopping_general";
+  }
   onActivityChange(); // setFormMode('spend') → shows #amountRow
 
   if (groqResult?.totalAmount) {
@@ -687,7 +694,21 @@ function detectCategoryFromText(text) {
   if (/endeks/i.test(t) && /\bgaz\b/.test(t)) return "gas";
   if (/sayaç/i.test(t) && /\bgaz\b/.test(t)) return "gas";
 
-  // 4. Shopping / e-commerce signals — only if no utility signal matched.
+  // 4. Transport & Fuel
+  const hasTransport = /akaryak[ıi]t|benzin|motorin|lpg|otogaz|ta[şs][ıi]t tan[ıi]ma|yak[ıi]t|petrol|istasyon|kur[şs]unsuz/i.test(t);
+  if (hasTransport) {
+    console.log("[detectCategoryFromText] reason=transport_signals");
+    return "transport";
+  }
+
+  // 5. Food & Dining
+  const hasFood = /restoran|lokanta|cafe|yemek|g[ıi]da|market|s[üu]permarket|f[ıi]r[ıi]n|pastane|kasap|manav|yiyecek|i[çc]ecek/i.test(t);
+  if (hasFood) {
+    console.log("[detectCategoryFromText] reason=food_signals");
+    return "food";
+  }
+
+  // 6. Shopping / e-commerce signals — only if no specific signal matched.
   // "birim fiyat" excluded: utility bills also contain unit pricing.
   const isShopping =
     /satış internet üzerinden|mağaza adı|sipariş no|kargo|kredi kartı|web adresi|mal hizmet|adet/i.test(

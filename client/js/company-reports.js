@@ -110,7 +110,15 @@ function renderMyReports(reports) {
     if (!reports.length) {
         myReportsContainer.innerHTML = `
           <div class="hh-empty">
-            <div class="hh-empty-icon">📄</div>
+            <div class="hh-empty-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-text-muted); opacity: 0.7;">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+            </div>
             <p>Henüz rapor oluşturmadınız. "Rapor Oluştur" butonunu kullanın.</p>
           </div>`;
         return;
@@ -169,7 +177,12 @@ function renderIncoming(requests) {
     if (!requests.length) {
         incomingContainer.innerHTML = `
           <div class="hh-empty">
-            <div class="hh-empty-icon">📭</div>
+            <div class="hh-empty-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-text-muted); opacity: 0.7;">
+                <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
+                <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+              </svg>
+            </div>
             <p>Henüz gelen erişim talebi yok.</p>
           </div>`;
         return;
@@ -227,7 +240,13 @@ function renderOutgoing(requests) {
     if (!requests.length) {
         outgoingContainer.innerHTML = `
           <div class="hh-empty">
-            <div class="hh-empty-icon">📤</div>
+            <div class="hh-empty-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-text-muted); opacity: 0.7;">
+                <path d="M4 14.89V17a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2.11"></path>
+                <polyline points="7 9 12 4 17 9"></polyline>
+                <line x1="12" y1="4" x2="12" y2="15"></line>
+              </svg>
+            </div>
             <p>Henüz erişim talebi göndermediniz.</p>
           </div>`;
         return;

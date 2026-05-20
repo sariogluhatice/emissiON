@@ -393,6 +393,11 @@
   position: relative;
 }
 
+.notification-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
 .notification-btn:hover {
   background: rgba(128, 128, 128, 0.08);
   color: var(--color-text);

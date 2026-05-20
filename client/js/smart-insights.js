@@ -122,27 +122,39 @@ async function loadSmartInsights() {
 
     if (glacierEl) {
       const glacierMelt = Math.round(totalCarbon * 3); // 1 kg CO2 = ~3 kg buzul erimesi
-      glacierEl.textContent = `${glacierMelt.toLocaleString('tr-TR')} kg Buzul Erimesi`;
+      glacierEl.textContent = `Yaklaşık ${glacierMelt.toLocaleString('tr-TR')} kg buzul erimesi`;
     }
 
     if (flightsEl) {
       const flightsCount = (totalCarbon / 350).toFixed(1); // 1 tek yön uçuş = ~350 kg CO2
-      flightsEl.textContent = `${flightsCount} Kez İst - Lon Seyahati`;
+      flightsEl.textContent = `İstanbul'dan Londra'ya ${flightsCount} kez uçak yolculuğu`;
     }
 
     if (driveEl) {
       const driveDistance = Math.round(totalCarbon / 0.12); // binek araç = ~0.12 kg CO2 / km
-      driveEl.textContent = `${driveDistance.toLocaleString('tr-TR')} km Otomobil Yolculuğu`;
+      driveEl.textContent = `Benzinli araçla aralıksız ${driveDistance.toLocaleString('tr-TR')} km sürüş`;
     }
 
     if (chargesEl) {
       const phoneCharges = Math.round(totalCarbon / 0.008); // 1 şarj = ~0.008 kg CO2
-      chargesEl.textContent = `${phoneCharges.toLocaleString('tr-TR')} Adet Telefon Şarjı`;
+      chargesEl.textContent = `Bir telefonu tam ${phoneCharges.toLocaleString('tr-TR')} kez şarj etmek`;
     }
 
     if (treesEl) {
       const annualTrees = (totalCarbon / 22).toFixed(1); // 1 yetişkin ağaç = ~22 kg CO2 / yıl
-      treesEl.textContent = `${annualTrees} Adet Çam Ağacı / Yıl`;
+      treesEl.textContent = `Temizlemek için ${annualTrees} yetişkin ağacın 1 yıllık emeği`;
+    }
+
+    const streamingEl = document.getElementById('streamingVal');
+    if (streamingEl) {
+      const streamingHours = Math.round(totalCarbon / 0.055); // 1 saat video = ~0.055 kg CO2
+      streamingEl.textContent = `Aralıksız ${streamingHours.toLocaleString('tr-TR')} saat dizi/video izlemek`;
+    }
+
+    const burgerEl = document.getElementById('burgerVal');
+    if (burgerEl) {
+      const burgers = Math.round(totalCarbon / 2.5); // 1 dana hamburger = ~2.5 kg CO2
+      burgerEl.textContent = `Tam ${burgers.toLocaleString('tr-TR')} adet hamburger menüsü yemek`;
     }
 
   } catch (err) {

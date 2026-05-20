@@ -305,7 +305,12 @@ function renderTasks() {
 
     tasksContainer.innerHTML = `
       <div class="hh-empty">
-        <div class="hh-empty-icon">✅</div>
+        <div class="hh-empty-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-text-muted); opacity: 0.7;">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
         <p>${emptyMsg}</p>
       </div>`;
     return;

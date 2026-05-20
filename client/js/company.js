@@ -104,7 +104,7 @@ function renderCategories(categories) {
     if (!container) return;
 
     if (!categories?.length) {
-        container.innerHTML = `<div class="hh-empty"><div class="hh-empty-icon">📦</div><p>Henüz emisyon kaydı yok. <a href="add-entry.html" style="color:var(--color-primary);">Kayıt ekleyin.</a></p></div>`;
+        container.innerHTML = `<div class="hh-empty"><div class="hh-empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-text-muted); opacity: 0.7;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg></div><p>Henüz emisyon kaydı yok. <a href="add-entry.html" style="color:var(--color-primary);">Kayıt ekleyin.</a></p></div>`;
         return;
     }
 
@@ -176,7 +176,7 @@ function renderHighestRisk(dashboard) {
         return;
     }
 
-    container.innerHTML = `<div class="hh-empty"><div class="hh-empty-icon">🎯</div>
+    container.innerHTML = `<div class="hh-empty"><div class="hh-empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-text-muted); opacity: 0.7;"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg></div>
       <p>Henüz kayıt yok. <a href="add-entry.html" style="color:var(--color-primary);">Kayıt ekleyin.</a></p></div>`;
 }
 
@@ -235,7 +235,7 @@ function renderSensitivity(totalEmbedded) {
     if (!container) return;
 
     if (!totalEmbedded || totalEmbedded <= 0) {
-        container.innerHTML = `<div class="hh-empty"><div class="hh-empty-icon">📈</div><p>Hesaplama için önce <a href="add-entry.html" style="color:var(--color-primary);">emisyon kaydı ekleyin</a>.</p></div>`;
+        container.innerHTML = `<div class="hh-empty"><div class="hh-empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-text-muted); opacity: 0.7;"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg></div><p>Hesaplama için önce <a href="add-entry.html" style="color:var(--color-primary);">emisyon kaydı ekleyin</a>.</p></div>`;
         return;
     }
 

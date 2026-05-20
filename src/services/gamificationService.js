@@ -14,11 +14,10 @@ const EVENT_DEFS = {
     carbon_profile_updated:   { xp: 30,  dailyLimit: 1,    lifetimeLimit: null },
     what_if_simulation_used:  { xp: 25,  dailyLimit: 2,    lifetimeLimit: null },
     household_task_completed: { xp: 80,  dailyLimit: 3,    lifetimeLimit: null },
-    reduction_goal_achieved:  { xp: 150, dailyLimit: 1,    lifetimeLimit: null },
+    reduction_goal_achieved:  { xp: 150, monthlyLimit: 1,  lifetimeLimit: null },
     daily_streak_bonus:       { xp: 20,  dailyLimit: 1,    lifetimeLimit: null },
 };
 
-// ── Badge definitions ─────────────────────────────────────────────────────────
 const BADGE_DEFS = [
     { id: 'earth_friend',  name: 'Dünya Dostu',       icon: '🌍', xp: 25,  check: ()           => true },
     { id: 'first_step',   name: 'İlk Adım',           icon: '🌱', xp: 50,  check: s => s.total_entries >= 1 },
@@ -26,8 +25,10 @@ const BADGE_DEFS = [
     { id: 'data_expert',  name: 'Analiz Uzmanı',       icon: '🔬', xp: 200, check: s => s.total_entries >= 20 },
     { id: 'streak_3',     name: '3 Günlük Seri',       icon: '🔥', xp: 75,  check: s => s.longest_streak >= 3 },
     { id: 'streak_7',     name: 'Haftalık Şampiyon',   icon: '⭐', xp: 150, check: s => s.longest_streak >= 7 },
+    { id: 'streak_14',    name: 'İstikrarlı (14 Gün)', icon: '⏳', xp: 300, check: s => s.longest_streak >= 14 },
     { id: 'streak_30',    name: 'Aylık Efsane',        icon: '🚀', xp: 500, check: s => s.longest_streak >= 30 },
     { id: 'carbon_aware', name: 'Karbon Bilinçli',     icon: '♻️', xp: 75,  check: s => s.total_xp >= 300 },
+    { id: 'eco_warrior',  name: 'Eko Savaşçı (Sv.5)',  icon: '🛡️', xp: 250, check: s => s.level >= 5 },
 ];
 
 // ── Level helpers ─────────────────────────────────────────────────────────────
@@ -175,6 +176,17 @@ const awardXp = async (userId, eventType) => {
             if (dRows[0].cnt >= def.dailyLimit) canAward = false;
         }
 
+        if (canAward && def.monthlyLimit !== undefined && def.monthlyLimit !== null) {
+            const currentMonth = today.slice(0, 7); // 'YYYY-MM'
+            const { rows: mRows } = await client.query(
+                `SELECT COUNT(*)::int AS cnt FROM gamification_events
+                 WHERE user_id = $1 AND event_type = $2
+                   AND to_char(created_at, 'YYYY-MM') = $3`,
+                [userId, eventType, currentMonth]
+            );
+            if (mRows[0].cnt >= def.monthlyLimit) canAward = false;
+        }
+
         if (canAward) {
             mainXp = def.xp;
             await client.query(
@@ -204,6 +216,7 @@ const awardXp = async (userId, eventType) => {
             total_entries:   totalEntries,
             longest_streak:  longestStreak,
             total_xp:        gam.total_xp + totalXpGained,
+            level:           computeLevel(gam.total_xp + totalXpGained),
         };
         for (const b of BADGE_DEFS) {
             if (!earnedIds.has(b.id) && b.check(checkStats)) {
