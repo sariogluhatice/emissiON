@@ -698,8 +698,8 @@ const _addProgressToCompanyTasks = async (tasks, userId) => {
     const taskIds = trackingTasks.map(t => t.id);
     const { rows: emRows } = await pool.query(
         `SELECT
-            ct.id                                        AS task_id,
-            COALESCE(SUM(er.amount), 0)::float / 1000   AS current_tco2
+            ct.id                              AS task_id,
+            COALESCE(SUM(er.amount), 0)::float AS current_kg
          FROM company_tasks ct
          JOIN emission_records er
              ON er.user_id = $1
@@ -712,7 +712,7 @@ const _addProgressToCompanyTasks = async (tasks, userId) => {
     );
 
     const currentMap = {};
-    emRows.forEach(r => { currentMap[r.task_id] = parseFloat(r.current_tco2); });
+    emRows.forEach(r => { currentMap[r.task_id] = parseFloat(r.current_kg); });
 
     const now      = new Date();
     const todayStr = now.toISOString().split('T')[0];
@@ -723,17 +723,18 @@ const _addProgressToCompanyTasks = async (tasks, userId) => {
 
         // Pending tasks: show data but don't compare against target yet
         if (t.status === 'pending') {
-            progressById[t.id] = { current_emission: current, progress_status: 'not_started' };
+            progressById[t.id] = { current_amount: current !== null ? parseFloat(current.toFixed(2)) : null, progress_status: 'not_started' };
             return;
         }
 
         if (t.baseline_emission == null) {
-            progressById[t.id] = { current_emission: current, progress_status: 'no_baseline' };
+            progressById[t.id] = { current_amount: current !== null ? parseFloat(current.toFixed(2)) : null, progress_status: 'no_baseline' };
             return;
         }
 
+        // period_target_emission is stored in tCO₂; convert to kg to match current_amount
         const periodTarget = t.period_target_emission != null
-            ? parseFloat(t.period_target_emission) : null;
+            ? parseFloat(t.period_target_emission) * 1000 : null;
 
         const dueStr         = tp.toDateStr(t.due_date);
         const deadlinePassed = dueStr && dueStr < todayStr;
@@ -742,7 +743,7 @@ const _addProgressToCompanyTasks = async (tasks, userId) => {
             deadlinePassed, isCompleted: t.status === 'completed',
         });
 
-        progressById[t.id] = { current_emission: current, progress_status };
+        progressById[t.id] = { current_amount: current !== null ? parseFloat(current.toFixed(2)) : null, progress_status };
     });
 
     return tasks.map(t => ({ ...t, ...(progressById[t.id] || {}) }));
@@ -758,7 +759,6 @@ const _normalizeCompanyTaskFields = (t) => {
         baseline_amount: toKg(t.baseline_emission),
         target_amount:   toKg(t.target_emission),
         period_target:   toKg(t.period_target_emission),
-        current_amount:  toKg(t.current_emission),
         target_pct:      t.target_reduction_pct,
     };
 };

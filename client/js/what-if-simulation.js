@@ -4,15 +4,16 @@ import { ApiClient }       from './api/apiClient.js';
 import { updateGlobe }     from './utils/globe.js';
 import { emissionService } from './api/emissionService.js';
 import { householdService } from './api/householdService.js';
+import { companyService }  from './api/companyService.js';
 import { getCategoryLabel } from './utils/labelUtils.js';
 
 const user = renderLayout({ activeNav: 'nav-whatif' });
 if (!user) throw new Error('redirect');
 
-// ── Household admin detection ─────────────────────────────────────────────────
-// Determines whether to show "Add as Household Task" buttons on roadmap steps.
+// ── Role-based task button detection ─────────────────────────────────────────
 let isHouseholdAdmin = false;
 let _householdMembersCache = null;
+const isCompanyUser = user.role === 'company';
 
 if (user.role === 'household') {
     householdService.getMe().then(res => {
@@ -506,7 +507,7 @@ if (getAiRoadmapBtn && aiPlannerContent && aiPlannerSteps) {
             catLi.style.cssText = 'list-style:none;margin-left:-20px;margin-top:14px;margin-bottom:6px;font-weight:700;color:var(--color-secondary);display:flex;align-items:center;gap:8px;flex-wrap:wrap;';
             catLi.textContent = step.kategori;
 
-            if (isHouseholdAdmin) {
+            if (isHouseholdAdmin || isCompanyUser) {
               const matchedCat = Object.keys(selectedChanges).find(key => {
                 const tr = (getCategoryLabel(key) || '').toLowerCase();
                 const lower = step.kategori.toLowerCase();
@@ -515,7 +516,7 @@ if (getAiRoadmapBtn && aiPlannerContent && aiPlannerSteps) {
               const pctMatch = step.kategori.match(/(\d+(?:\.\d+)?)/);
               if (matchedCat && pctMatch) {
                 const addBtn = document.createElement('button');
-                addBtn.textContent = '+ Hane Görevi Ekle';
+                addBtn.textContent = isCompanyUser ? '+ Şirket Görevi Ekle' : '+ Hane Görevi Ekle';
                 addBtn.style.cssText = 'font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--color-primary);background:transparent;color:var(--color-primary);cursor:pointer;font-weight:600;flex-shrink:0;';
                 addBtn.addEventListener('click', () => openAddTaskModal(matchedCat, parseFloat(pctMatch[1]), step.kategori));
                 catLi.appendChild(addBtn);
@@ -591,6 +592,16 @@ async function _ensureMembers() {
 async function openAddTaskModal(categoryKey, pct, label) {
   if (!addTaskModal) return;
 
+  const modalTitle = addTaskModal.querySelector('.modal-title');
+  const modalDesc  = addTaskModal.querySelector('p');
+  if (isCompanyUser) {
+    if (modalTitle) modalTitle.textContent = 'Şirket Görevi Ekle';
+    if (modalDesc)  modalDesc.textContent  = 'Bu AI önerisini emisyon takipli bir şirket görevine dönüştürün.';
+  } else {
+    if (modalTitle) modalTitle.textContent = 'Hane Görevi Ekle';
+    if (modalDesc)  modalDesc.textContent  = 'Bu AI önerisini emisyon takipli bir hane görevine dönüştürün.';
+  }
+
   taskModalCategoryKey.value     = categoryKey;
   taskModalCategoryLabel.textContent = getCategoryLabel(categoryKey);
   taskModalTitle.value           = label;
@@ -601,15 +612,21 @@ async function openAddTaskModal(categoryKey, pct, label) {
   const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
   taskModalDueDate.value = lastDay.toISOString().slice(0, 10);
 
-  // Populate assignee dropdown (lazy, cached)
-  taskModalAssignee.innerHTML = '<option value="">🏠 Tüm Hane</option>';
-  const members = await _ensureMembers();
-  members.forEach(m => {
-    const opt = document.createElement('option');
-    opt.value       = m.user_id;
-    opt.textContent = `👤 ${m.name || m.email}${m.role === 'admin' ? ' (Yönetici)' : ''}`;
-    taskModalAssignee.appendChild(opt);
-  });
+  // Assignee field: hide for company (single user), populate for household
+  const assigneeRow = taskModalAssignee?.closest('.form-group') || taskModalAssignee?.parentElement;
+  if (isCompanyUser) {
+    if (assigneeRow) assigneeRow.style.display = 'none';
+  } else {
+    if (assigneeRow) assigneeRow.style.display = '';
+    taskModalAssignee.innerHTML = '<option value="">🏠 Tüm Hane</option>';
+    const members = await _ensureMembers();
+    members.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value       = m.user_id;
+      opt.textContent = `👤 ${m.name || m.email}${m.role === 'admin' ? ' (Yönetici)' : ''}`;
+      taskModalAssignee.appendChild(opt);
+    });
+  }
 
   addTaskModal.style.display = 'flex';
 }
@@ -638,15 +655,26 @@ confirmAddTaskBtn?.addEventListener('click', async () => {
   confirmAddTaskBtn.disabled    = true;
   confirmAddTaskBtn.textContent = 'Oluşturuluyor…';
   try {
-    await householdService.createTask({
-      title,
-      emission_category: category,
-      target_pct:        pct,
-      assigned_to:       taskModalAssignee?.value || undefined,
-      due_date:          taskModalDueDate?.value  || undefined,
-    });
-    addTaskModal.style.display = 'none';
-    showToast('Başarılı', 'Hane görevi oluşturuldu.', 'success');
+    if (isCompanyUser) {
+      await companyService.createTask({
+        title,
+        emission_category:   category,
+        target_reduction_pct: pct,
+        due_date:            taskModalDueDate?.value || undefined,
+      });
+      addTaskModal.style.display = 'none';
+      showToast('Başarılı', 'Şirket görevi oluşturuldu.', 'success');
+    } else {
+      await householdService.createTask({
+        title,
+        emission_category: category,
+        target_pct:        pct,
+        assigned_to:       taskModalAssignee?.value || undefined,
+        due_date:          taskModalDueDate?.value  || undefined,
+      });
+      addTaskModal.style.display = 'none';
+      showToast('Başarılı', 'Hane görevi oluşturuldu.', 'success');
+    }
   } catch (err) {
     if (err.message?.includes('en az bir emisyon kaydı')) {
       if (addTaskModal) addTaskModal.style.display = 'none';
