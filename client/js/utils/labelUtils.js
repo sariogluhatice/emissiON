@@ -32,8 +32,11 @@ export const ACTIVITY_TYPE_LABELS = {
   car_diesel:       'Dizel Araç',
   bus:              'Otobüs',
   train:            'Tren',
-  flight_short:     'Kısa Mesafe Uçuş',
-  flight_long:      'Uzun Mesafe Uçuş',
+  flight:           'Uçuş',
+  flight_domestic:  'Yurt İçi Uçuş',
+  flight_international: 'Yurt Dışı Uçuş',
+  flight_short:     'Yurt İçi Uçuş',
+  flight_long:      'Yurt Dışı Uçuş',
   // Malzeme
   plastic:          'Plastik',
   paper:            'Kağıt',

@@ -32,7 +32,7 @@ class ClimatiqService {
   }
 
   /** Uçuşlar için özelleştirilmiş tahmin (Yerel Mesafe Hesaplamalı) */
-  async calculateFlightEmission(from, to, flightClass = "economy") {
+  async calculateFlightEmission(from, to, flightClass = "economy", flightType = null) {
     const airports = require("../data/airports.json");
     const { calculateDistance } = require("../utils/geoUtils");
 
@@ -58,15 +58,23 @@ class ClimatiqService {
 
     const distance = calculateDistance(start.lat, start.lon, end.lat, end.lon);
 
-    // Doğrulanmış BEIS ID'lerine dayanarak Uçuş Tipini belirle
-    let activityId =
-      "passenger_flight-route_type_international-aircraft_type_na-distance_short_haul_lt_3700km-class_na-rf_included-distance_uplift_included";
-    if (distance < 1000) {
+    let activityId;
+    if (flightType === "domestic") {
       activityId =
         "passenger_flight-route_type_domestic-aircraft_type_na-distance_na-class_na-rf_included-distance_uplift_included";
-    } else if (distance > 3700) {
-      activityId =
-        "passenger_flight-route_type_international-aircraft_type_na-distance_long_haul_gt_3700km-class_na-rf_included-distance_uplift_included";
+    } else if (flightType === "international") {
+      activityId = distance > 3700
+        ? "passenger_flight-route_type_international-aircraft_type_na-distance_long_haul_gt_3700km-class_na-rf_included-distance_uplift_included"
+        : "passenger_flight-route_type_international-aircraft_type_na-distance_short_haul_lt_3700km-class_na-rf_included-distance_uplift_included";
+    } else {
+      // flightType belirtilmemişse mesafeye göre otomatik
+      if (distance < 1000) {
+        activityId = "passenger_flight-route_type_domestic-aircraft_type_na-distance_na-class_na-rf_included-distance_uplift_included";
+      } else if (distance > 3700) {
+        activityId = "passenger_flight-route_type_international-aircraft_type_na-distance_long_haul_gt_3700km-class_na-rf_included-distance_uplift_included";
+      } else {
+        activityId = "passenger_flight-route_type_international-aircraft_type_na-distance_short_haul_lt_3700km-class_na-rf_included-distance_uplift_included";
+      }
     }
 
     return this.calculateEmission(activityId, distance, "km");

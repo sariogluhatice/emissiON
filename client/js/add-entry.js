@@ -74,14 +74,14 @@ const ACTIVITY_MAP = {
 { id: "bus", label: "Otobüs", units: ["km"], inputType: "quantity" },
     { id: "train", label: "Tren", units: ["km"], inputType: "quantity" },
     {
-      id: "flight_short",
-      label: "Kısa Mesafe Uçuş",
+      id: "flight_domestic",
+      label: "Yurt İçi Uçuş",
       units: ["km"],
       inputType: "flight",
     },
     {
-      id: "flight_long",
-      label: "Uzun Mesafe Uçuş",
+      id: "flight_international",
+      label: "Yurt Dışı Uçuş",
       units: ["km"],
       inputType: "flight",
     },
@@ -181,7 +181,7 @@ const CLIMATIQ_MAP = {
     apiUnit: "km",
     localCoefficient: 0.041,
   },
-  // flight_short / flight_long → handled via { from, to } in buildPayload()
+  // flight → handled via { from, to } in buildPayload()
   plastic: {
     activityId: "general_retail-type_nonstore_retailers",
     apiUnit: "usd",
@@ -316,6 +316,37 @@ if (isEditMode) {
   })();
 }
 
+// ── Airport datalist ──────────────────────────────────────────────────────────
+let _allAirports = {};
+
+function rebuildAirportList(mode) {
+  const dl = document.getElementById('airportList');
+  if (!dl) return;
+  dl.innerHTML = '';
+  const entries = Object.entries(_allAirports)
+    .filter(([, info]) => mode === 'domestic' ? info.tr === true : true)
+    .sort((a, b) => a[0].localeCompare(b[0]));
+  for (const [code, info] of entries) {
+    const opt = document.createElement('option');
+    opt.value = `${code} — ${info.name}`;
+    dl.appendChild(opt);
+  }
+}
+
+(async () => {
+  try {
+    const res = await fetch('/api/emissions/airports');
+    if (!res.ok) return;
+    _allAirports = await res.json();
+    rebuildAirportList('domestic');
+  } catch (_) { /* airport dropdown opsiyonel */ }
+})();
+
+function extractIata(val) {
+  const m = val.trim().toUpperCase().match(/^([A-Z]{3})/);
+  return m ? m[1] : val.trim().toUpperCase();
+}
+
 // ── Category prefill from ?category= param (e.g. task CTA redirect) ──────────
 if (!isEditMode) {
   const prefillCat = _urlParams.get("category");
@@ -336,6 +367,7 @@ function setMethod(m) {
   cardVisual.classList.toggle("active", m === "visual");
   cardCbam?.classList.toggle("active", m === "cbam");
   uploadSection.style.display = m === "visual" ? "block" : "none";
+  if (m !== "visual" && fuelReceiptHint) fuelReceiptHint.style.display = "none";
   const upperRow = document.querySelector(".upper-row");
   const debugCol = document.querySelector(".debug-col");
   if (upperRow) upperRow.style.display = m === "cbam" ? "none" : "";
@@ -389,6 +421,13 @@ function onActivityChange() {
 
   const act = (ACTIVITY_MAP[cat] || []).find((a) => a.id === actId);
   if (!act) return;
+
+  if (actId === 'flight_domestic' || actId === 'flight_international') {
+    const mode = actId === 'flight_domestic' ? 'domestic' : 'international';
+    rebuildAirportList(mode);
+    originEl.value = '';
+    destEl.value = '';
+  }
 
   populateUnits(act.units);
   setFormMode(act.inputType);
@@ -496,41 +535,6 @@ async function startScan(file) {
     scanStatus.textContent = `Hata: ${err.message}`;
     showToast("Tarama Hatası", err.message, "error");
   }
-}
-
-async function scanUtilityBill(file) {
-  const base64 = await fileToBase64(file);
-  const data = await emissionService.extractOcrFromImage(base64);
-  console.log("[add-entry] utility OCR:", data);
-  lastOcrData = { type: "utility", ...data };
-
-  const ext = data.extracted;
-  if (ext) {
-    const mappedCat = normalizeCategory(ext.category);
-    if (mappedCat && ACTIVITY_MAP[mappedCat] && !categoryEl.value) {
-      categoryEl.value = mappedCat;
-      onCategoryChange();
-    }
-    if (ext.quantity) {
-      quantityEl.value = ext.quantity;
-    }
-    if (ext.unit) {
-      for (const opt of unitSelect.options) {
-        if (opt.value.toLowerCase() === ext.unit.toLowerCase()) {
-          opt.selected = true;
-          break;
-        }
-      }
-    }
-    if (ext.date) {
-      entryDateEl.value = ext.date.length === 7 ? `${ext.date}-01` : ext.date;
-    }
-  }
-
-  scanStatus.textContent =
-    "Tarama tamamlandı — alanları doğrulayın, ardından hesaplayın.";
-  showToast("Tarama Tamamlandı", "Alanlar dolduruldu.", "success");
-  updateDebug({ ocrResult: data });
 }
 
 // Generic image OCR → Groq parsing → decide utility or shopping path
@@ -866,10 +870,10 @@ function validate() {
       ok = false;
     }
   } else if (mode === "flight") {
-    if (originEl.value.trim().length < 3 || destEl.value.trim().length < 3) {
+    if (extractIata(originEl.value).length !== 3 || extractIata(destEl.value).length !== 3) {
       showToast(
         "Eksik Alan",
-        "Kalkış ve varış bilgilerini girin (örn. IST, LHR).",
+        "Kalkış ve varış havalimanını listeden seçin veya IATA kodunu girin (örn. IST).",
         "error",
       );
       ok = false;
@@ -894,8 +898,9 @@ function buildPayload() {
 
   if (mode === "flight") {
     return {
-      from: originEl.value.trim().toUpperCase(),
-      to: destEl.value.trim().toUpperCase(),
+      from: extractIata(originEl.value),
+      to: extractIata(destEl.value),
+      flightType: actId === "flight_domestic" ? "domestic" : "international",
     };
   }
 
@@ -1042,7 +1047,7 @@ entryForm.addEventListener("submit", async (e) => {
   const label = activityEl.options[activityEl.selectedIndex]?.textContent || "";
   const source =
     mode === "flight"
-      ? `Uçuş: ${originEl.value.trim().toUpperCase()}-${destEl.value.trim().toUpperCase()}`
+      ? `Uçuş: ${extractIata(originEl.value)}-${extractIata(destEl.value)}`
       : desc || label || categoryEl.value || "Diğer";
 
   saveBtn.disabled = true;

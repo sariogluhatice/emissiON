@@ -176,28 +176,29 @@
                 </div>
 
                 <!-- Flight row (hidden by default, shown for flight activities) -->
+                <datalist id="airportList"></datalist>
                 <div id="flightRow" style="display: none; margin-bottom: 16px">
                   <div class="flight-inner">
                     <div class="form-group" style="margin-bottom: 0">
-                      <label class="label" for="origin"
-                        >Kalkış (IATA veya şehir)</label
-                      >
+                      <label class="label" for="origin">Kalkış Havalimanı</label>
                       <input
                         class="input"
                         type="text"
                         id="origin"
-                        placeholder="örn. IST"
+                        list="airportList"
+                        placeholder="Kod veya şehir adı yazın…"
+                        autocomplete="off"
                       />
                     </div>
                     <div class="form-group" style="margin-bottom: 0">
-                      <label class="label" for="dest"
-                        >Varış (IATA veya şehir)</label
-                      >
+                      <label class="label" for="dest">Varış Havalimanı</label>
                       <input
                         class="input"
                         type="text"
                         id="dest"
-                        placeholder="örn. LHR"
+                        list="airportList"
+                        placeholder="Kod veya şehir adı yazın…"
+                        autocomplete="off"
                       />
                     </div>
                   </div>

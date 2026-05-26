@@ -36,12 +36,12 @@ const normalizeExtractedBillData = (raw = {}) => {
 const VALID_FOOD_TYPES = Object.keys(climatiqService.FOOD_ACTIVITY_MAP);
 
 const calculate = async (req, res) => {
-    const { activityId, quantity, unit, from, to, flightClass, activityLabel, category, activityType } = req.body;
+    const { activityId, quantity, unit, from, to, flightClass, flightType, activityLabel, category, activityType } = req.body;
 
     try {
         let result;
         if (from && to) {
-            result = await climatiqService.calculateFlightEmission(from, to, flightClass);
+            result = await climatiqService.calculateFlightEmission(from, to, flightClass, flightType);
         } else if (activityId) {
             // Generic Climatiq flow — spend-based activities (vegetables, plastic, shopping…)
             if (!quantity || !unit) {

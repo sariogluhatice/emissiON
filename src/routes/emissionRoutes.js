@@ -4,6 +4,11 @@ const { getAll, getById, create, update, remove, calculate, generateInsight, ext
 
 const router = express.Router();
 
+// Havalimanı listesi — kimlik doğrulama gerektirmez
+router.get('/airports', (req, res) => {
+    res.json(require('../data/airports.json'));
+});
+
 // Tüm emisyon rotaları geçerli bir JWT token gerektirir
 router.use(authenticate);
 
