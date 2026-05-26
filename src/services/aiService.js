@@ -141,8 +141,8 @@ CATEGORY RULES — apply in this exact priority order:
 
 4. Transport & Fuel: akaryakıt, benzin, motorin, lpg, otogaz, taşıt tanıma, yakıt,
    petrol, istasyon, kurşunsuz → category: "transport".
-   - benzin / kurşunsuz / gasoline / petrol → activity_type: "petrol_vehicle"
-   - motorin / dizel / diesel → activity_type: "diesel_vehicle"
+   - benzin / kurşunsuz / gasoline / petrol → activity_type: "car_petrol"
+   - motorin / dizel / diesel → activity_type: "car_diesel"
    - akaryakıt / yakıt / fuel (without specifying petrol or diesel) → activity_type: null
    - For fuel receipts: extract litre amount as quantity with unit "l".
      Examples: "42 L" → quantity: 42, unit: "l"

@@ -61,17 +61,17 @@ const ACTIVITY_MAP = {
     {
       id: "car_petrol",
       label: "Benzinli Araç ",
-      units: ["km"],
+      units: ["km", "l"],
       inputType: "quantity",
     },
     {
       id: "car_diesel",
       label: "Dizel Araç",
-      units: ["km"],
+      units: ["km", "l"],
       inputType: "quantity",
     },
 
-    { id: "bus", label: "Otobüs", units: ["km"], inputType: "quantity" },
+{ id: "bus", label: "Otobüs", units: ["km"], inputType: "quantity" },
     { id: "train", label: "Tren", units: ["km"], inputType: "quantity" },
     {
       id: "flight_short",
@@ -163,19 +163,13 @@ const CLIMATIQ_MAP = {
     activityId:
       "passenger_vehicle-vehicle_type_car-fuel_source_petrol-engine_size_na-vehicle_age_na-vehicle_weight_na",
     apiUnit: "km",
+    byVolume: { activityId: "fuel-type_motor_gasoline-fuel_use_na", apiUnit: "l" },
   },
   car_diesel: {
     activityId:
       "passenger_vehicle-vehicle_type_car-fuel_source_diesel-engine_size_na-vehicle_age_na-vehicle_weight_na",
     apiUnit: "km",
-  },
-  petrol_vehicle: {
-    activityId: "fuel_combustion-type_motor_gasoline",
-    apiUnit: "l",
-  },
-  diesel_vehicle: {
-    activityId: "fuel_combustion-type_automotive_diesel_oil",
-    apiUnit: "l",
+    byVolume: { activityId: "fuel-type_diesel-fuel_use_na", apiUnit: "l" },
   },
   bus: {
     activityId:
@@ -606,8 +600,8 @@ async function scanImageGeneric(file) {
       // fuelType comes from Textract normalizeExpenseData or AI activity_type
       const fuelType =
         ext.fuelType || // from Textract path
-        (ext.activity_type === "petrol_vehicle" ? "petrol" : null) ||
-        (ext.activity_type === "diesel_vehicle" ? "diesel" : null);
+        (ext.activity_type === "petrol_vehicle" || ext.activity_type === "car_petrol" ? "petrol" : null) ||
+        (ext.activity_type === "diesel_vehicle" || ext.activity_type === "car_diesel" ? "diesel" : null);
 
       if (
         detected === "transport" &&
@@ -615,18 +609,17 @@ async function scanImageGeneric(file) {
         ext.unit === "l" &&
         ext.quantity
       ) {
-        // Set the volume-based fuel activity
+        // Set the volume-based fuel activity using the unified car_petrol/car_diesel entries
         const fuelActivityId =
-          fuelType === "petrol" ? "petrol_vehicle" : "diesel_vehicle";
+          fuelType === "petrol" ? "car_petrol" : "car_diesel";
         if (activityEl.querySelector(`option[value="${fuelActivityId}"]`)) {
           activityEl.value = fuelActivityId;
           activityEl.dispatchEvent(new Event("change", { bubbles: true }));
         }
-        // Show litre→m³ conversion hint
+        // Show fuel receipt hint
         const litres = parseFloat(ext.quantity);
-        const m3 = (litres / 1000).toFixed(4);
         if (fuelReceiptHint) {
-          fuelReceiptHint.textContent = `Yakıt fişi algılandı: ${litres} L → ${m3} m³ olarak emisyon hesabına dönüştürüldü.`;
+          fuelReceiptHint.textContent = `Yakıt fişi algılandı: ${litres} L — litre bazlı emisyon hesabı uygulandı.`;
           fuelReceiptHint.style.display = "block";
         }
       } else if (fuelReceiptHint) {
@@ -952,14 +945,16 @@ function buildPayload() {
   // quantity mode — apply unit conversion if needed (e.g. m³ → l for water, m³ → kWh for gas)
   const rawQty = parseFloat(quantityEl.value);
   const inUnit = unitSelect.value;
-  const apiQty = climatiq.convert?.[inUnit]
-    ? climatiq.convert[inUnit](rawQty)
+  const effectiveClimatiq =
+    climatiq.byVolume && inUnit === "l" ? climatiq.byVolume : climatiq;
+  const apiQty = effectiveClimatiq.convert?.[inUnit]
+    ? effectiveClimatiq.convert[inUnit](rawQty)
     : rawQty;
 
   return {
-    activityId: climatiq.activityId,
+    activityId: effectiveClimatiq.activityId,
     quantity: parseFloat(apiQty.toFixed(6)),
-    unit: climatiq.apiUnit,
+    unit: effectiveClimatiq.apiUnit,
     activityLabel: label,
     category: cat,
   };
