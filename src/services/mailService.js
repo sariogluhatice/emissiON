@@ -1,10 +1,12 @@
 const nodemailer = require('nodemailer');
 
-const isMailConfigured = 
-    process.env.SMTP_HOST && 
-    process.env.SMTP_PORT && 
-    process.env.SMTP_USER && 
+const isMailConfigured =
+    process.env.SMTP_HOST &&
+    process.env.SMTP_PORT &&
+    process.env.SMTP_USER &&
     process.env.SMTP_PASS;
+
+const isDev = process.env.NODE_ENV !== 'production';
 
 let transporter = null;
 
@@ -22,10 +24,12 @@ if (isMailConfigured) {
 
 const sendVerificationEmail = async (email, code) => {
     if (!transporter) {
-        console.warn('--- [MOCK MAIL: no SMTP configured] ---');
-        console.warn(`To: ${email}`);
-        console.warn(`Verification Code: ${code}`);
-        console.warn('---------------------------------------');
+        if (isDev) {
+            console.warn('--- [MOCK MAIL: no SMTP configured] ---');
+            console.warn(`To: ${email}`);
+            console.warn(`Verification Code: ${code}`);
+            console.warn('---------------------------------------');
+        }
         return;
     }
 
@@ -53,19 +57,23 @@ const sendVerificationEmail = async (email, code) => {
         });
     } catch (err) {
         console.error('[sendVerificationEmail] SMTP send failed:', err.message);
-        console.warn('--- [DEV FALLBACK: use this code manually] ---');
-        console.warn(`To: ${email}`);
-        console.warn(`Verification Code: ${code}`);
-        console.warn('----------------------------------------------');
+        if (isDev) {
+            console.warn('--- [DEV FALLBACK: use this code manually] ---');
+            console.warn(`To: ${email}`);
+            console.warn(`Verification Code: ${code}`);
+            console.warn('----------------------------------------------');
+        }
     }
 };
 
 const sendPasswordResetEmail = async (email, resetLink) => {
     if (!transporter) {
-        console.warn('--- [MOCK MAIL: no SMTP configured] ---');
-        console.warn(`To: ${email}`);
-        console.warn(`Reset Link: ${resetLink}`);
-        console.warn('---------------------------------------');
+        if (isDev) {
+            console.warn('--- [MOCK MAIL: no SMTP configured] ---');
+            console.warn(`To: ${email}`);
+            console.warn(`Reset Link: ${resetLink}`);
+            console.warn('---------------------------------------');
+        }
         return;
     }
 
@@ -98,10 +106,12 @@ const sendPasswordResetEmail = async (email, resetLink) => {
         });
     } catch (err) {
         console.error('[sendPasswordResetEmail] SMTP send failed:', err.message);
-        console.warn('--- [DEV FALLBACK: open this link manually] ---');
-        console.warn(`To: ${email}`);
-        console.warn(`Reset Link: ${resetLink}`);
-        console.warn('------------------------------------------------');
+        if (isDev) {
+            console.warn('--- [DEV FALLBACK: open this link manually] ---');
+            console.warn(`To: ${email}`);
+            console.warn(`Reset Link: ${resetLink}`);
+            console.warn('------------------------------------------------');
+        }
     }
 };
 
@@ -109,10 +119,12 @@ const sendPasswordResetEmail = async (email, resetLink) => {
 // Always sent — not subject to notification preferences.
 const sendEmailChangeVerification = async (newEmail, code) => {
     if (!transporter) {
-        console.warn('--- [MOCK MAIL SERVICE] ---');
-        console.warn(`To (new address): ${newEmail}`);
-        console.warn(`Email Change Code: ${code}`);
-        console.warn('---------------------------');
+        if (isDev) {
+            console.warn('--- [MOCK MAIL SERVICE] ---');
+            console.warn(`To (new address): ${newEmail}`);
+            console.warn(`Email Change Code: ${code}`);
+            console.warn('---------------------------');
+        }
         return;
     }
     try {
@@ -139,10 +151,12 @@ const sendEmailChangeVerification = async (newEmail, code) => {
         });
     } catch (err) {
         console.error('[sendEmailChangeVerification] SMTP send failed:', err.message);
-        console.warn('--- [DEV FALLBACK: email change code] ---');
-        console.warn(`To: ${newEmail}`);
-        console.warn(`Code: ${code}`);
-        console.warn('-----------------------------------------');
+        if (isDev) {
+            console.warn('--- [DEV FALLBACK: email change code] ---');
+            console.warn(`To: ${newEmail}`);
+            console.warn(`Code: ${code}`);
+            console.warn('-----------------------------------------');
+        }
     }
 };
 
@@ -150,10 +164,12 @@ const sendEmailChangeVerification = async (newEmail, code) => {
 // Always sent — not subject to notification preferences.
 const sendPasswordChangeVerification = async (email, code) => {
     if (!transporter) {
-        console.warn('--- [MOCK MAIL SERVICE] ---');
-        console.warn(`To: ${email}`);
-        console.warn(`Password Change Code: ${code}`);
-        console.warn('---------------------------');
+        if (isDev) {
+            console.warn('--- [MOCK MAIL SERVICE] ---');
+            console.warn(`To: ${email}`);
+            console.warn(`Password Change Code: ${code}`);
+            console.warn('---------------------------');
+        }
         return;
     }
     try {
@@ -180,10 +196,12 @@ const sendPasswordChangeVerification = async (email, code) => {
         });
     } catch (err) {
         console.error('[sendPasswordChangeVerification] SMTP send failed:', err.message);
-        console.warn('--- [DEV FALLBACK: password change code] ---');
-        console.warn(`To: ${email}`);
-        console.warn(`Code: ${code}`);
-        console.warn('--------------------------------------------');
+        if (isDev) {
+            console.warn('--- [DEV FALLBACK: password change code] ---');
+            console.warn(`To: ${email}`);
+            console.warn(`Code: ${code}`);
+            console.warn('--------------------------------------------');
+        }
     }
 };
 
@@ -191,10 +209,12 @@ const sendPasswordChangeVerification = async (email, code) => {
 // Only sent when email_notifications = true.
 const sendEmailChangedAlert = async (oldEmail, newEmail) => {
     if (!transporter) {
-        console.warn('--- [MOCK MAIL SERVICE] ---');
-        console.warn(`To (old address): ${oldEmail}`);
-        console.warn(`Email changed to: ${newEmail}`);
-        console.warn('---------------------------');
+        if (isDev) {
+            console.warn('--- [MOCK MAIL SERVICE] ---');
+            console.warn(`To (old address): ${oldEmail}`);
+            console.warn(`Email changed to: ${newEmail}`);
+            console.warn('---------------------------');
+        }
         return;
     }
     try {
@@ -223,10 +243,12 @@ const sendEmailChangedAlert = async (oldEmail, newEmail) => {
 // Only sent when email_notifications = true.
 const sendPasswordChangedAlert = async (email) => {
     if (!transporter) {
-        console.warn('--- [MOCK MAIL SERVICE] ---');
-        console.warn(`To: ${email}`);
-        console.warn('Password changed successfully (security alert).');
-        console.warn('---------------------------');
+        if (isDev) {
+            console.warn('--- [MOCK MAIL SERVICE] ---');
+            console.warn(`To: ${email}`);
+            console.warn('Password changed successfully (security alert).');
+            console.warn('---------------------------');
+        }
         return;
     }
     try {
@@ -259,4 +281,3 @@ module.exports = {
     sendEmailChangedAlert,
     sendPasswordChangedAlert,
 };
-

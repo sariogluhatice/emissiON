@@ -129,7 +129,6 @@ const extractOcrFromImage = async (req, res) => {
 
         const uploaded = await textractService.uploadImageToS3(imageBase64, mimeType);
         const ocrText = await textractService.extractTextFromS3Object(uploaded.bucket, uploaded.key);
-        console.log('[DEBUG Textract raw text]:\n', ocrText || '(empty)');
 
         if (!ocrText || ocrText.length < 20) {
             return res.status(200).json({

@@ -20,15 +20,13 @@ const saveOnboarding = async (req, res) => {
         const role = userRes.rows[0].role;
 
         // ── 2. Primary Save: onboarding_answers (JSONB) ────────────────────
-        // We use a dedicated try-block for each table to ensure failure in one doesn't kill the request.
-        try {
-            await pool.query(
-                `INSERT INTO onboarding_answers (user_id, answers, updated_at)
-                 VALUES ($1, $2, NOW())
-                 ON CONFLICT (user_id) DO UPDATE SET answers = EXCLUDED.answers, updated_at = NOW()`,
-                [userId, JSON.stringify(answers)]
-            );
-        } catch (e) { console.error('onboarding_answers error:', e.message); }
+        // If this fails the error bubbles to the outer catch — user is NOT marked complete.
+        await pool.query(
+            `INSERT INTO onboarding_answers (user_id, answers, updated_at)
+             VALUES ($1, $2, NOW())
+             ON CONFLICT (user_id) DO UPDATE SET answers = EXCLUDED.answers, updated_at = NOW()`,
+            [userId, JSON.stringify(answers)]
+        );
 
         // ── 3. Secondary Save: Normalized tables ───────────────────────────
         try {
@@ -68,10 +66,8 @@ const saveOnboarding = async (req, res) => {
         return res.status(200).json({ message: 'Profil başarıyla oluşturuldu.' });
 
     } catch (err) {
-        console.error('[saveOnboarding Global Error]:', err.message);
-        // Fallback: If EVERYTHING fails but we at least have a user, try to mark them complete anyway
-        try { await pool.query('UPDATE users SET onboarding_completed = true WHERE id = $1', [userId]); } catch(f) {}
-        return res.status(200).json({ message: 'Kurulum tamamlandı (Kısmi kayıt).' }); 
+        console.error('[saveOnboarding error]:', err.message);
+        return res.status(500).json({ message: 'Onboarding kaydedilemedi. Lütfen tekrar deneyin.' });
     }
 };
 

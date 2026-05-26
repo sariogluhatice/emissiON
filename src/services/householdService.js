@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const pool   = require('../config/db');
 const { normalizeCategory } = require('../utils/categoryNormalizer');
 const tp     = require('../utils/taskProgress');
+const { _fail } = require('../utils/errorUtils');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INTERNAL HELPERS
@@ -27,13 +28,6 @@ const _uniqueInviteCode = async () => {
     throw new Error('Davet kodu oluşturulamadı, lütfen tekrar deneyin.');
 };
 
-// Throws a shaped error that the controller can turn into an HTTP response.
-// Usage: _fail(409, 'Zaten bir haneye üyesiniz.')
-const _fail = (status, message) => {
-    const err = new Error(message);
-    err.status = status;
-    throw err;
-};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MEMBERSHIP LOOKUP  (used as a security primitive throughout the service)

@@ -1,5 +1,10 @@
 require('dotenv').config();
 
+if (!process.env.JWT_SECRET) {
+    console.error('FATAL: JWT_SECRET environment variable is not set.');
+    process.exit(1);
+}
+
 const path      = require('path');
 const express   = require('express');
 const pool      = require('./config/db');
@@ -49,9 +54,8 @@ app.get('/health', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Sunucu ${PORT} portunda çalışıyor`);
     pool.query('SELECT 1').then(() => {
-        console.log(`[DB] Veritabanı bağlantısı başarılı (${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME})`);
+        console.log('[DB] Veritabanı bağlantısı başarılı.');
     }).catch(err => {
         console.error(`[DB] HATA — Veritabanına bağlanılamadı: ${err.message}`);
-        console.error(`[DB] Kontrol edilecekler: DB_HOST=${process.env.DB_HOST}, DB_PORT=${process.env.DB_PORT}, DB_NAME=${process.env.DB_NAME}, DB_USER=${process.env.DB_USER}`);
     });
 });

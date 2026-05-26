@@ -390,9 +390,67 @@
                 <div class="hh-loading">Yükleniyor…</div>
               </div>
             </div>
+            <!-- AI Emisyon Önerileri -->
+            <div class="content-card glass-card" id="csAiCard" style="margin-top: var(--spacing-lg)">
+              <div class="content-card-header">
+                <span class="content-card-title">AI Emisyon Önerileri</span>
+                <span style="font-size:12px;color:var(--color-text-muted)">Senaryo bazlı aksiyon planı</span>
+              </div>
+              <div style="padding: 0 24px 20px">
+                <p style="font-size:13px;color:var(--color-text-muted);margin:0 0 16px;">
+                  Emisyon yoğunluğu azaltımı içeren bir senaryo için AI destekli aksiyon önerileri alın
+                  ve beğendiklerinizi doğrudan şirket görevi olarak oluşturun.
+                </p>
+                <button class="btn-secondary" id="csAiBtn">AI Önerisi Al</button>
+                <div id="csAiContent" style="display:none; margin-top:20px">
+                  <ul id="csAiSteps" style="padding-left:20px; margin:0"></ul>
+                </div>
+              </div>
+            </div>
           </div>
           <!-- /#csSimulatorSection -->
         </main>
+      </div>
+    </div>
+
+    <!-- Şirket Görevi Ekle — AI önerisinden oluşturulan modal -->
+    <div id="csTaskModal" class="modal-backdrop" style="display:none">
+      <div class="modal-box glass-card" style="max-width:480px">
+        <h2 class="modal-title">Şirket Görevi Ekle</h2>
+        <p style="font-size:13px;color:var(--color-text-muted);margin:0 0 16px;">
+          Bu AI önerisini şirket görevi olarak oluşturun.
+        </p>
+        <input type="hidden" id="csTaskCategoryKey" />
+        <div style="margin-bottom:12px">
+          <label class="label" style="font-size:13px;display:block;margin-bottom:4px">Emisyon Kategorisi</label>
+          <div id="csTaskCategoryLabelEl"
+               style="font-size:13px;font-weight:700;padding:8px 12px;background:var(--color-surface);
+                      border-radius:6px;color:var(--color-primary);border:1px solid var(--color-border)"></div>
+        </div>
+        <div style="margin-bottom:12px">
+          <label class="label" for="csTaskTitle" style="font-size:13px;display:block;margin-bottom:4px">Görev Başlığı</label>
+          <input class="input" type="text" id="csTaskTitle" maxlength="200" />
+        </div>
+        <div style="margin-bottom:12px">
+          <label class="label" for="csTaskPct" style="font-size:13px;display:block;margin-bottom:4px">Hedef Azaltım (%)</label>
+          <input class="input" type="number" id="csTaskPct" min="1" max="99" step="1" />
+        </div>
+        <div style="margin-bottom:12px">
+          <label class="label" for="csTaskDueDate" style="font-size:13px;display:block;margin-bottom:4px">
+            Son Tarih <span style="color:var(--color-text-muted);font-weight:400">— İsteğe Bağlı</span>
+          </label>
+          <input class="input" type="date" id="csTaskDueDate" />
+        </div>
+        <div style="margin-bottom:20px">
+          <label class="label" for="csTaskDesc" style="font-size:13px;display:block;margin-bottom:4px">
+            Açıklama <span style="color:var(--color-text-muted);font-weight:400">— İsteğe Bağlı</span>
+          </label>
+          <textarea class="input" id="csTaskDesc" rows="2" style="resize:vertical"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" id="csTaskCancelBtn">İptal</button>
+          <button class="btn-primary" id="csTaskConfirmBtn">Görevi Oluştur</button>
+        </div>
       </div>
     </div>
 

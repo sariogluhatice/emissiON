@@ -37,7 +37,7 @@
 }
 
 .btn-secondary {
-  background: var(--color-surface-mixed);
+  background: var(--color-surface-muted);
   color: var(--color-text);
   padding: 12px 24px;
   border: 1px solid var(--color-border);

@@ -14,24 +14,32 @@ const getIndividualComparison = async (req, res) => {
     }
 
     try {
-        // Tüm individual kullanıcıların toplam emisyonlarını tek sorguda çek
-        const result = await pool.query(`
+        const { rows } = await pool.query(`
+            WITH all_totals AS (
+                SELECT u.id,
+                       COALESCE(SUM(e.amount), 0)::float AS total_emission
+                FROM users u
+                LEFT JOIN emission_records e ON e.user_id = u.id
+                WHERE u.role = 'individual'
+                GROUP BY u.id
+            ),
+            user_total AS (
+                SELECT total_emission FROM all_totals WHERE id = $1
+            )
             SELECT
-                u.id,
-                COALESCE(SUM(e.amount), 0)::float AS total_emission
-            FROM users u
-            LEFT JOIN emission_records e ON e.user_id = u.id
-            WHERE u.role = 'individual'
-            GROUP BY u.id
-        `);
+                (SELECT total_emission FROM user_total)                                        AS user_total,
+                COUNT(*)                                                                        AS total_users,
+                COUNT(*) FILTER (WHERE total_emission > (SELECT total_emission FROM user_total)) AS users_higher,
+                COUNT(*) FILTER (WHERE id != $1 AND total_emission > 0)                        AS others_with_records
+            FROM all_totals
+        `, [userId]);
 
-        const rows = result.rows;
+        const row                 = rows[0];
+        const currentUserEmission = parseFloat(row.user_total ?? 0);
+        const totalIndividualUsers = parseInt(row.total_users, 10);
+        const usersWithHigherEmission = parseInt(row.users_higher, 10);
+        const othersWithRecords   = parseInt(row.others_with_records, 10);
 
-        // Mevcut kullanıcı satırını bul
-        const currentUserRow      = rows.find(r => parseInt(r.id, 10) === userId);
-        const currentUserEmission = currentUserRow ? parseFloat(currentUserRow.total_emission) : 0;
-
-        // Kullanıcının hiç emisyon kaydı yoksa
         if (currentUserEmission === 0) {
             return res.status(200).json({
                 success:               true,
@@ -40,9 +48,6 @@ const getIndividualComparison = async (req, res) => {
             });
         }
 
-        const totalIndividualUsers = rows.length;
-
-        // Toplam individual kullanıcı sayısı 1 ise (sadece mevcut kullanıcı)
         if (totalIndividualUsers <= 1) {
             return res.status(200).json({
                 success:               true,
@@ -51,12 +56,7 @@ const getIndividualComparison = async (req, res) => {
             });
         }
 
-        // Diğer individual kullanıcıların herhangi bir emisyon kaydı var mı?
-        const otherUsersWithRecords = rows.filter(
-            r => parseInt(r.id, 10) !== userId && parseFloat(r.total_emission) > 0
-        );
-
-        if (otherUsersWithRecords.length === 0) {
+        if (othersWithRecords === 0) {
             return res.status(200).json({
                 success:               true,
                 comparisonAvailable:   false,
@@ -64,12 +64,6 @@ const getIndividualComparison = async (req, res) => {
             });
         }
 
-        // Mevcut kullanıcıdan DAHA YÜKSEK emisyona sahip kullanıcı sayısı
-        const usersWithHigherEmission = rows.filter(
-            r => parseFloat(r.total_emission) > currentUserEmission
-        ).length;
-
-        // Percentile: daha yüksek emisyon yapan kullanıcıların toplam içindeki yüzdesi
         const percentile = Math.round((usersWithHigherEmission / totalIndividualUsers) * 100);
 
         // Mesaj üret

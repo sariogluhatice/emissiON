@@ -1,5 +1,4 @@
 import { emissionService } from "./api/emissionService.js";
-import { TokenManager } from "./api/tokenManager.js";
 import { renderLayout } from "./layout.js";
 import { showToast } from "./utils/uiUtils.js";
 import { companyService } from "./api/companyService.js";
@@ -704,16 +703,7 @@ async function scanImageGeneric(file) {
 // Calls the backend Groq endpoint and returns parsed data, or null on any failure
 async function callGroqParser(ocrText) {
   try {
-    const res = await fetch("/api/emissions/parse-ocr-groq", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${TokenManager.get() || ""}`,
-      },
-      body: JSON.stringify({ ocrText }),
-    });
-    if (!res.ok) return null;
-    const json = await res.json();
+    const json = await emissionService.parseOcrGroq(ocrText);
     return json.success ? json.data : null;
   } catch {
     return null;
@@ -807,16 +797,7 @@ function detectCategoryFromText(text) {
 }
 
 async function scanShoppingReceipt(file) {
-  const formData = new FormData();
-  formData.append("receipt", file);
-
-  const res = await fetch("/api/ocr/shopping", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${TokenManager.get() || ""}` },
-    body: formData,
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tarama başarısız.");
+  const data = await emissionService.scanShoppingReceipt(file);
 
   console.log("[add-entry] shopping OCR:", data);
   lastOcrData = { type: "shopping", ...data };
@@ -1020,17 +1001,7 @@ async function runCalculate() {
       return;
     }
 
-    const res = await fetch("/api/emissions/calculate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${TokenManager.get() || ""}`,
-      },
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json();
-    if (!res.ok)
-      throw new Error(data.message || `Hesaplama hatası (${res.status})`);
+    const data = await emissionService.calculateEmission(payload);
 
     calculatedCo2 = parseFloat(data.co2e);
     if (calcStatusEl) {

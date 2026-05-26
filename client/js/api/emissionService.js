@@ -12,4 +12,11 @@ export const emissionService = {
     extractOcrFromImage: (imageBase64) => client.post('/emissions/extract-ocr-image', { imageBase64 }),
     getSmartInsights: ()       => client.get('/emissions/smart-insights'),
     getSimulationRoadmap: (reductions) => client.post('/emissions/simulation-roadmap', { reductions }),
+    parseOcrGroq:   (ocrText)  => client.post('/emissions/parse-ocr-groq', { ocrText }),
+    calculateEmission: (payload) => client.post('/emissions/calculate', payload),
+    scanShoppingReceipt: (file) => {
+        const formData = new FormData();
+        formData.append('receipt', file);
+        return client.request('/ocr/shopping', { method: 'POST', body: formData });
+    },
 };

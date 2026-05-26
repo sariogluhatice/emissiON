@@ -1,15 +1,11 @@
 const pool = require('../config/db');
 const tp   = require('../utils/taskProgress');
+const { _fail } = require('../utils/errorUtils');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INTERNAL HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 
-const _fail = (status, message) => {
-    const err = new Error(message);
-    err.status = status;
-    throw err;
-};
 
 // Valid CBAM sector keys — used to validate cbam_entries.export_category.
 const CBAM_SECTORS = [

@@ -1,6 +1,7 @@
-import { companyService } from './api/companyService.js';
-import { renderLayout }   from './layout.js';
-import { showToast }      from './utils/uiUtils.js';
+import { companyService }  from './api/companyService.js';
+import { emissionService }  from './api/emissionService.js';
+import { renderLayout }     from './layout.js';
+import { showToast }        from './utils/uiUtils.js';
 import { RISK_LABELS, RISK_COLORS } from './utils/labelUtils.js';
 
 const user = renderLayout({ activeNav: 'nav-company', title: 'CBAM Simülasyonu' });
@@ -43,6 +44,21 @@ const previewDetail     = document.getElementById('csPreviewDetail'); // gizli, 
 
 const simsContainer     = document.getElementById('csSimsContainer');
 const simCountEl        = document.getElementById('csSimCountEl');
+
+// ── AI card + Task modal refs ─────────────────────────────────────────────────
+const csAiBtn           = document.getElementById('csAiBtn');
+const csAiContent       = document.getElementById('csAiContent');
+const csAiSteps         = document.getElementById('csAiSteps');
+
+const csTaskModal       = document.getElementById('csTaskModal');
+const csTaskCancelBtn   = document.getElementById('csTaskCancelBtn');
+const csTaskConfirmBtn  = document.getElementById('csTaskConfirmBtn');
+const csTaskTitleEl     = document.getElementById('csTaskTitle');
+const csTaskPctEl       = document.getElementById('csTaskPct');
+const csTaskCategoryKey = document.getElementById('csTaskCategoryKey');
+const csTaskCategoryLabel = document.getElementById('csTaskCategoryLabelEl');
+const csTaskDueDateEl   = document.getElementById('csTaskDueDate');
+const csTaskDescEl      = document.getElementById('csTaskDesc');
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let baselineEmission = 0;
@@ -394,6 +410,134 @@ csRunBtn?.addEventListener('click', async () => {
     } finally {
         csRunBtn.disabled    = false;
         csRunBtn.textContent = 'Simüle Et ve Kaydet';
+    }
+});
+
+// ── AI Öneri Kartı ────────────────────────────────────────────────────────────
+const CAT_LABELS = {
+    energy:    'Enerji',
+    gas:       'Doğalgaz',
+    transport: 'Ulaşım',
+    materials: 'Malzeme',
+    water:     'Su Kullanımı',
+    waste:     'Atık',
+};
+
+csAiBtn?.addEventListener('click', async () => {
+    const factorPct = parseFloat(factorChangePctEl?.value) || 0;
+    if (factorPct >= 0) {
+        showToast('Bilgi', 'AI önerisi için "Emisyon Yoğunluğu Değişimi" alanına negatif bir değer girin (örn: −15).', 'info');
+        factorChangePctEl?.focus();
+        return;
+    }
+
+    csAiBtn.disabled    = true;
+    csAiBtn.textContent = 'Hazırlanıyor…';
+    if (csAiContent) csAiContent.style.display = 'none';
+
+    try {
+        // CBAM bağlamında operasyonel emisyon azaltımına karşılık gelen kategoriler
+        const reductions = { energy: factorPct, gas: factorPct, transport: factorPct, materials: factorPct };
+
+        const roadmap = await emissionService.getSimulationRoadmap(reductions);
+        const steps   = roadmap.steps || [];
+
+        if (csAiSteps) {
+            csAiSteps.innerHTML = '';
+            steps.forEach(step => {
+                if (!step?.kategori || !Array.isArray(step.adimlar)) return;
+
+                const catLi = document.createElement('li');
+                catLi.style.cssText = 'list-style:none;margin-left:-20px;margin-top:14px;margin-bottom:6px;font-weight:700;color:var(--color-secondary);display:flex;align-items:center;gap:8px;flex-wrap:wrap;';
+                catLi.textContent = step.kategori;
+
+                const matchedKey = Object.keys(reductions).find(key => {
+                    const label = (CAT_LABELS[key] || '').toLowerCase();
+                    return step.kategori.toLowerCase().includes(label);
+                });
+
+                const addBtn = document.createElement('button');
+                addBtn.textContent = '+ Şirket Görevi Ekle';
+                addBtn.style.cssText = 'font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--color-primary);background:transparent;color:var(--color-primary);cursor:pointer;font-weight:600;flex-shrink:0;';
+                const taskCat = matchedKey || 'energy';
+                const taskPct = Math.abs(factorPct);
+                addBtn.addEventListener('click', () => openTaskModal(taskCat, taskPct, step.kategori));
+                catLi.appendChild(addBtn);
+
+                csAiSteps.appendChild(catLi);
+
+                step.adimlar.forEach(subStep => {
+                    const subLi = document.createElement('li');
+                    subLi.textContent = subStep;
+                    subLi.style.cssText = 'margin-bottom:4px;color:var(--color-text);font-size:13px;line-height:1.5;';
+                    csAiSteps.appendChild(subLi);
+                });
+            });
+        }
+
+        if (csAiContent) csAiContent.style.display = 'block';
+    } catch (err) {
+        showToast('Hata', err.message || 'AI önerisi hazırlanamadı.', 'error');
+    } finally {
+        csAiBtn.disabled    = false;
+        csAiBtn.textContent = 'Yenile';
+    }
+});
+
+// ── Şirket Görevi Modal ───────────────────────────────────────────────────────
+function openTaskModal(categoryKey, pct, titleText) {
+    if (csTaskCategoryKey)   csTaskCategoryKey.value       = categoryKey;
+    if (csTaskCategoryLabel) csTaskCategoryLabel.textContent = CAT_LABELS[categoryKey] || categoryKey;
+    if (csTaskTitleEl)       csTaskTitleEl.value            = titleText;
+    if (csTaskPctEl)         csTaskPctEl.value              = Math.round(pct);
+    if (csTaskDescEl)        csTaskDescEl.value             = '';
+
+    const now     = new Date();
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    if (csTaskDueDateEl) csTaskDueDateEl.value = lastDay.toISOString().slice(0, 10);
+
+    if (csTaskModal) csTaskModal.style.display = 'flex';
+}
+
+csTaskCancelBtn?.addEventListener('click', () => {
+    if (csTaskModal) csTaskModal.style.display = 'none';
+});
+csTaskModal?.addEventListener('click', e => {
+    if (e.target === csTaskModal) csTaskModal.style.display = 'none';
+});
+
+csTaskConfirmBtn?.addEventListener('click', async () => {
+    const title    = csTaskTitleEl?.value.trim();
+    const pct      = parseFloat(csTaskPctEl?.value);
+    const category = csTaskCategoryKey?.value;
+
+    if (!title) {
+        showToast('Hata', 'Görev başlığı gereklidir.', 'error');
+        return;
+    }
+    if (!pct || pct <= 0 || pct >= 100) {
+        showToast('Hata', 'Hedef azaltım 1 ile 99 arasında olmalıdır.', 'error');
+        return;
+    }
+
+    csTaskConfirmBtn.disabled    = true;
+    csTaskConfirmBtn.textContent = 'Oluşturuluyor…';
+
+    try {
+        await companyService.createTask({
+            title,
+            description:          csTaskDescEl?.value.trim() || undefined,
+            emission_category:    category                   || undefined,
+            target_reduction_pct: pct,
+            due_date:             csTaskDueDateEl?.value     || undefined,
+        });
+        if (csTaskModal) csTaskModal.style.display = 'none';
+        showToast('Başarılı', 'Şirket görevi oluşturuldu.', 'success');
+    } catch (err) {
+        showToast('Hata', err.message, 'error');
+    } finally {
+        csTaskConfirmBtn.disabled    = false;
+        csTaskConfirmBtn.textContent = 'Görevi Oluştur';
     }
 });
 

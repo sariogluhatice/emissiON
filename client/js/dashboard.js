@@ -7,7 +7,6 @@ import {
   calculateStats,
   formatDate,
   getTaskStatusLabel,
-  getTaskStatusClass,
 } from "./utils/uiUtils.js";
 import {
   getCategoryKey,
@@ -21,6 +20,8 @@ import {
 
 const user = renderLayout({ activeNav: "nav-dashboard" });
 if (!user) throw new Error("redirect");
+
+let myChart = null;
 
 // Gamification verisini sayfa açılır açılmaz çek (diğer API çağrılarını beklemeden)
 const _gamStatsPromise = gamificationService.getStats().catch(() => null);
@@ -495,9 +496,9 @@ function initChart(data) {
   }
 
   // Clear existing chart if any (Chart.js works better this way)
-  if (window.myChart) window.myChart.destroy();
+  if (myChart) myChart.destroy();
 
-  window.myChart = new Chart(ctx, {
+  myChart = new window.Chart(ctx, {
     type: "doughnut",
     data: {
       labels: labels,

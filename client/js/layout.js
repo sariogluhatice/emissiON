@@ -210,7 +210,7 @@ export function renderLayout({ activeNav, title } = {}) {
             </a>`,
     ).join("");
 
-    const collapseIcon = SVG('<polyline points="15 18 9 12 15 6"/>', "w-4 h-4");
+    const collapseIcon = SVG('<rect x="2" y="3" width="20" height="18" rx="2"/><path d="M8 3v18"/>', "w-4 h-4");
 
     sidebarEl.innerHTML = `
             <div class="sidebar-brand">
