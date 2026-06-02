@@ -1,4 +1,4 @@
-import { profileService } from './api/profileService.js';
+import { profileApi } from './api/profileApi.js';
 import { TokenManager }   from './api/tokenManager.js';
 import { getCurrentUser, renderTopbarUser, showToast } from './utils/uiUtils.js';
 import { renderLayout } from './layout.js';
@@ -39,7 +39,7 @@ if (window.location.hash) {
 
 async function loadData() {
   try {
-    const { user: u, settings } = await profileService.getProfile();
+    const { user: u, settings } = await profileApi.getProfile();
 
     // Name field
     const nameInput = document.getElementById('editName');
@@ -87,7 +87,7 @@ document.getElementById('editNameForm').addEventListener('submit', async (e) => 
   btn.disabled = true;
 
   try {
-    const { user: updated } = await profileService.updateProfile({ name });
+    const { user: updated } = await profileApi.updateProfile({ name });
 
     // Sync localStorage
     const stored = getCurrentUser();
@@ -122,7 +122,7 @@ document.getElementById('emailChangeForm').addEventListener('submit', async (e) 
   btn.disabled = true;
 
   try {
-    await profileService.requestEmailChange({ newEmail });
+    await profileApi.requestEmailChange({ newEmail });
     openVerifyModal('email', `${newEmail} adresine 6 haneli bir kod gönderildi. Değişikliği onaylamak için aşağıya girin.`);
   } catch (err) {
     setMsg('emailChangeMsg', err.message || 'Doğrulama kodu gönderilemedi.', true);
@@ -155,7 +155,7 @@ document.getElementById('changePasswordForm').addEventListener('submit', async (
   btn.disabled = true;
 
   try {
-    await profileService.requestPasswordChange({ currentPassword, newPassword });
+    await profileApi.requestPasswordChange({ currentPassword, newPassword });
     openVerifyModal('password', 'Mevcut e-posta adresinize 6 haneli bir kod gönderildi. Şifre değişikliğini onaylamak için aşağıya girin.');
   } catch (err) {
     setMsg('changePasswordMsg', err.message || 'Doğrulama kodu gönderilemedi.', true);
@@ -204,9 +204,9 @@ document.getElementById('verifyConfirmBtn').addEventListener('click', async () =
 
   try {
     if (activeVerifyFlow === 'email') {
-      await profileService.verifyEmailChange({ code });
+      await profileApi.verifyEmailChange({ code });
     } else if (activeVerifyFlow === 'password') {
-      await profileService.verifyPasswordChange({ code });
+      await profileApi.verifyPasswordChange({ code });
     }
 
     closeVerifyModal();
@@ -231,7 +231,7 @@ document.getElementById('verifyCode').addEventListener('keydown', (e) => {
 async function saveNotifications() {
   clearMsg('notifMsg');
   try {
-    await profileService.updateSettings({
+    await profileApi.updateSettings({
       email_notifications:       document.getElementById('emailNotifications').checked,
       carbon_tips_notifications: document.getElementById('carbonTips').checked,
     });
@@ -274,7 +274,7 @@ document.getElementById('deleteConfirmBtn').addEventListener('click', async () =
   btn.disabled = true;
 
   try {
-    await profileService.deleteAccount({ password });
+    await profileApi.deleteAccount({ password });
     TokenManager.remove();
     localStorage.removeItem('user');
     window.location.replace('../index.html');

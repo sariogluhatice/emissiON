@@ -1,4 +1,4 @@
-import { householdService } from './api/householdService.js';
+import { householdApi } from './api/householdApi.js';
 import { renderLayout }     from './layout.js';
 import { showToast, formatDate, getTaskStatusLabel, getTaskStatusClass } from './utils/uiUtils.js';
 import { getCategoryLabel } from './utils/labelUtils.js';
@@ -267,7 +267,7 @@ function renderRecentTasks(tasks, isAdmin) {
       const newStatus = sel.value;
       sel.disabled    = true;
       try {
-        await householdService.updateTaskStatus(taskId, newStatus);
+        await householdApi.updateTaskStatus(taskId, newStatus);
         showToast('Başarılı', `Görev durumu: ${STATUS_LABELS[newStatus]}`, 'success');
         const badge = `<span class="status-badge ${STATUS_CLASSES[newStatus] || 'pending'}">${STATUS_LABELS[newStatus]}</span>`;
         sel.outerHTML = badge;
@@ -454,7 +454,7 @@ createBtn?.addEventListener('click', async () => {
   createBtn.disabled = true;
   createBtn.textContent = 'Oluşturuluyor…';
   try {
-    await householdService.create({ name, monthly_target: target || undefined });
+    await householdApi.create({ name, monthly_target: target || undefined });
     showToast('Başarılı', 'Hane oluşturuldu! Sayfa yenileniyor…', 'success');
     setTimeout(() => window.location.reload(), 1200);
   } catch (err) {
@@ -475,7 +475,7 @@ joinBtn?.addEventListener('click', async () => {
   joinBtn.disabled = true;
   joinBtn.textContent = 'Katılınıyor…';
   try {
-    await householdService.join({ invite_code });
+    await householdApi.join({ invite_code });
     showToast('Başarılı', 'Haneye katıldınız! Sayfa yenileniyor…', 'success');
     setTimeout(() => window.location.reload(), 1200);
   } catch (err) {
@@ -498,7 +498,7 @@ hhCopyBtn?.addEventListener('click', () => {
 // ── Main init ─────────────────────────────────────────────────────────────────
 async function init() {
   try {
-    const meRes     = await householdService.getMe();
+    const meRes     = await householdApi.getMe();
     const household = meRes.data?.household;
 
     hide(loadingEl);
@@ -519,7 +519,7 @@ async function init() {
         joinBtn.textContent = 'Katılınıyor…';
 
         try {
-          await householdService.join({ invite_code: storedCode });
+          await householdApi.join({ invite_code: storedCode });
           showToast('Başarılı', 'Haneye katıldınız! Sayfa yenileniyor…', 'success');
           setTimeout(() => window.location.reload(), 1200);
         } catch (err) {
@@ -547,8 +547,8 @@ async function init() {
     // Load dashboard and comparison in parallel; use allSettled so one
     // failure doesn't block the other section from rendering.
     const [dashResult, compResult] = await Promise.allSettled([
-      householdService.getDashboard(),
-      householdService.getComparison(),
+      householdApi.getDashboard(),
+      householdApi.getComparison(),
     ]);
 
     if (dashResult.status === 'fulfilled') {

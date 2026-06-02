@@ -1,7 +1,7 @@
-import { emissionService } from "./api/emissionService.js";
-import { profileService } from "./api/profileService.js";
-import { gamificationService } from "./api/gamificationService.js";
-import { householdService } from "./api/householdService.js";
+import { emissionApi } from "./api/emissionApi.js";
+import { carbonProfileApi } from "./api/carbonProfileApi.js";
+import { gamificationApi } from "./api/gamificationApi.js";
+import { householdApi } from "./api/householdApi.js";
 import { renderLayout } from "./layout.js";
 import {
   calculateStats,
@@ -24,7 +24,7 @@ if (!user) throw new Error("redirect");
 let myChart = null;
 
 // Gamification verisini sayfa açılır açılmaz çek (diğer API çağrılarını beklemeden)
-const _gamStatsPromise = gamificationService.getStats().catch(() => null);
+const _gamStatsPromise = gamificationApi.getStats().catch(() => null);
 // Skeleton: banner'ı hemen göster, gerçek veri gelene kadar loading state
 _showGamSkeleton();
 
@@ -131,7 +131,7 @@ function createCard(record) {
 // CRUD Kayıtlarını Yükle ve İstatistikleri Güncelle
 async function initDashboard() {
   try {
-    const { records } = await emissionService.getAll();
+    const { records } = await emissionApi.getAll();
 
     // 1. İstatistikleri Hesapla ve Göster
     const stats = calculateStats(records);
@@ -194,7 +194,7 @@ async function initDashboard() {
 
     // 4. AI Spotlight (Özet) Bilgisini Çek
     try {
-      const insights = await emissionService.getSmartInsights();
+      const insights = await emissionApi.getSmartInsights();
       const spotlightEl = document.getElementById("aiSpotlightText");
       if (spotlightEl) {
         let pred = insights?.prediction;
@@ -461,7 +461,7 @@ if (recordList) {
       deleteBtn.disabled = true;
       deleteBtn.textContent = "Siliniyor…";
 
-      await emissionService.remove(id);
+      await emissionApi.remove(id);
       await initDashboard(); // İstatistikleri ve listeyi tazele
     } catch (err) {
       console.error("Silme hatası:", err);
@@ -550,7 +550,7 @@ async function loadHouseholdTasks() {
   if (!card || !listEl) return;
 
   try {
-    const res = await householdService.getDashboard();
+    const res = await householdApi.getDashboard();
     const tasks = res.data?.dashboard?.recent_tasks ?? [];
 
     card.style.display = "block";
@@ -647,7 +647,7 @@ async function loadIndividualComparison() {
   card.style.display = "";
 
   try {
-    const data = await profileService.getIndividualComparison();
+    const data = await carbonProfileApi.getIndividualComparison();
     renderComparison(data);
   } catch (err) {
     console.error("[dashboard] karşılaştırma yüklenemedi:", err.message);

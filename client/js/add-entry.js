@@ -1,8 +1,8 @@
-import { emissionService } from "./api/emissionService.js";
+import { emissionApi } from "./api/emissionApi.js";
 import { renderLayout } from "./layout.js";
 import { showToast } from "./utils/uiUtils.js";
-import { companyService } from "./api/companyService.js";
-import { gamificationService } from "./api/gamificationService.js";
+import { companyApi } from "./api/companyApi.js";
+import { gamificationApi } from "./api/gamificationApi.js";
 import {
   triggerConfetti,
   showXpGain,
@@ -280,7 +280,7 @@ entryDateEl.value = today;
 if (isEditMode) {
   (async () => {
     try {
-      const { record } = await emissionService.getById(editId);
+      const { record } = await emissionApi.getById(editId);
       if (!record) throw new Error("Kayıt bulunamadı.");
 
       // Tarih
@@ -540,7 +540,7 @@ async function startScan(file) {
 // Generic image OCR → Groq parsing → decide utility or shopping path
 async function scanImageGeneric(file) {
   const base64 = await fileToBase64(file);
-  const data = await emissionService.extractOcrFromImage(base64);
+  const data = await emissionApi.extractOcrFromImage(base64);
   console.log("[add-entry] image OCR:", data);
   lastOcrData = { type: "image", ...data };
 
@@ -700,7 +700,7 @@ async function scanImageGeneric(file) {
 // Calls the backend Groq endpoint and returns parsed data, or null on any failure
 async function callGroqParser(ocrText) {
   try {
-    const json = await emissionService.parseOcrGroq(ocrText);
+    const json = await emissionApi.parseOcrGroq(ocrText);
     return json.success ? json.data : null;
   } catch {
     return null;
@@ -794,7 +794,7 @@ function detectCategoryFromText(text) {
 }
 
 async function scanShoppingReceipt(file) {
-  const data = await emissionService.scanShoppingReceipt(file);
+  const data = await emissionApi.scanShoppingReceipt(file);
 
   console.log("[add-entry] shopping OCR:", data);
   lastOcrData = { type: "shopping", ...data };
@@ -1001,7 +1001,7 @@ async function runCalculate() {
       return;
     }
 
-    const data = await emissionService.calculateEmission(payload);
+    const data = await emissionApi.calculateEmission(payload);
 
     calculatedCo2 = parseFloat(data.co2e);
     if (calcStatusEl) {
@@ -1073,10 +1073,10 @@ entryForm.addEventListener("submit", async (e) => {
     let newLevel = null;
 
     if (isEditMode) {
-      await emissionService.update(editId, payload);
+      await emissionApi.update(editId, payload);
       showToast("Güncellendi!", "Emisyon kaydı güncellendi.", "success");
     } else {
-      await emissionService.create(payload);
+      await emissionApi.create(payload);
       showToast("Kaydedildi!", "Emisyon kaydı oluşturuldu.", "success");
 
       // Mark today as logged (for daily reminder suppression)
@@ -1086,7 +1086,7 @@ entryForm.addEventListener("submit", async (e) => {
 
       // Award XP and show celebrations
       try {
-        const gamResult = await gamificationService.processEntry();
+        const gamResult = await gamificationApi.processEntry();
         const gam = gamResult?.data;
         if (gam && gam.xpGained > 0) {
           showXpGain(gam.xpGained, saveBtn);
@@ -1242,7 +1242,7 @@ async function cbamLoadCategoryDefaults(category) {
     return;
   }
   try {
-    const res = await companyService.getCbamDefaultFactor(category);
+    const res = await companyApi.getCbamDefaultFactor(category);
     const data = res.data || {};
     if (data.factor !== null && !_factorIsManual) {
       if (ceEmissionFactorEl) ceEmissionFactorEl.value = data.factor;
@@ -1276,7 +1276,7 @@ async function cbamLoadPeriodEmissions(period) {
       '<span style="color:var(--color-text-muted);">Yükleniyor…</span>';
 
   try {
-    const res = await companyService.getPeriodEmissions(period);
+    const res = await companyApi.getPeriodEmissions(period);
     const data = res.data || {};
 
     const totalKg = parseFloat(data.total_kg ?? 0);
@@ -1497,7 +1497,7 @@ ceSaveBtnEl?.addEventListener("click", async () => {
   ceSaveBtnEl.textContent = "Hesaplanıyor…";
 
   try {
-    await companyService.createEntry({
+    await companyApi.createEntry({
       export_category: category,
       period_start: period + "-01",
       export_amount: exportAmt,

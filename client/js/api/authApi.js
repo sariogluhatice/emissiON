@@ -1,11 +1,7 @@
 import { ApiClient } from './apiClient.js';
 import { TokenManager } from './tokenManager.js';
 
-/**
- * AuthService Sınıfı
- * Login ve Register işlemlerini üstlenir.
- */
-export class AuthService {
+export class AuthApi {
     constructor() {
         this.api = new ApiClient();
     }
@@ -24,7 +20,6 @@ export class AuthService {
 
     async register(name, email, password, role) {
         const response = await this.api.post('/auth/register', { name, email, password, role });
-        // Kayıttan sonra otomatik giriş yapma, kullanıcının login sayfasına gitmesini bekliyoruz.
         return response;
     }
 

@@ -1,4 +1,4 @@
-import { emissionService } from './api/emissionService.js';
+import { emissionApi } from './api/emissionApi.js';
 import { renderLayout } from './layout.js';
 
 const user = renderLayout({ activeNav: 'nav-insights' });
@@ -10,7 +10,7 @@ async function loadSmartInsights() {
   const recEl = document.getElementById('recommendationContent');
 
   try {
-    const res = await emissionService.getAll();
+    const res = await emissionApi.getAll();
     const emissionsArray = res.records || [];
     // Veri parmak izini sadece kayıt sayısına göre değil, toplam miktara göre hesapla (Daha güvenli)
     const dataFingerprint = emissionsArray.reduce((sum, r) => sum + Number(r.amount), 0).toFixed(2);
@@ -21,7 +21,7 @@ async function loadSmartInsights() {
 
     // Her zaman en taze AI analizini getir (Tavsiyelerin her seferinde değişmesi için)
     console.log('Generating fresh AI insights for recommendations...');
-    const insights = await emissionService.getSmartInsights();
+    const insights = await emissionApi.getSmartInsights();
 
     // Helper to cap sentences to exactly 2 for ultra-clean readability
     const capToTwoSentences = (text) => {

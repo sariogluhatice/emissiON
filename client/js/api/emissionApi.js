@@ -2,7 +2,7 @@ import { ApiClient } from './apiClient.js';
 
 const client = new ApiClient();
 
-export const emissionService = {
+export const emissionApi = {
     getAll:         ()         => client.get('/emissions'),
     getById:        (id)       => client.get(`/emissions/${id}`),
     create:         (data)     => client.post('/emissions', data),

@@ -1,4 +1,4 @@
-import { companyService } from './api/companyService.js';
+import { companyApi } from './api/companyApi.js';
 import { renderLayout }   from './layout.js';
 import {
   showToast,
@@ -293,7 +293,7 @@ function renderTasks() {
 async function handleStatusChange(taskId, status, prevStatus, selectEl) {
   selectEl.disabled = true;
   try {
-    await companyService.updateTaskStatus(taskId, status);
+    await companyApi.updateTaskStatus(taskId, status);
     showToast('Güncellendi', `Görev durumu: ${getTaskStatusLabel(status)}`, 'success');
     await loadTasks();
   } catch (err) {
@@ -307,7 +307,7 @@ async function handleStatusChange(taskId, status, prevStatus, selectEl) {
 async function loadTasks() {
   tasksContainer.innerHTML = '<div class="hh-loading">Yükleniyor…</div>';
   try {
-    const res = await companyService.getTasks();
+    const res = await companyApi.getTasks();
     _allTasks = res.data?.tasks ?? [];
     updateFilterCounts();
     renderTasks();

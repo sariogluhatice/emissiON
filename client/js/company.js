@@ -1,4 +1,4 @@
-import { companyService } from './api/companyService.js';
+import { companyApi } from './api/companyApi.js';
 import { renderLayout }   from './layout.js';
 import { getCategoryLabelWithEmoji, CBAM_SECTOR_LABELS, RISK_LABELS, RISK_COLORS } from './utils/labelUtils.js';
 
@@ -312,8 +312,8 @@ function renderDashboard(profile, dashboard) {
 (async () => {
     try {
         const [profileRes, dashboardRes] = await Promise.all([
-            companyService.getProfile(),
-            companyService.getDashboard(),
+            companyApi.getProfile(),
+            companyApi.getDashboard(),
         ]);
 
         const profile   = profileRes.data?.profile;

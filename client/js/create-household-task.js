@@ -1,4 +1,4 @@
-import { householdService } from "./api/householdService.js";
+import { householdApi } from "./api/householdApi.js";
 import { renderLayout }     from "./layout.js";
 import { showToast }        from "./utils/uiUtils.js";
 
@@ -28,7 +28,7 @@ noRecordsModal?.addEventListener("click", (e) => {
 // ── Populate assignee dropdown ────────────────────────────────────────────────
 async function loadMembers() {
   try {
-    const res = await householdService.getMembers();
+    const res = await householdApi.getMembers();
     const members = res.data?.members ?? [];
     members.forEach((m) => {
       const opt = document.createElement("option");
@@ -86,7 +86,7 @@ createTaskBtn?.addEventListener("click", async () => {
   createTaskBtn.disabled    = true;
   createTaskBtn.textContent = "Oluşturuluyor…";
   try {
-    await householdService.createTask(payload);
+    await householdApi.createTask(payload);
     showToast("Başarılı", "Görev oluşturuldu.", "success");
     setTimeout(() => { window.location.href = "household-tasks.html"; }, 600);
   } catch (err) {
@@ -106,7 +106,7 @@ createTaskBtn?.addEventListener("click", async () => {
 
   // Admin guard: members can't create tasks
   try {
-    const res = await householdService.getMe();
+    const res = await householdApi.getMe();
     const h   = res.data?.household;
     if (!h) {
       window.location.href = "household.html";

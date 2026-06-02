@@ -1,4 +1,4 @@
-import { emissionService } from './api/emissionService.js';
+import { emissionApi } from './api/emissionApi.js';
 import { TokenManager } from './api/tokenManager.js';
 import { getCurrentUser, renderTopbarUser, bindLogout, showToast } from './utils/uiUtils.js';
 
@@ -128,7 +128,7 @@ saveForm.addEventListener('submit', async (e) => {
     saveBtn.textContent = 'Kaydediliyor…';
 
     try {
-        await emissionService.create({
+        await emissionApi.create({
             source: desc,
             amount: co2,
             date

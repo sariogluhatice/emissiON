@@ -1,23 +1,14 @@
-const express          = require('express');
-const { authenticate } = require('../middleware/authMiddleware');
-const gamService       = require('../services/gamificationService');
+const express                        = require('express');
+const { authenticate }               = require('../middleware/authMiddleware');
+const { getStats, processEntry }     = require('../controllers/gamificationController');
 
 const router = express.Router();
 router.use(authenticate);
 
-const ok     = (res, data) => res.json({ success: true, data });
-const handle = (res, err)  => res.status(err.status || 500).json({ success: false, message: err.message });
-
 // GET /api/gamification/stats
-router.get('/stats', async (req, res) => {
-    try { ok(res, await gamService.getStats(req.user.id)); }
-    catch (err) { handle(res, err); }
-});
+router.get('/stats', getStats);
 
 // POST /api/gamification/process-entry  (backward-compat alias)
-router.post('/process-entry', async (req, res) => {
-    try { ok(res, await gamService.processEntry(req.user.id)); }
-    catch (err) { handle(res, err); }
-});
+router.post('/process-entry', processEntry);
 
 module.exports = router;

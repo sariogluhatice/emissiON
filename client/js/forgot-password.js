@@ -3,9 +3,9 @@ import {
   showError,
   bindFieldValidation,
 } from './utils/validation.js';
-import { AuthService } from './api/authService.js';
+import { AuthApi } from './api/authApi.js';
 
-const authService = new AuthService();
+const authService = new AuthApi();
 
 const form       = document.getElementById('forgotForm');
 const emailInput = document.getElementById('email');

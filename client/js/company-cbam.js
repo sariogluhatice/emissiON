@@ -1,4 +1,4 @@
-import { companyService } from './api/companyService.js';
+import { companyApi } from './api/companyApi.js';
 import { renderLayout }   from './layout.js';
 import { showToast }      from './utils/uiUtils.js';
 import { getCategoryLabelWithEmoji, CBAM_SECTOR_LABELS, RISK_LABELS, RISK_COLORS } from './utils/labelUtils.js';
@@ -195,7 +195,7 @@ function renderSensitivity(totalTco2) {
 // ── Load and render auto-analysis ─────────────────────────────────────────────
 async function loadSummary() {
     try {
-        const res     = await companyService.getCbamSummary();
+        const res     = await companyApi.getCbamSummary();
         summaryState  = res.data?.summary;
 
         cbamLoading.style.display = 'none';
@@ -351,7 +351,7 @@ function entryRow(e) {
 async function loadEntries() {
     if (entriesContainer) entriesContainer.innerHTML = '<div class="hh-loading">Yükleniyor…</div>';
     try {
-        const res  = await companyService.getEntries({ page: currentPage, limit: PAGE_LIMIT });
+        const res  = await companyApi.getEntries({ page: currentPage, limit: PAGE_LIMIT });
         const data = res.data ?? {};
         renderEntries(data.entries ?? [], data.total ?? 0, data.page ?? 1, data.limit ?? PAGE_LIMIT);
     } catch (err) {
@@ -362,7 +362,7 @@ async function loadEntries() {
 async function handleDelete(entryId, displayName) {
     if (!window.confirm(`"${displayName}" beyanını silmek istediğinizden emin misiniz?`)) return;
     try {
-        await companyService.deleteEntry(entryId);
+        await companyApi.deleteEntry(entryId);
         showToast('Silindi', 'Beyan silindi.', 'success');
         if (currentPage > 1) {
             const remaining = totalEntries - 1;
@@ -480,7 +480,7 @@ async function saveEdit() {
     if (warningEl) warningEl.style.display = 'none';
 
     try {
-        const res = await companyService.updateEntry(_editEntryId, {
+        const res = await companyApi.updateEntry(_editEntryId, {
             product_name:       document.getElementById('ceEditProductName').value.trim() || null,
             period_end:         document.getElementById('ceEditPeriodEnd').value          || null,
             paid_carbon_price:  parseFloat(document.getElementById('ceEditPaidPrice').value) || 0,

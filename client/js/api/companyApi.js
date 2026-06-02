@@ -2,7 +2,7 @@ import { ApiClient } from './apiClient.js';
 
 const client = new ApiClient();
 
-export const companyService = {
+export const companyApi = {
     // ── Company profile ──────────────────────────────────────────────────────
     getProfile:   ()     => client.get('/company/profile'),
     upsertProfile: (data) => client.put('/company/profile', data),

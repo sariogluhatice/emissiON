@@ -1,4 +1,4 @@
-import { companyService } from './api/companyService.js';
+import { companyApi } from './api/companyApi.js';
 import { renderLayout }   from './layout.js';
 import { showToast }      from './utils/uiUtils.js';
 
@@ -54,7 +54,7 @@ ctCreateBtn?.addEventListener('click', async () => {
     ctCreateBtn.textContent = 'Oluşturuluyor…';
 
     try {
-        await companyService.createTask({
+        await companyApi.createTask({
             title,
             description:          ctDescEl?.value.trim()  || undefined,
             due_date:             ctDueDateEl?.value       || undefined,

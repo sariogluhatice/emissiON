@@ -1,5 +1,5 @@
-import { companyService }  from './api/companyService.js';
-import { emissionService }  from './api/emissionService.js';
+import { companyApi }  from './api/companyApi.js';
+import { emissionApi }  from './api/emissionApi.js';
 import { renderLayout }     from './layout.js';
 import { showToast }        from './utils/uiUtils.js';
 import { RISK_LABELS, RISK_COLORS } from './utils/labelUtils.js';
@@ -372,7 +372,7 @@ function simRow(s) {
 async function loadSimulations() {
     simsContainer.innerHTML = '<div class="hh-loading">Yükleniyor…</div>';
     try {
-        const res  = await companyService.getSavedSimulations({ page: currentPage, limit: PAGE_LIMIT });
+        const res  = await companyApi.getSavedSimulations({ page: currentPage, limit: PAGE_LIMIT });
         const data = res.data ?? {};
         renderSimulations(data.simulations ?? [], data.total ?? 0, data.page ?? 1, data.limit ?? PAGE_LIMIT);
     } catch (err) {
@@ -393,7 +393,7 @@ csRunBtn?.addEventListener('click', async () => {
     csRunBtn.textContent = 'Hesaplanıyor…';
 
     try {
-        await companyService.runSimulation({
+        await companyApi.runSimulation({
             scenario_name:              scenarioNameEl?.value.trim()     || undefined,
             carbon_price:               carbonPrice,
             export_change_pct:          parseFloat(exportChangePctEl?.value) || 0,
@@ -439,7 +439,7 @@ csAiBtn?.addEventListener('click', async () => {
         // CBAM bağlamında operasyonel emisyon azaltımına karşılık gelen kategoriler
         const reductions = { energy: factorPct, gas: factorPct, transport: factorPct, materials: factorPct };
 
-        const roadmap = await emissionService.getSimulationRoadmap(reductions);
+        const roadmap = await emissionApi.getSimulationRoadmap(reductions);
         const steps   = roadmap.steps || [];
 
         if (csAiSteps) {
@@ -524,7 +524,7 @@ csTaskConfirmBtn?.addEventListener('click', async () => {
     csTaskConfirmBtn.textContent = 'Oluşturuluyor…';
 
     try {
-        await companyService.createTask({
+        await companyApi.createTask({
             title,
             description:          csTaskDescEl?.value.trim() || undefined,
             emission_category:    category                   || undefined,
@@ -545,8 +545,8 @@ csTaskConfirmBtn?.addEventListener('click', async () => {
 (async () => {
     try {
         const [dashRes, profileRes] = await Promise.all([
-            companyService.getDashboard(),
-            companyService.getProfile(),
+            companyApi.getDashboard(),
+            companyApi.getProfile(),
         ]);
 
         const dashboard = dashRes.data?.dashboard;

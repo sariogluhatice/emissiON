@@ -1,4 +1,4 @@
-import { householdService } from "./api/householdService.js";
+import { householdApi } from "./api/householdApi.js";
 import { renderLayout }     from "./layout.js";
 import {
   showToast,
@@ -318,7 +318,7 @@ function renderTasks() {
 async function handleStatusChange(taskId, status, prevStatus, selectEl) {
   selectEl.disabled = true;
   try {
-    await householdService.updateTaskStatus(taskId, status);
+    await householdApi.updateTaskStatus(taskId, status);
     showToast("Güncellendi", `Görev durumu: ${getTaskStatusLabel(status)}`, "success");
     await loadTasks();
   } catch (err) {
@@ -332,7 +332,7 @@ async function handleStatusChange(taskId, status, prevStatus, selectEl) {
 async function loadTasks() {
   tasksContainer.innerHTML = `<div class="hh-loading">Yükleniyor…</div>`;
   try {
-    const res  = await householdService.getTasks();
+    const res  = await householdApi.getTasks();
     _allTasks  = res.data?.tasks ?? [];
     updateFilterCounts();
     renderTasks();
@@ -355,7 +355,7 @@ filterBar?.querySelectorAll(".hh-filter-btn").forEach(btn => {
 // ── Boot ──────────────────────────────────────────────────────────────────────
 (async () => {
   try {
-    const res = await householdService.getMe();
+    const res = await householdApi.getMe();
     const h   = res.data?.household;
 
     if (!h) {

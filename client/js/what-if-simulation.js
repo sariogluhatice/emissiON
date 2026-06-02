@@ -1,10 +1,9 @@
 import { renderLayout }    from './layout.js';
 import { showToast }       from './utils/uiUtils.js';
-import { ApiClient }       from './api/apiClient.js';
 import { updateGlobe }     from './utils/globe.js';
-import { emissionService } from './api/emissionService.js';
-import { householdService } from './api/householdService.js';
-import { companyService }  from './api/companyService.js';
+import { emissionApi }     from './api/emissionApi.js';
+import { householdApi }    from './api/householdApi.js';
+import { companyApi }      from './api/companyApi.js';
 import { getCategoryLabel } from './utils/labelUtils.js';
 
 const user = renderLayout({ activeNav: 'nav-whatif' });
@@ -16,12 +15,10 @@ let _householdMembersCache = null;
 const isCompanyUser = user.role === 'company';
 
 if (user.role === 'household') {
-    householdService.getMe().then(res => {
+    householdApi.getMe().then(res => {
         isHouseholdAdmin = res.data?.household?.role === 'admin';
     }).catch(() => {});
 }
-
-const api = new ApiClient();
 
 // ── DOM Referansları ──────────────────────────────────────────────────────────
 const actionsContainer  = document.getElementById('actionsContainer'); // Sürgüleri bu konteynırda render edeceğiz
@@ -115,7 +112,7 @@ let changes = {};   // { energy: 0, ... } (percentage -100 to 100)
   }
 
   try {
-    const { records } = await api.get('/emissions');
+    const { records } = await emissionApi.getAll();
     if (!records || records.length === 0) {
       renderEmptyState();
     } else {
@@ -491,7 +488,7 @@ if (getAiRoadmapBtn && aiPlannerContent && aiPlannerSteps) {
       aiPlannerSteps.innerHTML = '<li style="list-style:none;margin-left:-20px;text-align:center;color:var(--color-text-muted);">Yapay zekanız verilerinizi analiz ediyor...</li>';
       aiPlannerContent.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-      const roadmap = await emissionService.getSimulationRoadmap(selectedChanges);
+      const roadmap = await emissionApi.getSimulationRoadmap(selectedChanges);
 
       // Seçilmemiş kategorileri frontend'de de filtrele
       const steps = (roadmap.steps || []).filter(step => {
@@ -581,7 +578,7 @@ const taskModalDueDate   = document.getElementById('taskModalDueDate');
 async function _ensureMembers() {
   if (_householdMembersCache) return _householdMembersCache;
   try {
-    const res = await householdService.getMembers();
+    const res = await householdApi.getMembers();
     _householdMembersCache = res.data?.members ?? [];
   } catch {
     _householdMembersCache = [];
@@ -656,7 +653,7 @@ confirmAddTaskBtn?.addEventListener('click', async () => {
   confirmAddTaskBtn.textContent = 'Oluşturuluyor…';
   try {
     if (isCompanyUser) {
-      await companyService.createTask({
+      await companyApi.createTask({
         title,
         emission_category:   category,
         target_reduction_pct: pct,
@@ -665,7 +662,7 @@ confirmAddTaskBtn?.addEventListener('click', async () => {
       addTaskModal.style.display = 'none';
       showToast('Başarılı', 'Şirket görevi oluşturuldu.', 'success');
     } else {
-      await householdService.createTask({
+      await householdApi.createTask({
         title,
         emission_category: category,
         target_pct:        pct,

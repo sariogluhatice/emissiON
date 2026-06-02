@@ -1,4 +1,4 @@
-import { companyService } from './api/companyService.js';
+import { companyApi } from './api/companyApi.js';
 import { renderLayout }   from './layout.js';
 import { showToast }      from './utils/uiUtils.js';
 
@@ -31,7 +31,7 @@ const cpSaveBtn          = document.getElementById('cpSaveBtn');
 // ── Populate form with existing profile data ──────────────────────────────────
 async function loadProfile() {
   try {
-    const res     = await companyService.getProfile();
+    const res     = await companyApi.getProfile();
     const profile = res.data?.profile;
     if (!profile) return; // first time — form stays empty
 
@@ -80,7 +80,7 @@ cpSaveBtn?.addEventListener('click', async () => {
   cpSaveBtn.textContent = 'Kaydediliyor…';
 
   try {
-    await companyService.upsertProfile({
+    await companyApi.upsertProfile({
       company_name:         companyName,
       cbam_sector:          cbamSector,
       exports_to_eu:        cpExportsToEu?.value === 'true',

@@ -1,12 +1,11 @@
-import { renderLayout } from './layout.js';
-import { showToast }    from './utils/uiUtils.js';
-import { ApiClient }    from './api/apiClient.js';
+import { renderLayout }   from './layout.js';
+import { showToast }       from './utils/uiUtils.js';
+import { carbonProfileApi } from './api/carbonProfileApi.js';
 
 const user = renderLayout({ activeNav: 'nav-profile', title: 'Karbon Profilini Düzenle' });
 if (!user) throw new Error('redirect');
 
 const role = user.role ?? 'individual';
-const api  = new ApiClient();
 
 // Mevcut cevaplar (API'dan yüklenir, form değişikliklerinde güncellenir)
 let answers = {};
@@ -396,7 +395,7 @@ async function saveCarbonProfile() {
     btn.textContent = 'Kaydediliyor…';
 
     try {
-        await api.put('/carbon-profile', answers);
+        await carbonProfileApi.updateCarbonProfile(answers);
         showToast('Başarılı', 'Profil başarıyla güncellendi', 'success');
     } catch (err) {
         console.error('[carbon-profile] kayıt hatası:', err.message);
@@ -410,7 +409,7 @@ async function saveCarbonProfile() {
 // ── Başlat ────────────────────────────────────────────────────────────────────
 async function init() {
     try {
-        const data = await api.get('/carbon-profile');
+        const data = await carbonProfileApi.getCarbonProfile();
         if (data.answers && typeof data.answers === 'object') {
             Object.assign(answers, data.answers);
         }

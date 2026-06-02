@@ -1,4 +1,4 @@
-import { householdService } from './api/householdService.js';
+import { householdApi } from './api/householdApi.js';
 import { renderLayout }     from './layout.js';
 import { showToast, formatDate } from './utils/uiUtils.js';
 
@@ -30,7 +30,7 @@ const CAT_LABELS = {
 
 // ── Admin guard — redirect non-admins back to household.html ─────────────────
 async function guardAdmin() {
-  const res = await householdService.getMe();
+  const res = await householdApi.getMe();
   const h   = res.data?.household;
   if (!h || h.role !== 'admin') {
     window.location.href = 'household.html';
@@ -41,7 +41,7 @@ async function guardAdmin() {
 // ── Load and render members ───────────────────────────────────────────────────
 async function loadMembers() {
   try {
-    const res     = await householdService.getMembers();
+    const res     = await householdApi.getMembers();
     const members = res.data?.members ?? [];
 
     if (memberCountEl) memberCountEl.textContent = `${members.length} kişi`;
@@ -87,7 +87,7 @@ async function loadMemberEmissions(memberId, memberName) {
   memberEmissionsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   try {
-    const res       = await householdService.getMemberEmissions(memberId);
+    const res       = await householdApi.getMemberEmissions(memberId);
     const emissions = res.data?.emissions ?? [];
 
     if (!emissions.length) {
@@ -148,7 +148,7 @@ async function openCommentModal(emissionId, label) {
   commentModal.style.display   = 'flex';
 
   try {
-    const res      = await householdService.getComments(emissionId);
+    const res      = await householdApi.getComments(emissionId);
     const comments = res.data?.comments ?? [];
 
     if (!comments.length) {
@@ -181,7 +181,7 @@ saveCommentBtn?.addEventListener('click', async () => {
 
   saveCommentBtn.disabled = true;
   try {
-    await householdService.addComment(activeEmissionId, comment);
+    await householdApi.addComment(activeEmissionId, comment);
     showToast('Başarılı', 'Yorum kaydedildi.', 'success');
     commentModal.style.display = 'none';
     activeEmissionId           = null;

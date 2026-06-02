@@ -2,7 +2,7 @@ import { ApiClient } from './apiClient.js';
 
 const client = new ApiClient();
 
-export const householdService = {
+export const householdApi = {
     // ── Household lifecycle ──────────────────────────────────────────────────
     create:             (data)           => client.post('/households/create', data),
     join:               (data)           => client.post('/households/join', data),
@@ -20,7 +20,6 @@ export const householdService = {
     createTask:         (data)           => client.post('/households/tasks', data),
     getTasks:           ()               => client.get('/households/tasks'),
 
-    // ApiClient has no .patch() helper; use .request() directly.
     updateTaskStatus: (taskId, status)   => client.request(`/households/tasks/${taskId}/status`, {
         method: 'PATCH',
         body: JSON.stringify({ status }),

@@ -1,5 +1,5 @@
-import { emissionService } from "./api/emissionService.js";
-import { profileService } from "./api/profileService.js";
+import { emissionApi } from "./api/emissionApi.js";
+import { profileApi } from "./api/profileApi.js";
 import { renderLayout } from "./layout.js";
 import { calculateStats, showToast } from "./utils/uiUtils.js";
 
@@ -420,7 +420,7 @@ function setMsg(id, text, isError = false) {
 
 async function loadProfile() {
   try {
-    const { user: u, answers } = await profileService.getProfile();
+    const { user: u, answers } = await profileApi.getProfile();
 
     const displayName = u.name || u.email || "?";
     const initial = displayName.charAt(0).toUpperCase();
@@ -483,7 +483,7 @@ async function loadProfile() {
 
 async function loadStats() {
   try {
-    const { records } = await emissionService.getAll();
+    const { records } = await emissionApi.getAll();
     const stats = calculateStats(records);
     document.getElementById("profileStatTotal").textContent = stats.total;
     document.getElementById("profileStatMonth").textContent = stats.month;
@@ -510,7 +510,7 @@ document
     try {
       const btn = document.getElementById("saveNameBtn");
       if (btn) btn.disabled = true;
-      const { user: updated } = await profileService.updateProfile({ name });
+      const { user: updated } = await profileApi.updateProfile({ name });
       const stored = JSON.parse(localStorage.getItem("user") || "{}");
       stored.name = updated.name;
       localStorage.setItem("user", JSON.stringify(stored));
@@ -574,7 +574,7 @@ document
     try {
       const btn = document.getElementById("changePasswordBtn");
       if (btn) btn.disabled = true;
-      await profileService.requestPasswordChange({
+      await profileApi.requestPasswordChange({
         currentPassword: currentPw,
         newPassword: newPw,
       });
@@ -601,7 +601,7 @@ document.getElementById("savePrefsBtn")?.addEventListener("click", async () => {
   savePrefs(prefs);
 
   try {
-    await profileService.updateSettings(prefs);
+    await profileApi.updateSettings(prefs);
   } catch {
     /* backend yoksa localStorage'e kaydettik zaten */
   }

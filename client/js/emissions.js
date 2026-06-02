@@ -1,5 +1,5 @@
-import { emissionService } from './api/emissionService.js';
-import { householdService } from './api/householdService.js';
+import { emissionApi } from './api/emissionApi.js';
+import { householdApi } from './api/householdApi.js';
 import { renderLayout } from './layout.js';
 import { formatDate } from './utils/uiUtils.js';
 import {
@@ -30,7 +30,7 @@ async function openCommentModal(emissionId) {
   modal.style.display = 'flex';
 
   try {
-    const res      = await householdService.getComments(emissionId);
+    const res      = await householdApi.getComments(emissionId);
     const comments = res.data?.comments ?? [];
 
     if (!comments.length) {
@@ -65,7 +65,7 @@ const cancelDeleteBtn  = document.getElementById('cancelDeleteBtn');
 /** API'den verileri çek */
 async function loadData() {
   try {
-    const { records } = await emissionService.getAll();
+    const { records } = await emissionApi.getAll();
     allEmissions = records;
     render();
   } catch (err) {
@@ -185,7 +185,7 @@ cancelDeleteBtn?.addEventListener('click', () => {
 confirmDeleteBtn?.addEventListener('click', async () => {
   if (pendingDeleteId) {
     try {
-      await emissionService.remove(pendingDeleteId);
+      await emissionApi.remove(pendingDeleteId);
       await loadData();
     } catch (err) {
       alert('Kayıt silinemedi: ' + err.message);
