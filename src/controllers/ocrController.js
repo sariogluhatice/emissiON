@@ -15,26 +15,26 @@ const upload = multer({
 
 const uploadInvoice = async (req, res) => {
     if (!req.file) {
-        return res.status(400).json({ message: 'No file uploaded or unsupported format. Use JPEG, PNG, or WEBP.' });
+        return res.status(400).json({ message: 'Dosya yüklenmedi veya desteklenmeyen format. JPEG, PNG veya WEBP kullanın.' });
     }
 
     try {
         const expenseDoc = await textractService.analyzeExpenseFromBuffer(req.file.buffer, req.file.mimetype);
         if (!expenseDoc) {
-            return res.status(422).json({ message: 'Textract returned no expense document for this image.' });
+            return res.status(422).json({ message: 'Bu görüntü için belge analizi sonuç döndürmedi.' });
         }
 
         const result = normalizeExpenseData(expenseDoc);
         res.json(result);
     } catch (err) {
         console.error('[OCR] AnalyzeExpense failed:', err);
-        res.status(500).json({ message: err.message || 'OCR processing failed.' });
+        res.status(500).json({ message: err.message || 'OCR işlemi başarısız oldu.' });
     }
 };
 
 const uploadShoppingReceipt = async (req, res) => {
     if (!req.file) {
-        return res.status(400).json({ message: 'No file uploaded. Use JPEG, PNG, WEBP, or PDF.' });
+        return res.status(400).json({ message: 'Dosya yüklenmedi. JPEG, PNG, WEBP veya PDF kullanın.' });
     }
 
     try {
@@ -50,7 +50,7 @@ const uploadShoppingReceipt = async (req, res) => {
             expenseDoc = await textractService.analyzeExpenseFromBuffer(req.file.buffer, req.file.mimetype);
         }
         if (!expenseDoc) {
-            return res.status(422).json({ message: 'Textract returned no expense document for this image.' });
+            return res.status(422).json({ message: 'Bu görüntü için belge analizi sonuç döndürmedi.' });
         }
 
         console.log('[OCR Shopping] SummaryFields:',
@@ -69,7 +69,7 @@ const uploadShoppingReceipt = async (req, res) => {
 
         const { totalAmount, currency, date } = extractShoppingData(expenseDoc);
         if (!totalAmount || totalAmount <= 0) {
-            return res.status(422).json({ message: 'Could not extract a valid total amount from this receipt.' });
+            return res.status(422).json({ message: 'Bu fişten geçerli bir toplam tutar çıkarılamadı.' });
         }
 
         const { usdAmount, exchangeRate } = await convertToUSD(totalAmount, currency, date);
@@ -90,7 +90,7 @@ const uploadShoppingReceipt = async (req, res) => {
         });
     } catch (err) {
         console.error('[OCR Shopping]', err);
-        res.status(500).json({ message: err.message || 'Shopping receipt processing failed.' });
+        res.status(500).json({ message: err.message || 'Alışveriş fişi işlenemedi.' });
     }
 };
 
